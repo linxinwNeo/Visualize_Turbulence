@@ -9,15 +9,26 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    file.cpp \
+    FileLoader/ReadFile.cpp \
+    Geometry/Edge.cpp \
+    Geometry/Face.cpp \
+    Geometry/Mesh.cpp \
+    Geometry/Tet.cpp \
+    Geometry/Vertex.cpp \
     main.cpp \
     mainwindow.cpp \
     openglwindow.cpp
 
 HEADERS += \
-    file.h \
+    FileLoader/ReadFile.h \
+    Geometry/Edge.h \
+    Geometry/Face.h \
+    Geometry/Mesh.h \
+    Geometry/Tet.h \
+    Geometry/Vertex.h \
     mainwindow.h \
-    openglwindow.h
+    openglwindow.h \
+    predefined.h
 
 FORMS += \
     mainwindow.ui
