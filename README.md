@@ -1,7 +1,7 @@
-# Visualize_Material_Failure
+# Visualize_Turbulence
  
 # Introduction
-This project is aimed to visualize the regions in the 2D/3D material where the failure is going to happen or already happened.
+This project is aimed to visualize the regions in the 3D domain where the turbulence is ongoing.
 
 # Platform
 Using QT with c++.
@@ -10,4 +10,4 @@ Using QT with c++.
 Currently none.
 
 # Input Files
-Limited to the .inp, .rpt files outputed from Abaqus.
+Limited to the .mphtxt file output from COMSOL but the visualization technique can be used on any fluid data.
