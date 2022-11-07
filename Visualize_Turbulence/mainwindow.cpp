@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     file = new ReadFile( meshFilePath, dataFilePath );
+    mesh = file->mesh;
 }
 
 MainWindow::~MainWindow()
