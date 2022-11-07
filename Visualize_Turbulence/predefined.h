@@ -2,8 +2,6 @@
 #define PREDEFINED_H
 
 // we put constants in this file
-
-
 #define WIN_WIDTH 1200 // openGL window width
 #define WIN_HEIGHT 850 // openGL window height
 

@@ -1,12 +1,25 @@
-#ifndef PREDEFINED_H
-#define PREDEFINED_H
+#ifndef READFILE_H
+#define READFILE_H
 
-// we put constants in this file
+#include <QString>
+#include <QFile>
+#include "Geometry/Mesh.h"
 
+class ReadFile {
+public:
+    // member variables
+    QString meshPath;
+    QString dataPath;
 
-#define WIN_WIDTH 1200 // openGL window width
-#define WIN_HEIGHT 850 // openGL window height
+    Mesh* mesh;
 
-#define M_PI 3.14159265358979324
+    // member functions
+    ReadFile();
+    ReadFile(const QString, const QString);
+    ~ReadFile();
 
-#endif // PREDEFINED_H
+    void ReadMeshFile(QString);
+    void ReadDataFile(QString);
+};
+
+#endif // READFILE_H

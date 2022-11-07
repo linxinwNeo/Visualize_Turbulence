@@ -26,8 +26,16 @@ public:
 
     // public member functions
     Vertex();
-    Vertex(int, double, double, double);
+    Vertex(double, double, double);
     ~Vertex();
+
+    int num_edges();
+    int num_faces();
+    int num_tets();
+
+    void add_edge(Edge*);
+    void add_face(Face*);
+    void add_tet(Tet*);
 };
 
 #endif // VERTEX_H

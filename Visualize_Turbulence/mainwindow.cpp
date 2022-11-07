@@ -1,7 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "Geometry/Mesh.h"
+#include "predefined.h"
+#include "globalVars.h"
+
+extern ReadFile* file;
+extern Mesh* mesh;
+extern const QString meshFilePath;
+extern const QString dataFilePath;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,8 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    Mesh* m = new Mesh();
-
+    file = new ReadFile( meshFilePath, dataFilePath );
 }
 
 MainWindow::~MainWindow()

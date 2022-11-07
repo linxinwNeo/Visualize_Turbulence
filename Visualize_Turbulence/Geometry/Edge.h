@@ -21,6 +21,14 @@ public:
     // member functions
     Edge();
     ~Edge();
+
+    int num_verts();
+    int num_faces();
+    int num_tets();
+
+    void add_vert(Vertex*);
+    void add_face(Face*);
+    void add_tet(Tet*);
 };
 
 #endif // EDGE_H

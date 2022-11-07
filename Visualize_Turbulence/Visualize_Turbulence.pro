@@ -26,9 +26,11 @@ HEADERS += \
     Geometry/Mesh.h \
     Geometry/Tet.h \
     Geometry/Vertex.h \
+    globalVars.h \
     mainwindow.h \
     openglwindow.h \
-    predefined.h
+    predefined.h \
+    utility_functions.h
 
 FORMS += \
     mainwindow.ui

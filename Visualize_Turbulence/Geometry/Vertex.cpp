@@ -1,4 +1,4 @@
-#include "Vertex.h"
+#include "Geometry/Vertex.h"
 
 // constructors
 Vertex::Vertex()
@@ -10,9 +10,8 @@ Vertex::Vertex()
 }
 
 
-Vertex::Vertex( int idx, double x, double y, double z )
+Vertex::Vertex( double x, double y, double z )
 {
-    this->idx = idx;
     this->x = x;
     this->y = y;
     this->z = z;
@@ -25,4 +24,34 @@ Vertex::~Vertex()
     this->edges.clear();
     this->faces.clear();
     this->edges.clear();
+}
+
+
+int Vertex::num_edges(){
+    return this->edges.size();
+}
+
+
+int Vertex::num_faces(){
+    return this->faces.size();
+}
+
+
+int Vertex::num_tets(){
+    return this->tets.size();
+}
+
+
+void Vertex::add_edge(Edge* e){
+    this->edges.push_back(e);
+}
+
+
+void Vertex::add_face(Face* f){
+    this->faces.push_back(f);
+}
+
+
+void Vertex::add_tet(Tet* tet){
+    this->tets.push_back(tet);
 }

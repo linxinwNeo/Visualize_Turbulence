@@ -22,6 +22,16 @@ public:
     // member functions
     Tet();
     ~Tet();
+
+    int num_verts();
+    int num_edges();
+    int num_faces();
+    int num_tets();
+
+    void add_vert(Vertex*);
+    void add_edge(Edge*);
+    void add_face(Face*);
+    void add_tet(Tet*);
 };
 
 #endif // TET_H
