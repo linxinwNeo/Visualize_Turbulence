@@ -12,7 +12,7 @@ Mesh::Mesh()
 Mesh::~Mesh()
 {
     // free memories of each vector
-    int i;
+    unsigned long i;
     for( i=0; i<this->num_verts(); i++ ){
         if( this->verts[i] != NULL ){
             delete this->verts[i];
@@ -51,25 +51,25 @@ Mesh::~Mesh()
 }
 
 
-int Mesh::num_verts()
+unsigned long Mesh::num_verts()
 {
     return this->verts.size();
 }
 
 
-int Mesh::num_edges()
+unsigned long Mesh::num_edges()
 {
     return this->edges.size();
 }
 
 
-int Mesh::num_faces()
+unsigned long Mesh::num_faces()
 {
     return this->faces.size();
 }
 
 
-int Mesh::num_tets()
+unsigned long Mesh::num_tets()
 {
     return this->tets.size();
 }

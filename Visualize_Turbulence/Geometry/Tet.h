@@ -13,7 +13,7 @@ using namespace std;
 class Tet {
 public:
     // member variables
-    int idx;
+    unsigned long idx;
     vector<Vertex*> verts;  // exact 4 verts that consists of this tetrahedron
     vector<Edge*> edges;    // exact 4 edges that consists of this tetrahedron
     vector<Face*> faces;    // exact 4 faces that consists of this tetrahedron
@@ -23,10 +23,10 @@ public:
     Tet();
     ~Tet();
 
-    int num_verts();
-    int num_edges();
-    int num_faces();
-    int num_tets();
+    unsigned long num_verts();
+    unsigned long num_edges();
+    unsigned long num_faces();
+    unsigned long num_tets();
 
     void add_vert(Vertex*);
     void add_edge(Edge*);

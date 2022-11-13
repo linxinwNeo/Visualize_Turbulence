@@ -3,7 +3,7 @@
 // constructor
 Face::Face()
 {
-    this->idx = -1;
+    this->idx = 0;
 
     // reserve memories
     this->verts.reserve(3); // a face at least has 3 verts
@@ -21,17 +21,17 @@ Face::~Face()
 }
 
 
-int Face::num_verts(){
+unsigned long Face::num_verts(){
     return this->verts.size();
 }
 
 
-int Face::num_edges(){
+unsigned long Face::num_edges(){
     return this->edges.size();
 }
 
 
-int Face::num_tets(){
+unsigned long Face::num_tets(){
     return this->tets.size();
 }
 

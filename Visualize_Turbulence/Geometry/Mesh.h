@@ -28,10 +28,10 @@ public:
     Mesh();
     ~Mesh();
 
-    int num_verts();
-    int num_edges();
-    int num_faces();
-    int num_tets();
+    unsigned long num_verts();
+    unsigned long num_edges();
+    unsigned long num_faces();
+    unsigned long num_tets();
 
     void add_vert(Vertex*);
     void add_edge(Edge*);

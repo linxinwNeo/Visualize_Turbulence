@@ -3,7 +3,7 @@
 // constructor
 Edge::Edge()
 {
-    this->idx = -1; // using -1 to indicate the obj is new
+    this->idx = 0;
 
     // reserve memories
     this->verts.reserve(2); // an edge should only have 2 verts
@@ -19,17 +19,17 @@ Edge::~Edge()
 }
 
 
-int Edge::num_verts(){
+unsigned long Edge::num_verts(){
     return this->verts.size();
 }
 
 
-int Edge::num_faces(){
+unsigned long Edge::num_faces(){
     return this->faces.size();
 }
 
 
-int Edge::num_tets(){
+unsigned long Edge::num_tets(){
     return this->tets.size();
 }
 

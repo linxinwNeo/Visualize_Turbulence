@@ -3,7 +3,7 @@
 // constructors
 Vertex::Vertex()
 {
-    this->idx = -1; // using -1 to indicate this vertex has not been assigned
+    this->idx = 0;
     this->x = 0.0;
     this->y = 0.0;
     this->z = 0.0;
@@ -12,6 +12,7 @@ Vertex::Vertex()
 
 Vertex::Vertex( double x, double y, double z )
 {
+    this->idx = 0;
     this->x = x;
     this->y = y;
     this->z = z;
@@ -27,17 +28,17 @@ Vertex::~Vertex()
 }
 
 
-int Vertex::num_edges(){
+unsigned long Vertex::num_edges(){
     return this->edges.size();
 }
 
 
-int Vertex::num_faces(){
+unsigned long Vertex::num_faces(){
     return this->faces.size();
 }
 
 
-int Vertex::num_tets(){
+unsigned long Vertex::num_tets(){
     return this->tets.size();
 }
 
@@ -55,3 +56,31 @@ void Vertex::add_face(Face* f){
 void Vertex::add_tet(Tet* tet){
     this->tets.push_back(tet);
 }
+
+
+// copy everything, shallow copy
+Vertex* Vertex::clone()
+{
+    Vertex* newVert = new Vertex(this->x, this->y, this->z);
+
+    // copy edges
+    newVert->edges.reserve( this->edges.size() );
+    for( auto & edge : this->edges  ){
+        newVert->edges.push_back( edge );
+    }
+
+    // copy faces
+    newVert->faces.reserve( this->faces.size() );
+    for( auto & face : this->faces  ){
+        newVert->faces.push_back( face );
+    }
+
+    // copy tets
+    newVert->tets.reserve( this->tets.size() );
+    for( auto & tet : this->tets  ){
+        newVert->tets.push_back( tet );
+    }
+    return newVert;
+}
+
+

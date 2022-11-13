@@ -13,7 +13,7 @@ using namespace std;
 class Edge {
 public:
     // member variables
-    int idx;
+    unsigned long  idx;
     vector<Vertex*> verts;    // an edge has two vertices
     vector<Face*> faces;    // faces that contain this edge
     vector<Tet*> tets;      // tetrahedrons that contain this edge
@@ -22,9 +22,9 @@ public:
     Edge();
     ~Edge();
 
-    int num_verts();
-    int num_faces();
-    int num_tets();
+    unsigned long num_verts();
+    unsigned long num_faces();
+    unsigned long num_tets();
 
     void add_vert(Vertex*);
     void add_face(Face*);

@@ -13,7 +13,7 @@ using namespace std;
 class Face {
 public:
     // member variables
-    int idx;
+    unsigned long idx;
     vector<Vertex*> verts;      // a face can have 3/4/5... number of vertices, depending on the element type
     vector<Edge*> edges;        // edges that made of this face, can be more than 3.
     vector<Tet*> tets;          // tets that uses this face, should be one/two only.
@@ -22,9 +22,9 @@ public:
     Face();
     ~Face();
 
-    int num_verts();
-    int num_edges();
-    int num_tets();
+    unsigned long num_verts();
+    unsigned long num_edges();
+    unsigned long num_tets();
 
     void add_vert(Vertex*);
     void add_edge(Edge*);

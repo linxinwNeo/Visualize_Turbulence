@@ -17,7 +17,9 @@ SOURCES += \
     Geometry/Vertex.cpp \
     main.cpp \
     mainwindow.cpp \
-    openglwindow.cpp
+    openglwindow.cpp \
+    point.cpp \
+    pointVector.cpp
 
 HEADERS += \
     FileLoader/ReadFile.h \
@@ -29,6 +31,8 @@ HEADERS += \
     globalVars.h \
     mainwindow.h \
     openglwindow.h \
+    point.h \
+    pointVector.h \
     predefined.h \
     utility_functions.h
 

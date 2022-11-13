@@ -4,7 +4,6 @@
 #include <vector>
 
 // forward class declarations
-class Vertex;
 class Edge;
 class Face;
 class Tet;
@@ -15,7 +14,7 @@ using namespace std;
 class Vertex {
 public:
     // public member variables
-    int idx;
+    unsigned long idx;
     double x;
     double y;
     double z;
@@ -29,13 +28,15 @@ public:
     Vertex(double, double, double);
     ~Vertex();
 
-    int num_edges();
-    int num_faces();
-    int num_tets();
+    unsigned long num_edges();
+    unsigned long num_faces();
+    unsigned long num_tets();
 
     void add_edge(Edge*);
     void add_face(Face*);
     void add_tet(Tet*);
+
+    Vertex* clone();
 };
 
 #endif // VERTEX_H

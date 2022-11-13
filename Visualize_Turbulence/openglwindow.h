@@ -10,6 +10,13 @@ class openGLWindow : public QOpenGLWidget, public QOpenGLFunctions
     Q_OBJECT
 
 public:
+    // variables
+    double s_old;
+    double t_old;
+    double last_x;
+    double last_y;
+
+    // functions
     openGLWindow(QWidget *parent);
     ~openGLWindow();
 
@@ -23,9 +30,11 @@ private:
     void mouseReleaseEvent(QMouseEvent * event) override ;
     void mouseMoveEvent(QMouseEvent * event) override ;
 
-
+    void rightButtonDown(QMouseEvent *event);
     void rightButtonUp(QMouseEvent * event);
+
     void leftButtonMoved(QMouseEvent *event);
+
     void middleButtonDown(QMouseEvent *event);
     void middleButtonMoved(QMouseEvent *event);
 
