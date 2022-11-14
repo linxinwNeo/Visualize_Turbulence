@@ -1,11 +1,11 @@
-#include "Mesh.h"
-#include <QDebug>
+#include "Geometry/Mesh.h"
 
 Mesh::Mesh()
 {
+    this->radius = 0.;
     // reserve vector memories to save time
     this->edges.reserve(10000);
-    this->faces.reserve(10000);
+    this->tris.reserve(10000);
 }
 
 
@@ -29,10 +29,10 @@ Mesh::~Mesh()
     }
 
 
-    for( i=0; i<this->num_faces(); i++ ){
-        if( this->faces[i] != NULL ){
-            delete this->faces[i];
-            this->faces[i] = NULL;
+    for( i=0; i<this->num_tris(); i++ ){
+        if( this->tris[i] != NULL ){
+            delete this->tris[i];
+            this->tris[i] = NULL;
         }
     }
 
@@ -46,7 +46,7 @@ Mesh::~Mesh()
     }
     this->verts.clear();
     this->edges.clear();
-    this->faces.clear();
+    this->tris.clear();
     this->tets.clear();
 }
 
@@ -63,9 +63,9 @@ unsigned long Mesh::num_edges()
 }
 
 
-unsigned long Mesh::num_faces()
+unsigned long Mesh::num_tris()
 {
-    return this->faces.size();
+    return this->tris.size();
 }
 
 
@@ -87,13 +87,44 @@ void Mesh::add_edge(Edge* e){
 }
 
 
-void Mesh::add_face(Face* f){
-    f->idx = this->num_faces();
-    this->faces.push_back(f);
+void Mesh::add_triangle(Triangle* tri){
+    tri->idx = this->num_tris();
+    this->tris.push_back(tri);
 }
 
 
 void Mesh::add_tet(Tet* tet){
     tet->idx = this->num_tets();
     this->tets.push_back(tet);
+}
+
+
+void Mesh::calc_Bounding_Sphere()
+{
+    unsigned long i;
+    Vector3d min, max;
+
+    for (i=0; i<verts.size(); i++) {
+        if (i==0)  {
+            min.set(verts[i]->x, verts[i]->y, verts[i]->z);
+            max.set(verts[i]->x, verts[i]->y, verts[i]->z);
+        }
+        else {
+            if (verts[i]->x < min.entry[0])
+                min.entry[0] = verts[i]->x;
+            if (verts[i]->x > max.entry[0])
+                max.entry[0] = verts[i]->x;
+            if (verts[i]->y < min.entry[1])
+                min.entry[1] = verts[i]->y;
+            if (verts[i]->y > max.entry[1])
+                max.entry[1] = verts[i]->y;
+            if (verts[i]->z < min.entry[2])
+                min.entry[2] = verts[i]->z;
+            if (verts[i]->z > max.entry[2])
+                max.entry[2] = verts[i]->z;
+        }
+    }
+    Vector3d center = (min + max) * 0.5;
+    this->radius = length(center - min);
+    this->rot_center = center * 1.0;
 }

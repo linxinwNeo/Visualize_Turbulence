@@ -48,7 +48,7 @@ void Vertex::add_edge(Edge* e){
 }
 
 
-void Vertex::add_face(Face* f){
+void Vertex::add_face(Triangle* f){
     this->faces.push_back(f);
 }
 

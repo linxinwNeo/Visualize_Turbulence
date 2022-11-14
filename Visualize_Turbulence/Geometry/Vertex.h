@@ -5,7 +5,7 @@
 
 // forward class declarations
 class Edge;
-class Face;
+class Triangle;
 class Tet;
 
 using namespace std;
@@ -20,7 +20,7 @@ public:
     double z;
 
     vector<Edge*> edges;  // edges that has this vertex.
-    vector<Face*> faces;  // Faces that has this vertex.
+    vector<Triangle*> faces;  // Faces that has this vertex.
     vector<Tet*> tets;   // Tetrahedrons that has this vertex.
 
     // public member functions
@@ -33,7 +33,7 @@ public:
     unsigned long num_tets();
 
     void add_edge(Edge*);
-    void add_face(Face*);
+    void add_face(Triangle*);
     void add_tet(Tet*);
 
     Vertex* clone();

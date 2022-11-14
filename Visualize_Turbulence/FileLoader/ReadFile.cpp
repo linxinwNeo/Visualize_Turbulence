@@ -1,7 +1,6 @@
 #include <QTextStream>
 #include <QDebug>
 #include "FileLoader/ReadFile.h"
-#include "utility_functions.h"
 
 
 ReadFile::ReadFile()
@@ -30,6 +29,8 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
 
     this->ReadMeshFile(this->meshPath); // read Mesh file first
     this->ReadDataFile(this->dataPath);
+
+    this->mesh->calc_Bounding_Sphere();
 }
 
 

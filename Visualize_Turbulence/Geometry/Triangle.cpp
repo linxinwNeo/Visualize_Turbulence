@@ -1,7 +1,7 @@
-#include "Face.h"
+#include "Triangle.h"
 
 // constructor
-Face::Face()
+Triangle::Triangle()
 {
     this->idx = 0;
 
@@ -13,7 +13,7 @@ Face::Face()
 
 
 // desctructor
-Face::~Face()
+Triangle::~Triangle()
 {
     this->verts.clear();
     this->edges.clear();
@@ -21,32 +21,32 @@ Face::~Face()
 }
 
 
-unsigned long Face::num_verts(){
+unsigned long Triangle::num_verts(){
     return this->verts.size();
 }
 
 
-unsigned long Face::num_edges(){
+unsigned long Triangle::num_edges(){
     return this->edges.size();
 }
 
 
-unsigned long Face::num_tets(){
+unsigned long Triangle::num_tets(){
     return this->tets.size();
 }
 
 
-void Face::add_vert(Vertex* v){
+void Triangle::add_vert(Vertex* v){
     this->verts.push_back(v);
 }
 
 
-void Face::add_edge(Edge* e){
+void Triangle::add_edge(Edge* e){
     this->edges.push_back(e);
 }
 
 
-void Face::add_tets(Tet* tet){
+void Triangle::add_tets(Tet* tet){
     this->tets.push_back(tet);
 }
 

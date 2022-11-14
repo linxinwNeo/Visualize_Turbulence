@@ -11,10 +11,11 @@ CONFIG += c++17
 SOURCES += \
     FileLoader/ReadFile.cpp \
     Geometry/Edge.cpp \
-    Geometry/Face.cpp \
     Geometry/Mesh.cpp \
     Geometry/Tet.cpp \
+    Geometry/Triangle.cpp \
     Geometry/Vertex.cpp \
+    TraceBall.cpp \
     main.cpp \
     mainwindow.cpp \
     openglwindow.cpp \
@@ -24,10 +25,12 @@ SOURCES += \
 HEADERS += \
     FileLoader/ReadFile.h \
     Geometry/Edge.h \
-    Geometry/Face.h \
     Geometry/Mesh.h \
     Geometry/Tet.h \
+    Geometry/Triangle.h \
+    Geometry/Vector3d.h \
     Geometry/Vertex.h \
+    TraceBall.h \
     globalVars.h \
     mainwindow.h \
     openglwindow.h \
