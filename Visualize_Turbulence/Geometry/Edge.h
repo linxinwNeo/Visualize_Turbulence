@@ -6,7 +6,7 @@
 // forward class declarations
 class Vertex;
 class Tet;
-class Face;
+class Triangle;
 
 using namespace std;
 
@@ -15,7 +15,7 @@ public:
     // member variables
     unsigned long  idx;
     vector<Vertex*> verts;    // an edge has two vertices
-    vector<Face*> faces;    // faces that contain this edge
+    vector<Triangle*> tris;    // faces that contain this edge
     vector<Tet*> tets;      // tetrahedrons that contain this edge
 
     // member functions
@@ -23,11 +23,11 @@ public:
     ~Edge();
 
     unsigned long num_verts();
-    unsigned long num_faces();
+    unsigned long num_tris();
     unsigned long num_tets();
 
     void add_vert(Vertex*);
-    void add_face(Face*);
+    void add_triangle(Triangle*);
     void add_tet(Tet*);
 };
 

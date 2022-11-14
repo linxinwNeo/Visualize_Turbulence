@@ -18,4 +18,9 @@ Mesh* mesh = NULL;
 const QString meshFilePath = "/Users/linxinw/Desktop/mesh.txt";
 const QString dataFilePath = "/Users/linxinw/Desktop/data.txt";
 
+// boolean variables used to enable orbit control
+bool LeftButtonDown = false;
+bool MiddleButtonDown = false;
+bool RightButtonDown = false;
+
 #endif // GLOBALVARS_H

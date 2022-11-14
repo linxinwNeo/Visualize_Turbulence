@@ -8,7 +8,7 @@ Tet::Tet()
     // reserve memories
     this->verts.reserve(4); // a tet can only have exact 4 vertices
     this->edges.reserve(4); // a tet can only have exact 4 edges
-    this->faces.reserve(4); // a tet can only have exact 4 faces
+    this->tris.reserve(4); // a tet can only have exact 4 faces
     this->tets.reserve(4);  // a tet can only have 4 neighbor tets
 }
 
@@ -16,27 +16,27 @@ Tet::~Tet()
 {
     this->verts.clear();
     this->edges.clear();
-    this->faces.clear();
+    this->tris.clear();
     this->tets.clear();
 }
 
 
-int Tet::num_verts(){
+unsigned long Tet::num_verts(){
     return this->verts.size();
 }
 
 
-int Tet::num_edges(){
+unsigned long Tet::num_edges(){
     return this->edges.size();
 }
 
 
-int Tet::num_faces(){
-    return this->faces.size();
+unsigned long Tet::num_tris(){
+    return this->tris.size();
 }
 
 
-int Tet::num_tets(){
+unsigned long Tet::num_tets(){
     return this->tets.size();
 }
 
@@ -51,8 +51,8 @@ void Tet::add_edge(Edge* e){
 }
 
 
-void Tet::add_face(Face* f){
-    this->faces.push_back(f);
+void Tet::add_triangle(Triangle* f){
+    this->tris.push_back(f);
 }
 
 

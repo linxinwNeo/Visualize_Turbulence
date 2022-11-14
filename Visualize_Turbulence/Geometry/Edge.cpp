@@ -14,7 +14,7 @@ Edge::Edge()
 Edge::~Edge()
 {
     this->verts.clear();
-    this->faces.clear();
+    this->tris.clear();
     this->tets.clear();
 }
 
@@ -24,8 +24,8 @@ unsigned long Edge::num_verts(){
 }
 
 
-unsigned long Edge::num_faces(){
-    return this->faces.size();
+unsigned long Edge::num_tris(){
+    return this->tris.size();
 }
 
 
@@ -39,8 +39,8 @@ void Edge::add_vert(Vertex* v){
 }
 
 
-void Edge::add_face(Face* f){
-    this->faces.push_back(f);
+void Edge::add_triangle(Triangle* f){
+    this->tris.push_back(f);
 }
 
 

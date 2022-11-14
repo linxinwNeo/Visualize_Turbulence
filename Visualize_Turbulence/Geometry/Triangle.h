@@ -1,5 +1,5 @@
-#ifndef FACE_H
-#define FACE_H
+#ifndef TRIANGLE_H
+#define TRIANGLE_H
 
 #include <vector>
 
@@ -10,7 +10,7 @@ class Edge;
 
 using namespace std;
 
-class Face {
+class Triangle {
 public:
     // member variables
     unsigned long idx;
@@ -19,8 +19,8 @@ public:
     vector<Tet*> tets;          // tets that uses this face, should be one/two only.
 
     // member functions
-    Face();
-    ~Face();
+    Triangle();
+    ~Triangle();
 
     unsigned long num_verts();
     unsigned long num_edges();
@@ -31,4 +31,4 @@ public:
     void add_tets(Tet*);
 };
 
-#endif // FACE_H
+#endif // TRIANGLE_H
