@@ -1,9 +1,11 @@
 #define GL_SILENCE_DEPRECATION
 #include <QMouseEvent>
+#include <QSurfaceFormat>
 #include "openglwindow.h"
 #include "Geometry/Mesh.h"
 #include "Others/Predefined.h"
 #include "Others/Utility_functions.h"
+
 
 extern Mesh* mesh;
 extern bool LeftButtonDown;
@@ -26,6 +28,14 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     for(int i = 0; i < 16; i++)
         this->ObjXmat[i]=0.;
     this->ObjXmat[0] = this->ObjXmat[5] = this->ObjXmat[10] = this->ObjXmat[15] = 1;
+
+    // set up format
+    QSurfaceFormat fmt;
+    fmt.setRenderableType(QSurfaceFormat::OpenGL);
+    fmt.setProfile(QSurfaceFormat::CoreProfile);
+    fmt.setSamples(32);
+    QSurfaceFormat::setDefaultFormat(fmt);
+    this->setFormat(fmt);
 }
 
 
@@ -83,18 +93,41 @@ void openGLWindow::multmatrix(const Matrix m) const
 }
 
 
-void openGLWindow::initializeGL(){
+// reset all the modelView transformation variables
+void openGLWindow::reset_scene()
+{
+    this->trans_x = this->trans_y = 0.;
+    this->zoom_factor = 1.;
+
+    // init matrices
+    this->mat_ident( this->rotmat );
+
+    for(int i = 0; i < 16; i++)
+        this->ObjXmat[i]=0.;
+    this->ObjXmat[0] = this->ObjXmat[5] = this->ObjXmat[10] = this->ObjXmat[15] = 1;
+
+    this->update();
+}
+
+
+void openGLWindow::initializeGL()
+{
     this->initializeOpenGLFunctions();
     if( mesh == NULL ) return;
     this->rot_center = mesh->rot_center; //set the rotation center!
+
+    glEnable(GL_MULTISAMPLE_ARB);
+
 }
 
 void openGLWindow::paintGL()
 {
     if( mesh == NULL ) return;
 
-
     glMatrixMode(GL_PROJECTION);
+    glEnable(GL_DEPTH_TEST);
+
+    glLineWidth(3);
     glPushMatrix();
     glLoadIdentity();
     glOrtho(-1.5, 1.5, -1, 1., -1000.0, 4000.0);
@@ -104,18 +137,22 @@ void openGLWindow::paintGL()
     glPushMatrix();
     glLoadIdentity();
     this->set_scene();
-    glClearColor (1.0, 1.0, 1.0, 1.0);  // background for rendering color coding and lighting
+    glClearColor (0.7, 0.7, 0.7, 1.0);  // background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glColor3f(0, 0, 1.);
 
+    // fixing z-fighting
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0, 1.0);
+    glDepthFunc(GL_LESS);
+
+    glColor3f(0, 0, 1.);
+    glBegin(GL_TRIANGLES);
     for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
         Tet* tet = mesh->tets[i];
         Vertex* v1 = tet->verts[0];
         Vertex* v2 = tet->verts[1];
         Vertex* v3 = tet->verts[2];
         Vertex* v4 = tet->verts[3];
-
-        glBegin(GL_TRIANGLES);
             // face 1
             glVertex3f(v1->x(), v1->y(), v1->z());
             glVertex3f(v2->x(), v2->y(), v2->z());
@@ -135,10 +172,14 @@ void openGLWindow::paintGL()
             glVertex3f(v2->x(), v2->y(), v2->z());
             glVertex3f(v3->x(), v3->y(), v3->z());
             glVertex3f(v4->x(), v4->y(), v4->z());
-        glEnd();
     }
+    glEnd();
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
+
+    glDepthFunc(GL_LEQUAL);
     glColor3f(0., 0., 0.);
+
     glBegin(GL_LINES);
     for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
         Tet* tet = mesh->tets[i];
@@ -147,7 +188,6 @@ void openGLWindow::paintGL()
         Vertex* v3 = tet->verts[2];
         Vertex* v4 = tet->verts[3];
 
-         // edge 1
         glVertex3f(v1->x(), v1->y(), v1->z());
         glVertex3f(v2->x(), v2->y(), v2->z());
 
@@ -160,12 +200,14 @@ void openGLWindow::paintGL()
         glVertex3f(v2->x(), v2->y(), v2->z());
         glVertex3f(v3->x(), v3->y(), v3->z());
 
-        glVertex3f(v3->x(), v3->y(), v3->z());
+        glVertex3f(v2->x(), v2->y(), v2->z());
         glVertex3f(v4->x(), v4->y(), v4->z());
 
+        glVertex3f(v3->x(), v3->y(), v3->z());
+        glVertex3f(v4->x(), v4->y(), v4->z());
     }
     glEnd();
-
+    glDisable(GL_DEPTH_TEST);
     glPopMatrix();
 
     glMatrixMode(GL_PROJECTION);

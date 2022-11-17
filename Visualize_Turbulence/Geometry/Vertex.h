@@ -2,8 +2,8 @@
 #define VERTEX_H
 
 #include <vector>
-#include "Geometry/Point.h"
-#include "Geometry/Vector3d.h"
+#include "Others/Point.h"
+#include "Others/Vector3d.h"
 
 // forward class declarations
 class Edge;

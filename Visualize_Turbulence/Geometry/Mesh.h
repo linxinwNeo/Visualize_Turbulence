@@ -8,7 +8,7 @@
 #include "Geometry/Edge.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Tet.h"
-#include "Geometry/Vector3d.h"
+#include "Others/Vector3d.h"
 
 using namespace std;
 

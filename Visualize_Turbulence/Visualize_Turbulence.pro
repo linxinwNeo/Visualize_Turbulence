@@ -1,4 +1,4 @@
-QT       += core gui openglwidgets
+QT       += core gui openglwidgets opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,11 +12,10 @@ SOURCES += \
     FileLoader/ReadFile.cpp \
     Geometry/Edge.cpp \
     Geometry/Mesh.cpp \
-    Geometry/Point.cpp \
-    Geometry/PointVector.cpp \
     Geometry/Tet.cpp \
     Geometry/Triangle.cpp \
     Geometry/Vertex.cpp \
+    Others/PointVector.cpp \
     Others/TraceBall.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -26,16 +25,19 @@ HEADERS += \
     FileLoader/ReadFile.h \
     Geometry/Edge.h \
     Geometry/Mesh.h \
-    Geometry/Point.h \
-    Geometry/PointVector.h \
     Geometry/Tet.h \
     Geometry/Triangle.h \
-    Geometry/Vector3d.h \
     Geometry/Vertex.h \
     Others/GlobalVars.h \
+    Others/Matrix2x2.h \
+    Others/Matrix3x3.h \
+    Others/Point.h \
+    Others/PointVector.h \
     Others/Predefined.h \
     Others/TraceBall.h \
     Others/Utility_functions.h \
+    Others/Vector2d.h \
+    Others/Vector3d.h \
     mainwindow.h \
     openglwindow.h
 
