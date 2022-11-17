@@ -2,7 +2,7 @@
 
 #include <QApplication>
 
-#include "globalVars.h"
+#include "Others/GlobalVars.h"
 
 extern ReadFile* file;
 extern Mesh* mesh;

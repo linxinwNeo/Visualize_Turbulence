@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Geometry/Point.h"
+#include "Geometry/Vector3d.h"
 
 // forward class declarations
 class Edge;
@@ -17,6 +18,8 @@ public:
     // public member variables
     unsigned long idx;
     Point cords;
+    Vector3d v; // velocity vector
+
 
     vector<Edge*> edges;  // edges that has this vertex.
     vector<Triangle*> faces;  // Faces that has this vertex.
@@ -24,9 +27,13 @@ public:
 
     // public member functions
     inline Vertex();
-    inline Vertex(const double, const double, const double);
-    inline Vertex(const Point p);
-    inline Vertex(Point* p);
+    inline Vertex( const double, const double, const double, const double, const double, const double );
+    inline Vertex( const Point );
+    inline Vertex( const Point* );
+    inline Vertex( const Vector3d );
+    inline Vertex( const Vector3d* );
+    inline Vertex( const Point, const Vector3d );
+    inline Vertex( const Point*, const Vector3d* );
     inline ~Vertex();
 
     inline unsigned long num_edges() const;
@@ -40,6 +47,7 @@ public:
     Vertex* clone() const;
 
     inline void set_cords(const double, const double, const double);
+    inline void set_v(const double, const double, const double);
     inline double x() const;
     inline double y() const;
     inline double z() const;
@@ -53,10 +61,11 @@ inline Vertex::Vertex()
 }
 
 
-inline Vertex::Vertex( const double x, const double y, const double z )
+inline Vertex::Vertex( const double x, const double y, const double z,  const double vx = 0, const double vy = 0, const double vz = 0)
 {
     this->idx = 0;
     this->cords.set_xyz(x,y,z);
+    this->set_v(vx, vy, vz);
 }
 
 
@@ -66,9 +75,35 @@ inline Vertex::Vertex( const Point p )
 }
 
 
-inline Vertex::Vertex( Point* p )
+inline Vertex::Vertex( const Point* p )
 {
     this->cords.set_xyz(p->x, p->y, p->z);
+}
+
+
+inline Vertex::Vertex( const Vector3d vect )
+{
+    this->v = vect;
+}
+
+
+inline Vertex::Vertex( const Vector3d* vect )
+{
+    this->v.set(vect->entry[0], vect->entry[1], vect->entry[2]);
+}
+
+
+inline Vertex::Vertex( const Point p, const Vector3d vect )
+{
+    this->cords = p;
+    this->v = vect;
+}
+
+
+inline Vertex::Vertex( const Point* p, const Vector3d* vect )
+{
+    this->cords.set_xyz(p->x, p->y, p->z);
+    this->v.set(vect->entry[0], vect->entry[1], vect->entry[2]);
 }
 
 
@@ -117,6 +152,12 @@ inline void Vertex::add_tet(Tet* tet){
 inline void Vertex::set_cords(const double x, const double y, const double z)
 {
     this->cords.set_xyz(x, y, z);
+}
+
+
+inline void Vertex::set_v(const double vx, const double vy, const double vz)
+{
+    this->v.set(vx, vy, vz);
 }
 
 

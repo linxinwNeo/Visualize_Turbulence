@@ -12,7 +12,6 @@ extern bool RightButtonDown;
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
-    qInfo() << "openGLWindow Default Constructor has finished";
     this->s_old = 0.;
     this->t_old = 0.;
     this->last_x = 0.;
@@ -30,8 +29,9 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 }
 
 
-openGLWindow::~openGLWindow() {
-    qInfo() << "openGLWindow Destructor called";
+openGLWindow::~openGLWindow()
+{
+    return;
 }
 
 void openGLWindow::mat_ident(Matrix m) const

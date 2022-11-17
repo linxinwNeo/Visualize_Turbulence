@@ -1,7 +1,7 @@
 #include "Geometry/Vertex.h"
 
 // copy everything, shallow copy
-Vertex* Vertex::clone()
+Vertex* Vertex::clone() const
 {
     Vertex* newVert = new Vertex(this->cords);
 
