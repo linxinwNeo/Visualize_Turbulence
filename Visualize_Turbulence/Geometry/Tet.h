@@ -23,15 +23,60 @@ public:
     Tet();
     ~Tet();
 
-    unsigned long num_verts();
-    unsigned long num_edges();
-    unsigned long num_tris();
-    unsigned long num_tets();
+    inline unsigned long num_verts() const;
+    inline unsigned long num_edges() const;
+    inline unsigned long num_tris() const;
+    inline unsigned long num_tets() const;
 
-    void add_vert(Vertex*);
-    void add_edge(Edge*);
-    void add_triangle(Triangle*);
-    void add_tet(Tet*);
+    inline void add_vert(Vertex*);
+    inline void add_edge(Edge*);
+    inline void add_triangle(Triangle*);
+    inline void add_tet(Tet*);
 };
+
+
+inline unsigned long Tet::num_verts() const
+{
+    return this->verts.size();
+}
+
+
+inline unsigned long Tet::num_edges() const
+{
+    return this->edges.size();
+}
+
+
+inline unsigned long Tet::num_tris() const
+{
+    return this->tris.size();
+}
+
+
+inline unsigned long Tet::num_tets() const
+{
+    return this->tets.size();
+}
+
+
+inline void Tet::add_vert(Vertex* v){
+    this->verts.push_back(v);
+}
+
+
+inline void Tet::add_edge(Edge* e){
+    this->edges.push_back(e);
+}
+
+
+inline void Tet::add_triangle(Triangle* f){
+    this->tris.push_back(f);
+}
+
+
+inline void Tet::add_tet(Tet* tet){
+    this->tets.push_back(tet);
+}
+
 
 #endif // TET_H

@@ -19,16 +19,69 @@ public:
     vector<Tet*> tets;      // tetrahedrons that contain this edge
 
     // member functions
-    Edge();
-    ~Edge();
+    inline Edge();
+    inline ~Edge();
 
-    unsigned long num_verts();
-    unsigned long num_tris();
-    unsigned long num_tets();
+    inline unsigned long num_verts() const;
+    inline unsigned long num_tris() const;
+    inline unsigned long num_tets() const;
 
-    void add_vert(Vertex*);
-    void add_triangle(Triangle*);
-    void add_tet(Tet*);
+    inline void add_vert(Vertex*);
+    inline void add_triangle(Triangle*);
+    inline void add_tet(Tet*);
 };
+
+
+// constructor
+inline Edge::Edge()
+{
+    this->idx = 0;
+
+    // reserve memories
+    this->verts.reserve(2); // an edge should only have 2 verts
+}
+
+
+// destructor
+inline Edge::~Edge()
+{
+    this->verts.clear();
+    this->tris.clear();
+    this->tets.clear();
+}
+
+
+inline unsigned long Edge::num_verts() const
+{
+    return this->verts.size();
+}
+
+
+inline unsigned long Edge::num_tris() const
+{
+    return this->tris.size();
+}
+
+
+inline unsigned long Edge::num_tets() const
+{
+    return this->tets.size();
+}
+
+
+inline void Edge::add_vert(Vertex* v){
+    this->verts.push_back(v);
+}
+
+
+inline void Edge::add_triangle(Triangle* f){
+    this->tris.push_back(f);
+}
+
+
+inline void Edge::add_tet(Tet* tet){
+    this->tets.push_back(tet);
+}
+
 
 #endif // EDGE_H

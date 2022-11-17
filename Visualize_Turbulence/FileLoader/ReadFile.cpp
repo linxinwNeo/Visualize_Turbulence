@@ -1,7 +1,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include "FileLoader/ReadFile.h"
-
+#include "Others/Utility_functions.h"
 
 ReadFile::ReadFile()
 {
@@ -42,7 +42,7 @@ ReadFile::~ReadFile()
 }
 
 
-void ReadFile::ReadMeshFile(QString f){
+void ReadFile::ReadMeshFile(const QString f){
     /*we read the mesh file following this pattern:
         1. reading # of nodes
             "% Nodes:              4238"
@@ -158,7 +158,7 @@ void ReadFile::ReadDataFile(QString f){
         // check if data File has the same number of nodes
         if( line.contains( "% Nodes:" ) ){
             QStringList strings = line.split(" ", Qt::SkipEmptyParts);
-            int num_nodes = strings[ strings.size() - 1 ].toInt();
+            unsigned long num_nodes = strings[ strings.size() - 1 ].toInt();
             if( num_nodes != this->mesh->num_verts() ){
                 throwErrorMessage( "ReadFile::ReadDataFile(QString f): the # of nodes for the data file and the mesh file are different" ); return;
             }

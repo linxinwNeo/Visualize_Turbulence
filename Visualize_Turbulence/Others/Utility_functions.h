@@ -4,7 +4,7 @@
 #include <QString>
 #include <QMessageBox>
 
-inline void throwErrorMessage( QString message ){
+inline void throwErrorMessage( const QString message ){
     QMessageBox messageBox;
     messageBox.critical(0, "Error", message);
     messageBox.setFixedSize(500,200);
@@ -13,11 +13,11 @@ inline void throwErrorMessage( QString message ){
 
 
 inline void ScreenToSecondWin(
-        int px, int py,
-        int screen_leftx, int screen_bottomy,
-        int win_screen_sizex, int win_screen_sizey,
-        double world_leftx, double world_bottomy,
-        double win_world_sizex, double win_world_sizey,
+        const int px, const int py,
+        const int screen_leftx, const int screen_bottomy,
+        const int win_screen_sizex, const int win_screen_sizey,
+        const double world_leftx, const double world_bottomy,
+        const double win_world_sizex, const double win_world_sizey,
         double &s, double &t
 )
 {

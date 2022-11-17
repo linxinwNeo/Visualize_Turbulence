@@ -1,9 +1,6 @@
-#include "pointVector.h"
+#include "PointVector.h"
 
-PointVector::PointVector()
-{
 
-}
 
 
 PointVector::~PointVector()
@@ -15,20 +12,7 @@ PointVector::~PointVector()
 }
 
 
-void PointVector::add_pt(Point* pt)
-{
-    this->pts.push_back(pt);
-}
-
-
-void PointVector::add_pt(double x, double y, double z)
-{
-    Point* newPt = new Point(x, y, z);
-    this->add_pt(newPt);
-}
-
-
-bool PointVector::remove_pt_at_idx(unsigned long idx)
+bool PointVector::remove_pt_at_idx(const unsigned long idx)
 {
     // checking if the pt exists
     if( idx < 0 || idx >= this->pts.size() ){
@@ -41,7 +25,7 @@ bool PointVector::remove_pt_at_idx(unsigned long idx)
 
 
 // deep copy
-PointVector *PointVector::clone()
+PointVector *PointVector::clone() const
 {
     PointVector* newPV = new PointVector();
     // reserve space

@@ -4,7 +4,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 
-#include "TraceBall.h"
+#include "Others/TraceBall.h"
 #include "Geometry/Vector3d.h"
 
 class openGLWindow : public QOpenGLWidget, public QOpenGLFunctions
@@ -32,9 +32,9 @@ public:
     // functions
     openGLWindow(QWidget *parent);
     ~openGLWindow();
-    void mat_ident( Matrix m );
-    void set_scene();
-    void multmatrix( const Matrix );
+    void mat_ident( Matrix m ) const;
+    void set_scene() const;
+    void multmatrix( const Matrix ) const;
 
 protected:
     void  initializeGL() override;
@@ -42,22 +42,23 @@ protected:
     //void	resizeGL(int w, int h) override;
 
 private:
+    // mouse events
     void mousePressEvent(QMouseEvent * event) override ;
     void mouseReleaseEvent(QMouseEvent * event) override ;
     void mouseMoveEvent(QMouseEvent * event) override ;
     void wheelEvent(QWheelEvent * event) override;
 
-    void leftButtonDown(QMouseEvent *event);
-    void leftButtonMoved(QMouseEvent *event);
-    void leftButtonUp(QMouseEvent * event);
+    void leftButtonDown(const QMouseEvent *event);
+    void leftButtonMoved(const QMouseEvent *event);
+    void leftButtonUp(const QMouseEvent * event);
 
-    void middleButtonDown(QMouseEvent *event);
-    void middleButtonMoved(QMouseEvent *event);
-    void middleButtonUp(QMouseEvent *event);
+    void middleButtonDown(const QMouseEvent *event);
+    void middleButtonMoved(const QMouseEvent *event);
+    void middleButtonUp(const QMouseEvent *event);
 
-    void rightButtonDown(QMouseEvent *event);
-    void rightButtonMoved(QMouseEvent * event);
-    void rightButtonUp(QMouseEvent * event);
+    void rightButtonDown(const QMouseEvent *event);
+    void rightButtonMoved(const QMouseEvent * event);
+    void rightButtonUp(const QMouseEvent * event);
 };
 
 #endif // OPENGLWINDOW_H

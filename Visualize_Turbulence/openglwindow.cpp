@@ -2,6 +2,8 @@
 #include <QMouseEvent>
 #include "openglwindow.h"
 #include "Geometry/Mesh.h"
+#include "Others/Predefined.h"
+#include "Others/Utility_functions.h"
 
 extern Mesh* mesh;
 extern bool LeftButtonDown;
@@ -32,7 +34,7 @@ openGLWindow::~openGLWindow() {
     qInfo() << "openGLWindow Destructor called";
 }
 
-void openGLWindow::mat_ident(Matrix m)
+void openGLWindow::mat_ident(Matrix m) const
 {
     int i;
 
@@ -46,7 +48,7 @@ void openGLWindow::mat_ident(Matrix m)
 }
 
 
-void openGLWindow::set_scene()
+void openGLWindow::set_scene() const
 {
     // translate the scene
     glTranslatef(trans_x, trans_y, 0);
@@ -67,7 +69,7 @@ void openGLWindow::set_scene()
 }
 
 
-void openGLWindow::multmatrix(const Matrix m)
+void openGLWindow::multmatrix(const Matrix m) const
 {
     int i, j, index = 0;
 
@@ -115,24 +117,24 @@ void openGLWindow::paintGL()
 
         glBegin(GL_TRIANGLES);
             // face 1
-            glVertex3f(v1->x, v1->y, v1->z);
-            glVertex3f(v2->x, v2->y, v2->z);
-            glVertex3f(v3->x, v3->y, v3->z);
+            glVertex3f(v1->x(), v1->y(), v1->z());
+            glVertex3f(v2->x(), v2->y(), v2->z());
+            glVertex3f(v3->x(), v3->y(), v3->z());
 
             // face 2
-            glVertex3f(v1->x, v1->y, v1->z);
-            glVertex3f(v2->x, v2->y, v2->z);
-            glVertex3f(v4->x, v4->y, v4->z);
+            glVertex3f(v1->x(), v1->y(), v1->z());
+            glVertex3f(v2->x(), v2->y(), v2->z());
+            glVertex3f(v4->x(), v4->y(), v4->z());
 
             // face 3
-            glVertex3f(v1->x, v1->y, v1->z);
-            glVertex3f(v3->x, v3->y, v3->z);
-            glVertex3f(v4->x, v4->y, v4->z);
+            glVertex3f(v1->x(), v1->y(), v1->z());
+            glVertex3f(v3->x(), v3->y(), v3->z());
+            glVertex3f(v4->x(), v4->y(), v4->z());
 
             // face 4
-            glVertex3f(v2->x, v2->y, v2->z);
-            glVertex3f(v3->x, v3->y, v3->z);
-            glVertex3f(v4->x, v4->y, v4->z);
+            glVertex3f(v2->x(), v2->y(), v2->z());
+            glVertex3f(v3->x(), v3->y(), v3->z());
+            glVertex3f(v4->x(), v4->y(), v4->z());
         glEnd();
     }
 
@@ -146,20 +148,20 @@ void openGLWindow::paintGL()
         Vertex* v4 = tet->verts[3];
 
          // edge 1
-        glVertex3f(v1->x, v1->y, v1->z);
-        glVertex3f(v2->x, v2->y, v2->z);
+        glVertex3f(v1->x(), v1->y(), v1->z());
+        glVertex3f(v2->x(), v2->y(), v2->z());
 
-        glVertex3f(v1->x, v1->y, v1->z);
-        glVertex3f(v3->x, v3->y, v3->z);
+        glVertex3f(v1->x(), v1->y(), v1->z());
+        glVertex3f(v3->x(), v3->y(), v3->z());
 
-        glVertex3f(v1->x, v1->y, v1->z);
-        glVertex3f(v4->x, v4->y, v4->z);
+        glVertex3f(v1->x(), v1->y(), v1->z());
+        glVertex3f(v4->x(), v4->y(), v4->z());
 
-        glVertex3f(v2->x, v2->y, v2->z);
-        glVertex3f(v3->x, v3->y, v3->z);
+        glVertex3f(v2->x(), v2->y(), v2->z());
+        glVertex3f(v3->x(), v3->y(), v3->z());
 
-        glVertex3f(v3->x, v3->y, v3->z);
-        glVertex3f(v4->x, v4->y, v4->z);
+        glVertex3f(v3->x(), v3->y(), v3->z());
+        glVertex3f(v4->x(), v4->y(), v4->z());
 
     }
     glEnd();
@@ -237,7 +239,7 @@ void openGLWindow::wheelEvent(QWheelEvent *event)
     this->update();
 }
 
-void openGLWindow::leftButtonDown(QMouseEvent *event)
+void openGLWindow::leftButtonDown(const QMouseEvent *event)
 {
     LeftButtonDown = true;
     QPointF p = event->pos();
@@ -251,7 +253,7 @@ void openGLWindow::leftButtonDown(QMouseEvent *event)
 }
 
 
-void openGLWindow::leftButtonMoved(QMouseEvent *event)
+void openGLWindow::leftButtonMoved(const QMouseEvent *event)
 {
     float r[4];
     QPointF p = event->pos();
@@ -270,32 +272,34 @@ void openGLWindow::leftButtonMoved(QMouseEvent *event)
 }
 
 
-void openGLWindow::leftButtonUp(QMouseEvent *event)
+void openGLWindow::leftButtonUp(const QMouseEvent *event)
 {
     LeftButtonDown = false;
-
+    return;
 }
 
 
-void openGLWindow::middleButtonDown(QMouseEvent *event)
+void openGLWindow::middleButtonDown(const QMouseEvent *event)
 {
     MiddleButtonDown = true;
-
+    return;
 }
 
 
-void openGLWindow::middleButtonMoved(QMouseEvent *event)
+void openGLWindow::middleButtonMoved(const QMouseEvent *event)
 {
+    return;
 }
 
 
-void openGLWindow::middleButtonUp(QMouseEvent *event)
+void openGLWindow::middleButtonUp(const QMouseEvent *event)
 {
     MiddleButtonDown = false;
+    return;
 }
 
 
-void openGLWindow::rightButtonDown(QMouseEvent *event)
+void openGLWindow::rightButtonDown(const QMouseEvent *event)
 {
     RightButtonDown = true;
     double s, t;
@@ -314,7 +318,7 @@ void openGLWindow::rightButtonDown(QMouseEvent *event)
 }
 
 
-void openGLWindow::rightButtonMoved(QMouseEvent *event)
+void openGLWindow::rightButtonMoved(const QMouseEvent *event)
 {
     double s, t;
     double position [3];
@@ -346,7 +350,7 @@ void openGLWindow::rightButtonMoved(QMouseEvent *event)
 }
 
 
-void openGLWindow::rightButtonUp(QMouseEvent *event)
+void openGLWindow::rightButtonUp(const QMouseEvent *event)
 {
     RightButtonDown = false;
 }

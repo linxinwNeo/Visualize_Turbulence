@@ -12,32 +12,32 @@ SOURCES += \
     FileLoader/ReadFile.cpp \
     Geometry/Edge.cpp \
     Geometry/Mesh.cpp \
+    Geometry/Point.cpp \
+    Geometry/PointVector.cpp \
     Geometry/Tet.cpp \
     Geometry/Triangle.cpp \
     Geometry/Vertex.cpp \
-    TraceBall.cpp \
+    Others/TraceBall.cpp \
     main.cpp \
     mainwindow.cpp \
-    openglwindow.cpp \
-    point.cpp \
-    pointVector.cpp
+    openglwindow.cpp
 
 HEADERS += \
     FileLoader/ReadFile.h \
     Geometry/Edge.h \
     Geometry/Mesh.h \
+    Geometry/Point.h \
+    Geometry/PointVector.h \
     Geometry/Tet.h \
     Geometry/Triangle.h \
     Geometry/Vector3d.h \
     Geometry/Vertex.h \
-    TraceBall.h \
-    globalVars.h \
+    Others/GlobalVars.h \
+    Others/Predefined.h \
+    Others/TraceBall.h \
+    Others/Utility_functions.h \
     mainwindow.h \
-    openglwindow.h \
-    point.h \
-    pointVector.h \
-    predefined.h \
-    utility_functions.h
+    openglwindow.h
 
 FORMS += \
     mainwindow.ui

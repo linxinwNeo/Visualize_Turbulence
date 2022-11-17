@@ -22,13 +22,47 @@ public:
     Triangle();
     ~Triangle();
 
-    unsigned long num_verts();
-    unsigned long num_edges();
-    unsigned long num_tets();
+    inline unsigned long num_verts() const;
+    inline unsigned long num_edges() const;
+    inline unsigned long num_tets() const;
 
-    void add_vert(Vertex*);
-    void add_edge(Edge*);
-    void add_tets(Tet*);
+    inline void add_vert(Vertex*);
+    inline void add_edge(Edge*);
+    inline void add_tets(Tet*);
 };
+
+
+inline unsigned long Triangle::num_verts() const
+{
+    return this->verts.size();
+}
+
+
+inline unsigned long Triangle::num_edges() const
+{
+    return this->edges.size();
+}
+
+
+inline unsigned long Triangle::num_tets() const
+{
+    return this->tets.size();
+}
+
+
+inline void Triangle::add_vert(Vertex* v){
+    this->verts.push_back(v);
+}
+
+
+inline void Triangle::add_edge(Edge* e){
+    this->edges.push_back(e);
+}
+
+
+inline void Triangle::add_tets(Tet* tet){
+    this->tets.push_back(tet);
+}
+
 
 #endif // TRIANGLE_H

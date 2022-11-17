@@ -9,8 +9,8 @@ public:
     double entry[3];
 
     inline Vector3d();
-    inline Vector3d(double d);
-    inline Vector3d(double d0,double d1,double d2);
+    inline Vector3d(const double d);
+    inline Vector3d(const double d0,const double d1,const double d2);
 
     inline Vector3d(const Vector3d &a);
     inline Vector3d(const double    *a);
@@ -72,12 +72,12 @@ inline Vector3d::Vector3d() {
 }
 
 
-inline Vector3d::Vector3d(double d) {
+inline Vector3d::Vector3d(const double d) {
     entry[0] = entry[1] = entry[2] = d;
 }
 
 
-inline Vector3d::Vector3d(double d0,double d1,double d2) {
+inline Vector3d::Vector3d(const double d0,const double d1, const double d2) {
     entry[0] = d0;
     entry[1] = d1;
     entry[2] = d2;
