@@ -2,7 +2,7 @@
 #define POINTVECTOR_H
 
 #include <vector>
-#include "Geometry/Point.h"
+#include "Others/Point.h"
 
 class PointVector
 {

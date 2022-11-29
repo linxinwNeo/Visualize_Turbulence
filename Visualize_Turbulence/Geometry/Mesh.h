@@ -10,7 +10,9 @@
 #include "Geometry/Tet.h"
 #include "Others/Vector3d.h"
 
+
 using namespace std;
+
 
 class Mesh {
 public:
@@ -21,6 +23,8 @@ public:
     vector<Tet*> tets;
     Vector3d rot_center;
     double radius;
+    unsigned int num_time_steps;
+
     // member functions
     Mesh();
     ~Mesh();
@@ -36,6 +40,10 @@ public:
     inline void add_tet(Tet*);
 
     void calc_Bounding_Sphere();
+    void build_triangles();
+    void build_edges( );
+    void assign_triangle(Tet*, Tet*, Vertex*, Vertex*, Vertex*); // without edges
+    void assign_edge(Vertex*, Vertex*);
 };
 
 
@@ -85,5 +93,6 @@ inline void Mesh::add_tet(Tet* tet){
     tet->idx = this->num_tets();
     this->tets.push_back(tet);
 }
+
 
 #endif // MESH_H

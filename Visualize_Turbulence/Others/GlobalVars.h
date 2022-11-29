@@ -15,8 +15,8 @@ Mesh* mesh = NULL;
 
 // the file path, should be entered before starting the program
 // TODO dynamiclly import files
-const QString meshFilePath = "/Users/linxinw/Desktop/mesh.txt";
-const QString dataFilePath = "/Users/linxinw/Desktop/data.txt";
+const QString meshFilePath = "/Users/linxinw/Desktop/slow_mesh.txt";
+const QString dataFilePath = "/Users/linxinw/Desktop/slow_data.txt";
 
 // boolean variables used to enable orbit control
 bool LeftButtonDown = false;
