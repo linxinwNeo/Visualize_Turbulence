@@ -10,4 +10,4 @@ Using QT with c++.
 Currently none.
 
 # Input Files
-Limited to the .mphtxt file output from COMSOL but the visualization technique can be used on any fluid data.
+Limited to the .txt file output from COMSOL but the visualization technique can be used on any fluid data.
