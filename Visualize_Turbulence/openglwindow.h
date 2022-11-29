@@ -5,7 +5,7 @@
 #include <QOpenGLFunctions>
 
 #include "Others/TraceBall.h"
-#include "Geometry/Vector3d.h"
+#include "Others/Vector3d.h"
 
 class openGLWindow : public QOpenGLWidget, public QOpenGLFunctions
 {
@@ -35,7 +35,7 @@ public:
     void mat_ident( Matrix m ) const;
     void set_scene() const;
     void multmatrix( const Matrix ) const;
-
+    void reset_scene();
 protected:
     void  initializeGL() override;
     void	paintGL() override;

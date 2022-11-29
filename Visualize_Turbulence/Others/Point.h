@@ -17,7 +17,7 @@ public:
 
     inline Point* clone() const; // deep copy
 
-    inline void set_xyz(const double, const double, const double);
+    inline void set_cords(const double, const double, const double);
 };
 
 
@@ -51,7 +51,7 @@ inline Point* Point::clone() const
 }
 
 
-inline void Point::set_xyz(const double x, const double y, const double z)
+inline void Point::set_cords(const double x, const double y, const double z)
 {
     this->x = x;
     this->y = y;

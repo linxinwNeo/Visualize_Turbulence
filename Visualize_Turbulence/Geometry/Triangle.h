@@ -20,6 +20,7 @@ public:
 
     // member functions
     Triangle();
+    Triangle(Vertex*, Vertex*, Vertex*);
     ~Triangle();
 
     inline unsigned long num_verts() const;
@@ -29,6 +30,8 @@ public:
     inline void add_vert(Vertex*);
     inline void add_edge(Edge*);
     inline void add_tets(Tet*);
+    bool has_vert(const Vertex*) const;
+    bool has_edge(const Vertex*, const Vertex*) const;
 };
 
 

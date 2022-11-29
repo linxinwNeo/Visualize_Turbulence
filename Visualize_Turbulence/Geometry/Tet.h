@@ -21,6 +21,7 @@ public:
 
     // member functions
     Tet();
+    Tet(Vertex*, Vertex*, Vertex*, Vertex*);
     ~Tet();
 
     inline unsigned long num_verts() const;
@@ -32,6 +33,10 @@ public:
     inline void add_edge(Edge*);
     inline void add_triangle(Triangle*);
     inline void add_tet(Tet*);
+    bool has_vert(const Vertex*) const;
+    bool has_verts(const Vertex*, const Vertex*, const Vertex*) const;
+    bool has_triangle(const Vertex*, const Vertex*, const Vertex*) const;
+    bool has_edge(const Vertex*, const Vertex*) const;
 };
 
 

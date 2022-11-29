@@ -1,8 +1,10 @@
 #include "Geometry/Mesh.h"
+#include <set>
 
 Mesh::Mesh()
 {
     this->radius = 0.;
+    this->num_time_steps = 0;
     // reserve vector memories to save time
     this->edges.reserve(10000);
     this->tris.reserve(10000);
@@ -80,3 +82,149 @@ void Mesh::calc_Bounding_Sphere()
     this->radius = length(center - min);
     this->rot_center = center * 1.0;
 }
+
+// build unique triangles for the mesh and assign them accordingly to
+// the verts, tets
+void Mesh::build_triangles()
+{
+    for( Tet* tet : this->tets ) // loop every tet
+    {
+        if(tet->num_tris() == 4) continue;
+
+        Vertex* v1 = tet->verts[0];
+        Vertex* v2 = tet->verts[1];
+        Vertex* v3 = tet->verts[2];
+        Vertex* v4 = tet->verts[3];
+        for( Tet* neighbor_Tet : v1->tets ){ // we are certain that the same triangle is shared only by the neighbor tets of this vert
+            if(neighbor_Tet == tet) continue;
+            // these are three triangles that can be found by using neighbor tets of v1
+            // v1,v2,v3
+            // v1,v3,v4
+            // v1,v2,v4
+            if( neighbor_Tet->has_verts(v1, v2, v3) &&  !neighbor_Tet->has_triangle(v1, v2, v3)) // if this neighbor tet shares the same 3 vertices and does not have corresponding triangle
+            {
+                this->assign_triangle(tet, neighbor_Tet, v1, v2, v3);
+                continue;
+            }
+
+            if( neighbor_Tet->has_verts(v1, v3, v4) &&  !neighbor_Tet->has_triangle(v1, v3, v4)) // if this neighbor tet shares the same 3 vertices and does not have corresponding triangle
+            {
+                this->assign_triangle(tet, neighbor_Tet, v1, v3, v4);
+                continue;
+            }
+
+            if( neighbor_Tet->has_verts(v1, v2, v4) &&  !neighbor_Tet->has_triangle(v1, v2, v4)) // if this neighbor tet shares the same 3 vertices and does not have corresponding triangle
+            {
+                this->assign_triangle(tet, neighbor_Tet, v1, v2, v4);
+                continue;
+            }
+        }
+
+        for( Tet* neighbor_Tet : v2->tets ){ // we are certain that the same triangle is shared only by the neighbor tets of this vert
+            if(neighbor_Tet == tet) continue;
+            // these are one triangle left that can be found by using neighbor tets of v2
+            // v2,v3,v4
+            if( neighbor_Tet->has_verts(v2, v3, v4) &&  !neighbor_Tet->has_triangle(v2, v3, v4)) // if this neighbor tet shares the same 3 vertices and does not have corresponding triangle
+            {
+                this->assign_triangle(tet, neighbor_Tet, v2, v3, v4);
+                continue;
+            }
+        }
+    }
+
+    // loop tets again, this time, for those tets that don't have 4 triangles, we add triangles naively
+    // because the missing ones will not duplicate with other tets.
+    for( Tet* tet : this->tets ){
+        if(tet->num_tris() == 4) continue;
+        Vertex* v1 = tet->verts[0];
+        Vertex* v2 = tet->verts[1];
+        Vertex* v3 = tet->verts[2];
+        Vertex* v4 = tet->verts[3];
+        if(!tet->has_triangle(v1, v2, v3)){
+            this->assign_triangle(tet, NULL, v1, v2, v3);
+        }
+        if(!tet->has_triangle(v1, v2, v4)){
+            this->assign_triangle(tet, NULL, v1, v2, v4);
+        }
+        if(!tet->has_triangle(v1, v3, v4)){
+            this->assign_triangle(tet, NULL, v1, v3, v4);
+        }
+        if(!tet->has_triangle(v2, v3, v4)){
+            this->assign_triangle(tet, NULL, v2, v3, v4);
+        }
+    }
+}
+
+
+// build unique edges for the mesh and assign them accordingly to
+// verts, triangles, tets.
+// assume triangles are built
+void Mesh::build_edges()
+{
+    for( Triangle* tri : this->tris )
+    {
+        if(tri->num_edges() == 3) continue;
+
+        Vertex* v1 = tri->verts[0];
+        Vertex* v2 = tri->verts[1];
+        Vertex* v3 = tri->verts[2];
+        if(!tri->has_edge(v1, v2)){ // does not have this edge, then other tris do not have this edge as well
+            assign_edge(v1, v2);
+        }
+
+        if(!tri->has_edge(v1, v3)){ // does not have this edge, then other tris do not have this edge as well
+            assign_edge(v1, v3);
+        }
+
+        if(!tri->has_edge(v2, v3)){ // does not have this edge, then other tris do not have this edge as well
+            assign_edge(v2, v3);
+        }
+
+    }
+}
+
+
+void Mesh::assign_edge(Vertex* v1, Vertex* v2){
+    // create edge and add this edge to the mesh
+    Edge* e = new Edge(v1, v2);
+    this->add_edge(e);
+
+    // add edge to tets
+    // add tets to edge
+    for(Tet* tet : v1->tets){
+        // if this tet has both verts and it does not have this edge
+        if( tet->has_vert(v1) && tet->has_vert(v2) && !tet->has_edge(v1,v2) )
+        {
+            tet->add_edge(e);
+            e->add_tet(tet);
+            // add this edge to all possible triangles
+            for(Triangle* tri : tet->tris){
+                // if this triangle has both verts and does not have the edge
+                if( tri->has_vert(v1) && tri->has_vert(v2) && !tri->has_edge(v1, v2) )
+                {
+                    tri->add_edge(e); // add edge to this triangle
+                    e->add_triangle(tri); // add this triangle to the edge
+                }
+            }
+        }
+    }
+}
+
+
+// tet2 can be null in case the incoming triangle is used only by the tet1.
+void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vertex *v3)
+{
+    Triangle* new_tri = new Triangle(v1, v2, v3);
+    // add triangle to the neighbor tri list of vertices
+    v1->add_triangle(new_tri);
+    v2->add_triangle(new_tri);
+    v3->add_triangle(new_tri);
+    // add triangle to the tri list of tets
+    tet1->add_triangle(new_tri);
+    if(tet2!=NULL) tet2->add_triangle(new_tri);
+    // add triangle to the mesh
+    this->add_triangle(new_tri);
+}
+
+
+

@@ -14,12 +14,14 @@ class Edge {
 public:
     // member variables
     unsigned long  idx;
+    double length;
     vector<Vertex*> verts;    // an edge has two vertices
     vector<Triangle*> tris;    // faces that contain this edge
     vector<Tet*> tets;      // tetrahedrons that contain this edge
 
     // member functions
     inline Edge();
+    inline Edge(Vertex*, Vertex*);
     inline ~Edge();
 
     inline unsigned long num_verts() const;
@@ -29,6 +31,8 @@ public:
     inline void add_vert(Vertex*);
     inline void add_triangle(Triangle*);
     inline void add_tet(Tet*);
+
+    bool is_same(const Edge*) const;
 };
 
 
@@ -36,9 +40,15 @@ public:
 inline Edge::Edge()
 {
     this->idx = 0;
-
+    this->length = 0.;
     // reserve memories
     this->verts.reserve(2); // an edge should only have 2 verts
+}
+
+
+inline Edge::Edge(Vertex* v1, Vertex* v2){
+    this->add_vert(v1);
+    this->add_vert(v2);
 }
 
 
