@@ -3,7 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-
+#include <QTime>
 #include "Others/TraceBall.h"
 #include "Others/Vector3d.h"
 
@@ -17,6 +17,9 @@ public:
     double t_old;
     double last_x;
     double last_y;
+
+    QTime* timer;
+    QTime start_t;
 
     CTraceBall traceball;
     Quaternion rvec;

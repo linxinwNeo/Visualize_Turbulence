@@ -18,4 +18,8 @@
 #define UL unsigned long
 #endif
 
+#ifndef MSECS_PER_SEC
+#define MSECS_PER_SEC 1000
+#endif
+
 #endif // PREDEFINED_H

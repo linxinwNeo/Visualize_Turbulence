@@ -1,5 +1,6 @@
 #include "Geometry/Mesh.h"
 #include <set>
+#include <float.h>
 
 Mesh::Mesh()
 {
@@ -208,6 +209,24 @@ void Mesh::assign_edge(Vertex* v1, Vertex* v2){
             }
         }
     }
+}
+
+
+void Mesh::max_vor_mag(const unsigned int time, double& min, double& max) const
+{
+    if(time < 0 || time > this->num_time_steps) return;
+
+    min = DBL_MAX;
+    max = DBL_MIN;
+    for( const Vertex* v : this->verts ){
+        Vector3d vor = v->vors[time];
+        double mag = length(vor);
+        if(mag < min) min = mag;
+        if(mag > max) max = mag;
+    }
+    // scale
+    min = min/2;
+    max = max/2;
 }
 
 

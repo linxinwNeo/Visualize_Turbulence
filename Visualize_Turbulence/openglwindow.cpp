@@ -1,16 +1,19 @@
 #define GL_SILENCE_DEPRECATION
 #include <QMouseEvent>
 #include <QSurfaceFormat>
+
 #include "openglwindow.h"
 #include "Geometry/Mesh.h"
 #include "Others/Predefined.h"
 #include "Others/Utility_functions.h"
-
+#include "Others/ColorTable.h"
 
 extern Mesh* mesh;
 extern bool LeftButtonDown;
 extern bool MiddleButtonDown;
 extern bool RightButtonDown;
+ColorTable CT;
+double vor_MIN = 0, vor_MAX = 0;
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -36,11 +39,17 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     fmt.setSamples(32);
     QSurfaceFormat::setDefaultFormat(fmt);
     this->setFormat(fmt);
+
 }
 
 
 openGLWindow::~openGLWindow()
 {
+    if(this->timer){
+        delete this->timer;
+    }
+    this->timer = NULL;
+
     return;
 }
 
@@ -123,6 +132,22 @@ void openGLWindow::initializeGL()
 void openGLWindow::paintGL()
 {
     if( mesh == NULL ) return;
+    int time_idx = 0;
+    if(!this->timer){ // first time running paintGL
+        this->timer = new QTime();
+        this->start_t = this->timer->currentTime();
+    }
+    else{
+        QTime cur_t = this->timer->currentTime();
+        unsigned int msecs = this->start_t.msecsTo(cur_t);
+        if(msecs > mesh->num_time_steps * MSECS_PER_SEC){
+            this->start_t = cur_t;
+            msecs = 0;
+        }
+        time_idx = floor(msecs/MSECS_PER_SEC);
+    }
+    qDebug() << time_idx;
+    mesh->max_vor_mag(time_idx, vor_MIN, vor_MAX);
 
     glMatrixMode(GL_PROJECTION);
     glEnable(GL_DEPTH_TEST);
@@ -145,34 +170,35 @@ void openGLWindow::paintGL()
     glPolygonOffset(1.0, 1.0);
     glDepthFunc(GL_LESS);
 
-    glColor3f(0, 0, 1.);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glBegin(GL_TRIANGLES);
-    for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
-        Tet* tet = mesh->tets[i];
-        Vertex* v1 = tet->verts[0];
-        Vertex* v2 = tet->verts[1];
-        Vertex* v3 = tet->verts[2];
-        Vertex* v4 = tet->verts[3];
-            // face 1
-            glVertex3f(v1->x(), v1->y(), v1->z());
-            glVertex3f(v2->x(), v2->y(), v2->z());
-            glVertex3f(v3->x(), v3->y(), v3->z());
+    for( unsigned int i = 0 ; i < mesh->num_tris(); i++ ){
+        Triangle* tri = mesh->tris[i];
+        vector<Vertex*> verts = tri->verts;
+        Vertex* v1 = verts[0];
+        Vertex* v2 = verts[1];
+        Vertex* v3 = verts[2];
 
-            // face 2
-            glVertex3f(v1->x(), v1->y(), v1->z());
-            glVertex3f(v2->x(), v2->y(), v2->z());
-            glVertex3f(v4->x(), v4->y(), v4->z());
+        double vor_mag1 = length(v1->vors[time_idx]); // vorticity mag
+        double vor_mag2 = length(v2->vors[time_idx]);
+        double vor_mag3 = length(v3->vors[time_idx]);
+        RGB color1 = CT.lookUp( vor_mag1/vor_MAX );
+        RGB color2 = CT.lookUp( vor_mag2/vor_MAX );
+        RGB color3 = CT.lookUp( vor_mag3/vor_MAX );
 
-            // face 3
-            glVertex3f(v1->x(), v1->y(), v1->z());
-            glVertex3f(v3->x(), v3->y(), v3->z());
-            glVertex3f(v4->x(), v4->y(), v4->z());
+        double alpha = 0.1;
+        glColor4f(color1.R, color1.G, color1.B, alpha);
+        glVertex3f(v1->x(), v1->y(), v1->z());
 
-            // face 4
-            glVertex3f(v2->x(), v2->y(), v2->z());
-            glVertex3f(v3->x(), v3->y(), v3->z());
-            glVertex3f(v4->x(), v4->y(), v4->z());
+        glColor4f(color2.R, color2.G, color2.B, alpha);
+        glVertex3f(v2->x(), v2->y(), v2->z());
+
+        glColor4f(color3.R, color3.G, color3.B, alpha);
+        glVertex3f(v3->x(), v3->y(), v3->z());
     }
+
     glEnd();
     glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -180,38 +206,40 @@ void openGLWindow::paintGL()
     glDepthFunc(GL_LEQUAL);
     glColor3f(0., 0., 0.);
 
-    glBegin(GL_LINES);
-    for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
-        Tet* tet = mesh->tets[i];
-        Vertex* v1 = tet->verts[0];
-        Vertex* v2 = tet->verts[1];
-        Vertex* v3 = tet->verts[2];
-        Vertex* v4 = tet->verts[3];
+//    glBegin(GL_LINES);
+//    for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
+//        Tet* tet = mesh->tets[i];
+//        Vertex* v1 = tet->verts[0];
+//        Vertex* v2 = tet->verts[1];
+//        Vertex* v3 = tet->verts[2];
+//        Vertex* v4 = tet->verts[3];
 
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v2->x(), v2->y(), v2->z());
+//        glVertex3f(v1->x(), v1->y(), v1->z());
+//        glVertex3f(v2->x(), v2->y(), v2->z());
 
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v3->x(), v3->y(), v3->z());
+//        glVertex3f(v1->x(), v1->y(), v1->z());
+//        glVertex3f(v3->x(), v3->y(), v3->z());
 
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
+//        glVertex3f(v1->x(), v1->y(), v1->z());
+//        glVertex3f(v4->x(), v4->y(), v4->z());
 
-        glVertex3f(v2->x(), v2->y(), v2->z());
-        glVertex3f(v3->x(), v3->y(), v3->z());
+//        glVertex3f(v2->x(), v2->y(), v2->z());
+//        glVertex3f(v3->x(), v3->y(), v3->z());
 
-        glVertex3f(v2->x(), v2->y(), v2->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
+//        glVertex3f(v2->x(), v2->y(), v2->z());
+//        glVertex3f(v4->x(), v4->y(), v4->z());
 
-        glVertex3f(v3->x(), v3->y(), v3->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
-    }
-    glEnd();
+//        glVertex3f(v3->x(), v3->y(), v3->z());
+//        glVertex3f(v4->x(), v4->y(), v4->z());
+//    }
+//    glEnd();
     glDisable(GL_DEPTH_TEST);
     glPopMatrix();
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
+
+    this->update();
 }
 
 
