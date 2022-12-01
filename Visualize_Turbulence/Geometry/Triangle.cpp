@@ -55,3 +55,13 @@ bool Triangle::has_edge(const Vertex * v1, const Vertex * v2) const
     }
     return false;
 }
+
+
+// return the first vertex that is not in the vector input
+Vertex* Triangle::not_has_vert(const vector<Vertex *> vs) const
+{
+    for( Vertex* v : vs ){
+        if(this->has_vert(v)) return v;
+    }
+    return NULL;
+}

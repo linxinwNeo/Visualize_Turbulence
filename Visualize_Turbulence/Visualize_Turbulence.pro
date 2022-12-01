@@ -15,6 +15,7 @@ SOURCES += \
     Geometry/Tet.cpp \
     Geometry/Triangle.cpp \
     Geometry/Vertex.cpp \
+    Lines/PathLine.cpp \
     Others/PointVector.cpp \
     Others/TraceBall.cpp \
     main.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     Geometry/Tet.h \
     Geometry/Triangle.h \
     Geometry/Vertex.h \
+    Lines/PathLine.h \
     Others/GlobalVars.h \
     Others/Matrix2x2.h \
     Others/Matrix3x3.h \

@@ -1,6 +1,10 @@
 #include "mainwindow.h"
+#include "Lines/PathLine.h"
+#include "Others/Predefined.h"
 #include "ui_mainwindow.h"
 
+// external vars
+extern vector<PathLine*> pathlines;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,6 +17,17 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+
+    UL i;
+
+    // clear memoery for pathlines
+    for( i = 0; i < pathlines.size(); i++ ){
+        if(pathlines[i] != NULL){
+            delete pathlines[i];
+            pathlines[i] = NULL;
+        }
+    }
+    pathlines.clear();
 }
 
 

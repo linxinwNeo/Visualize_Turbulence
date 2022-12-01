@@ -28,4 +28,5 @@ inline void ScreenToSecondWin(
     t = (double) world_bottomy + ratioy * win_world_sizey;
 }
 
+
 #endif // UTILITY_FUNCTIONS_H

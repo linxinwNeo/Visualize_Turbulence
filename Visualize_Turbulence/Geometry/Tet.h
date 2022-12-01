@@ -1,6 +1,8 @@
 #ifndef TET_H
 #define TET_H
 
+#include "Others/Point.h"
+#include "Others/Vector3d.h"
 #include <vector>
 
 // forward class declarations
@@ -22,6 +24,7 @@ public:
     // member functions
     Tet();
     Tet(Vertex*, Vertex*, Vertex*, Vertex*);
+    Tet(Triangle* tri, Vertex *v4);
     ~Tet();
 
     inline unsigned long num_verts() const;
@@ -37,6 +40,13 @@ public:
     bool has_verts(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_triangle(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_edge(const Vertex*, const Vertex*) const;
+    // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
+    bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&) const;
+    bool is_pt_in(const Point*) const;
+
+    Vertex* interpolate(const Point*, unsigned time_idx);
+    double volume() const;
+    Point centroid() const;
 };
 
 

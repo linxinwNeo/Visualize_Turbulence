@@ -14,4 +14,8 @@
 #define M_PI 3.14159265358979324
 #endif
 
+#ifndef UNSIGNEDLONG
+#define UL unsigned long
+#endif
+
 #endif // PREDEFINED_H

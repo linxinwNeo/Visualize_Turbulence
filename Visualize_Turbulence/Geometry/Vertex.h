@@ -34,6 +34,8 @@ public:
     inline Vertex( const double x, const double y, const double z );
     ~Vertex();
 
+    inline Vector3d cordsVect() const ;
+
     inline unsigned long num_edges() const;
     inline unsigned long num_tris() const;
     inline unsigned long num_tets() const;
@@ -83,6 +85,12 @@ inline Vertex::Vertex( const Point* p )
 
 inline  Vertex::Vertex( const double x, const double y, const double z ){
     this->set_cords(x, y, z);
+}
+
+
+inline Vector3d Vertex::cordsVect() const
+{
+    return Vector3d(this->x(), this->y(), this->z());
 }
 
 

@@ -34,8 +34,6 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
     this->ReadMeshFile(this->meshPath); // read Mesh file first
     this->ReadDataFile(this->dataPath); // then read data file
 
-    qDebug() << "Reading Files takes" <<  t.msecsTo(t.currentTime())/1000. << "secs";
-
     this->mesh->calc_Bounding_Sphere();
     this->mesh->build_triangles();
     this->mesh->build_edges();
@@ -77,6 +75,8 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
             qDebug() << "Edge: num of verts not right!" << e->num_verts();
         }
     }
+
+    qDebug() << "Reading Files takes" <<  t.msecsTo(t.currentTime())/1000. << "secs";
 }
 
 

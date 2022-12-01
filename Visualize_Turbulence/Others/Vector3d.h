@@ -1,6 +1,7 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
+#include <QDebug>
 #include <math.h>
 #include <stdlib.h>
 
@@ -14,6 +15,7 @@ public:
 
     inline Vector3d(const Vector3d &a);
     inline Vector3d(const double    *a);
+    inline Vector3d(const Vector3d *a);
 
     inline Vector3d &set(double d);
     inline Vector3d &set(double d0, double d1,double d2);
@@ -55,10 +57,12 @@ inline Vector3d operator-(const Vector3d &a, const Vector3d &b);
 inline Vector3d operator+(const Vector3d &a, double b);
 inline Vector3d operator-(const Vector3d &a, double b);
 inline Vector3d operator*(const Vector3d &a, double b);
+inline Vector3d operator/(const Vector3d &a, double b);
 
 inline Vector3d operator+(double a, const Vector3d &b);
 inline Vector3d operator-(double a, const Vector3d &b);
 inline Vector3d operator*(double a, const Vector3d &b);
+
 
 inline double    length(const Vector3d &a);
 inline void normalize(Vector3d &a);
@@ -95,6 +99,13 @@ inline Vector3d::Vector3d(const double *a) {
     entry[0] = a[0];
     entry[1] = a[1];
     entry[1] = a[2];
+}
+
+inline Vector3d::Vector3d(const Vector3d *a)
+{
+    this->entry[0] = a->entry[0];
+    this->entry[1] = a->entry[1];
+    this->entry[2] = a->entry[2];
 }
 
 //-------------------------------------------------------------------
@@ -233,6 +244,14 @@ inline Vector3d operator-(const Vector3d &a,double b){
 
 inline Vector3d operator*(const Vector3d &a,double b){
     return Vector3d(a.entry[0] * b, a.entry[1] * b, a.entry[2] * b);
+}
+
+inline Vector3d operator/(const Vector3d &a, double b){
+    if(b == 0) {
+        qDebug() << "Error! inline Vector3d operator/(const Vector3d &a, double b): divided by 0!";
+        return Vector3d();
+    }
+    return Vector3d(a.entry[0] / b, a.entry[1] / b, a.entry[2] / b);
 }
 
 inline Vector3d operator+(double a,const Vector3d &b){
