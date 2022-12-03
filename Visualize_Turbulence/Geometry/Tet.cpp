@@ -2,6 +2,7 @@
 #include "Geometry/Vertex.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Edge.h"
+#include "Others/Utility_functions.h"
 #include <math.h>
 #include <QDebug>
 
@@ -115,8 +116,10 @@ bool Tet::is_pt_in(const Point *pt) const
 
 // assume pt is inside this tet
 // Using barycentric interpolation scheme, calculate the new Vertex at pt's position
-Vertex* Tet::interpolate(const Point* pt, const unsigned int time)
+Vertex* Tet::get_vert_at(const Point* pt, const double time)
 {
+    if(pt == NULL) return NULL;
+
     Vertex* pt_vert = new Vertex(pt->x, pt->y, pt->z);
     pt_vert->add_tet(this);
 
@@ -143,9 +146,8 @@ Vertex* Tet::interpolate(const Point* pt, const unsigned int time)
     for( const auto& vol : vols ){
         total_vol += vol;
     }
-    if(total_vol == 0.){
-        qDebug() << "Tet " << this->idx<< "has volume of 0.0 m^3";
-    }
+
+    if(total_vol == 0.) throwErrorMessage( QString("Tet %1 has volume of 0.0 m^3").arg(this->idx) );
 
     // calculate the weight for each vertex in tet
     vector<double> weights;
@@ -153,6 +155,7 @@ Vertex* Tet::interpolate(const Point* pt, const unsigned int time)
         weights.push_back( vol / total_vol );
     }
 
+    // finding the vertices that each weight is corresponding to
     vector<Vertex*> vs;
     vs.push_back( tri1->not_has_vert(this->verts) );
     vs.push_back( tri2->not_has_vert(this->verts) );
@@ -161,23 +164,44 @@ Vertex* Tet::interpolate(const Point* pt, const unsigned int time)
 
     Vector3d vel, vor;
     double mu = 0.;
+    int t = floor(time);
+    int c = ceil(time);
     for( int i = 0; i < 4; i++ ){
-        if(vs[i] == NULL)
+        Vertex* v = vs[i];
+        if(v == NULL)
         {
-            qDebug() << "Vertex* Tet::interpolate: a null pointer!";
-            continue;
+            throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
         }
 
-        Vector3d temp_vel = Vector3d(vs[i]->vels[time]);
-        Vector3d temp_vor = Vector3d(vs[i]->vors[time]);
+        Vector3d* temp_vel, *temp_vor;
+        if(v->has_vel_at_t(time)) // the velcity is defined at time t for this vertex
+        {
+            temp_vel = v->vels.at(time);
+        }
+        else
+        {
+            // not defined at time t
+            // we need to use linear interpolation to find the value for this vertex between two times
+
+        }
+
+        if(v->has_vor_at_t(time)) // the vorticity is defined at time t for this vertex
+        {
+            temp_vor = v->vors.at(time);
+        }
+        else
+        { // the vorticity is not defined at time t fo v
+
+        }
+
         vel =  vel + temp_vel * weights[i];
         vor =  vor + temp_vor * weights[i];
         mu = mu + vs[i]->mus[time] * weights[i];
     }
 
-    pt_vert->vels.push_back( new Vector3d(vel) );
-    pt_vert->vors.push_back( new Vector3d(vor) );
-    pt_vert->mus.push_back(mu);
+    pt_vert->set_vel(time, new Vector3d(vel) );
+    pt_vert->set_vor(time, new Vector3d(vor) );
+    pt_vert->set_mu(time, mu);
 
     return pt_vert;
 }

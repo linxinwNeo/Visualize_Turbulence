@@ -84,10 +84,13 @@ void Mesh::calc_Bounding_Sphere()
     this->rot_center = center * 1.0;
 }
 
+
 // build unique triangles for the mesh and assign them accordingly to
 // the verts, tets
 void Mesh::build_triangles()
 {
+    this->boundary_tris.reserve(this->num_tets()); // a rough number
+
     for( Tet* tet : this->tets ) // loop every tet
     {
         if(tet->num_tris() == 4) continue;
@@ -121,7 +124,8 @@ void Mesh::build_triangles()
             }
         }
 
-        for( Tet* neighbor_Tet : v2->tets ){ // we are certain that the same triangle is shared only by the neighbor tets of this vert
+        // we are certain that the same triangle is shared only by the neighbor tets of this vert
+        for( Tet* neighbor_Tet : v2->tets ){
             if(neighbor_Tet == tet) continue;
             // these are one triangle left that can be found by using neighbor tets of v2
             // v2,v3,v4
@@ -219,14 +223,11 @@ void Mesh::max_vor_mag(const unsigned int time, double& min, double& max) const
     min = DBL_MAX;
     max = DBL_MIN;
     for( const Vertex* v : this->verts ){
-        Vector3d vor = v->vors[time];
+        Vector3d vor = v->vors.at(time);
         double mag = length(vor);
         if(mag < min) min = mag;
         if(mag > max) max = mag;
     }
-    // scale
-    min = min/2;
-    max = max/2;
 }
 
 
@@ -234,6 +235,7 @@ void Mesh::max_vor_mag(const unsigned int time, double& min, double& max) const
 void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vertex *v3)
 {
     Triangle* new_tri = new Triangle(v1, v2, v3);
+    new_tri->on_boundary = true;
     // add triangle to the neighbor tri list of vertices
     v1->add_triangle(new_tri);
     v2->add_triangle(new_tri);
@@ -243,6 +245,7 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
     if(tet2!=NULL) tet2->add_triangle(new_tri);
     // add triangle to the mesh
     this->add_triangle(new_tri);
+    this->boundary_tris.push_back((new_tri));
 }
 
 

@@ -1,8 +1,10 @@
 #include <QTextStream>
 #include <QDebug>
+#include <QTime>
+
 #include "FileLoader/ReadFile.h"
 #include "Others/Utility_functions.h"
-#include <QTime>
+
 
 ReadFile::ReadFile()
 {
@@ -39,10 +41,11 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
     this->mesh->build_edges();
 
     // correctness check
-    qDebug() << "Mesh: num of faces:" << this->mesh->num_tris();
+    qDebug() << "Mesh: num of triangless:" << this->mesh->num_tris();
     qDebug() << "Mesh: num of tets: " <<  this->mesh->num_tets();
     qDebug() << "Mesh: num of verts: " <<  this->mesh->num_verts();
     qDebug() << "Mesh: num of edges: " <<  this->mesh->num_edges();
+    qDebug() << "Mesh: num of boundary triangles: " <<  this->mesh->num_boundary_tris();
 
     for(Triangle* t : this->mesh->tris){
         if(t->num_tets() > 2){
@@ -151,7 +154,7 @@ void ReadFile::ReadMeshFile(const QString f){
     // step4: reading elements
     // note that vertex indices that describe elements in the file are starting from 1
     // element vertex indices: [0,1,2,3] will produce
-    // faces: [0,1,2], [0,2,3], [0,1,2], [1,2,3] in order
+    // triangles: [0,1,2], [0,2,3], [0,1,2], [1,2,3] in order
     flag = false;
     while (!in.atEnd()) {
         line = in.readLine();
@@ -258,18 +261,18 @@ void ReadFile::ReadDataFile(QString f){
         Vertex* cur_vert = this->mesh->verts[vert_count];
 
         for( i = 0; i < num_time_steps; i++ ){
+            cur_vert->vors.reserve( num_time_steps ); // reserve enough space for many time steps data
             cur_vert->vels.reserve( num_time_steps ); // reserve enough space for many time steps data
+
             // calculate base index for each time step
             // first 3 indices are reserved for coordinates which we already have.
             const int idx = 3 + i * expected_num_expressions;
             // read velocity vector
-            Vector3d* vel = new Vector3d( strings[idx].toDouble(), strings[idx+1].toDouble(), strings[idx+2].toDouble() );
-            cur_vert->vels.push_back(vel);
+            cur_vert->set_vel( (double) i, strings[idx].toDouble(), strings[idx+1].toDouble(), strings[idx+2].toDouble());
             // read vorticity vector
-            Vector3d* vor = new Vector3d( strings[idx+3].toDouble(), strings[idx+4].toDouble(), strings[idx+5].toDouble() );
-            cur_vert->vors.push_back(vor);
+            cur_vert->set_vor( (double) i, strings[idx+3].toDouble(), strings[idx+4].toDouble(), strings[idx+5].toDouble());
             // read Turbulent dynamic viscosity
-            cur_vert->mus.push_back( strings[idx+6].toDouble() );
+            cur_vert->set_mu( (double) i, strings[idx+6].toDouble() );
         }
 
         vert_count ++;

@@ -20,6 +20,7 @@ public:
     vector<Edge*> edges;        // edges that made of this face, can be more than 3.
     vector<Tet*> tets;          // tets that uses this face, should be one/two only.
     Vector3d normal;
+    bool on_boundary;
 
     // member functions
     Triangle();

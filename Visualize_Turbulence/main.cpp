@@ -66,7 +66,7 @@ void place_seeds()
             Tet* tet = mesh->tets[random_idx];
             PathLine* PL = new PathLine();
             Point seed = tet->centroid();
-            Vertex* seed_v = tet->interpolate(&seed, 0); // interpolate this seed at time 0
+            Vertex* seed_v = tet->get_vert_at(&seed, 0); // interpolate this seed at time 0
             PL->verts.push_back( seed_v );
             pathlines.push_back(PL);
             cur_num_seeds ++;
@@ -78,9 +78,8 @@ void place_seeds()
 // now every pathline has a seed point, we want to calculate their path individually
 void build_pathlines_from_seeds(){
     // for each pathline, we calculate their trajectories
-//    for( PathLine* pathline : pathlines ){
-//        Vertex* seed = pathline->verts[0];
-//        Tet* inWhichTet = seed->tets[0];
-//        for(Tet* neighborTet : )
-//    }
+    for( PathLine* pathline : pathlines ){
+        Vertex* seed = pathline->verts[0];
+        Tet* inWhichTet = seed->tets[0];
+    }
 }

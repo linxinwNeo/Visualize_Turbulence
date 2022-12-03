@@ -44,7 +44,7 @@ public:
     bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&) const;
     bool is_pt_in(const Point*) const;
 
-    Vertex* interpolate(const Point*, unsigned time_idx);
+    Vertex* get_vert_at(const Point*, const double time);
     double volume() const;
     Point centroid() const;
 };

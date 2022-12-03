@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <QString>
+#include <unordered_map>
+
 #include "Others/Point.h"
 #include "Others/Vector3d.h"
 
@@ -19,9 +21,13 @@ public:
     // public member variables
     unsigned long idx;
     Point cords;
-    vector<Vector3d*> vels; // velocity vector
-    vector<Vector3d*> vors; // vorticity vector
-    vector<double> mus; // Turbulent dynamic viscosity
+
+    // velocity vectors
+    unordered_map<double, Vector3d*> vels; // <time, velocity>
+    // vorticity vectors
+    unordered_map<double, Vector3d*> vors; // <time, velocity>
+    // Turbulent dynamic viscosity
+    unordered_map<double, double> mus; // <time, dynamic viscosity>
 
     vector<Edge*> edges;  // edges that has this vertex.
     vector<Triangle*> faces;  // Faces that has this vertex.
@@ -47,19 +53,28 @@ public:
     inline void add_triangle(Triangle*);
     inline void add_tet(Tet*);
 
-    Vertex* clone() const;
+    inline void set_cords(const double x, const double y, const double z);
+    void set_vel(const double time, Vector3d* vel_ptr);
+    void set_vel(const double time, const double vx, const double vy, const double vz);
 
-    inline void set_cords(const double, const double, const double);
-    inline void set_vel(const double, const double, const double);
-    inline void set_vor(const double, const double, const double);
+    void set_vor(const double time, Vector3d* vor_ptr);
+    void set_vor(const double time, const double x, const double, const double);
+
+    void set_mu(const double time, const double mu);
+
     inline double x() const;
     inline double y() const;
     inline double z() const;
+    inline bool has_vel_at_t(const double time) const;
+    inline bool has_vor_at_t(const double time) const;
+    inline bool has_mu_at_t(const double time) const;
+    Vector3d linear_interpolate_vel(const int t1, const int t2, const double target_t);
+    Vector3d linear_interpolate_vor(const int t1, const int t2, const double target_t);
+    double linear_interpolate_mu(const int t1, const int t2, const double target_t);
 
     inline QString cords_str() const;
-    inline QString vel_str(unsigned long) const;
-    inline QString vor_str(unsigned long) const;
-
+    QString vel_str(const double time) const;
+    QString vor_str(const double time) const;
 
 };
 
@@ -151,17 +166,27 @@ inline void Vertex::set_cords(const double x, const double y, const double z)
 }
 
 
-inline void Vertex::set_vel(const double vx, const double vy, const double vz)
+// return false if vel at time t does not exist
+inline bool Vertex::has_vel_at_t(const double time) const
 {
-    Vector3d* new_vel = new Vector3d(vx, vy, vz);
-    this->vels.push_back(new_vel);
+    if(vels.find(time) == vels.end()) return false;
+    return true;
 }
 
 
-inline void Vertex::set_vor(const double vx, const double vy, const double vz)
+// return false if vor at time t does not exist
+inline bool Vertex::has_vor_at_t(const double time) const
 {
-    Vector3d* new_vor = new Vector3d(vx, vy, vz);
-    this->vors.push_back(new_vor);
+    if(vors.find(time) == vors.end()) return false;
+    return true;
+}
+
+
+// return false if mu at time t does not exist
+inline bool Vertex::has_mu_at_t(const double time) const
+{
+    if(mus.find(time) == mus.end()) return false;
+    return true;
 }
 
 
@@ -189,20 +214,4 @@ inline QString Vertex::cords_str() const
     return str;
 }
 
-
-inline QString Vertex::vel_str( unsigned long idx ) const
-{
-    if( idx >= this->num_vels() || idx < 0 ) return "idx is invalid";
-    QString str = QString( "%1, %2, %3" ).arg(this->vels[idx]->entry[0]).arg(this->vels[idx]->entry[1]).arg(this->vels[idx]->entry[2]);
-    return str;
-}
-
-
-inline QString Vertex::vor_str( unsigned long idx ) const
-{
-    if( idx >= this->num_vors() || idx < 0 ) return "idx is invalid";
-    QString str = QString( "%1, %2, %3" ).arg(this->vors[idx]->entry[0]).arg(this->vors[idx]->entry[1]).arg(this->vors[idx]->entry[2]);
-    return str;
-
-}
 #endif // VERTEX_H

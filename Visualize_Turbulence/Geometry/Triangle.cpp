@@ -6,7 +6,7 @@
 Triangle::Triangle()
 {
     this->idx = 0;
-
+    this->on_boundary = false;
     // reserve memories
     this->verts.reserve(3); // a face at least has 3 verts
     this->edges.reserve(3); // a face at least has 3 edges
@@ -15,6 +15,7 @@ Triangle::Triangle()
 
 Triangle::Triangle(Vertex * v1, Vertex * v2, Vertex * v3)
 {
+    this->on_boundary = false;
     this->add_vert(v1);
     this->add_vert(v2);
     this->add_vert(v3);

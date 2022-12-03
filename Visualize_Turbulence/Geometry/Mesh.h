@@ -4,15 +4,14 @@
 #include <vector>
 #include <QString>
 #include <QDebug>
+
 #include "Geometry/Vertex.h"
 #include "Geometry/Edge.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Tet.h"
 #include "Others/Vector3d.h"
 
-
 using namespace std;
-
 
 class Mesh {
 public:
@@ -21,6 +20,9 @@ public:
     vector<Edge*> edges;
     vector<Triangle*> tris;
     vector<Tet*> tets;
+
+    vector<Triangle*> boundary_tris;
+
     Vector3d rot_center;
     double radius;
     unsigned int num_time_steps;
@@ -33,6 +35,7 @@ public:
     inline unsigned long num_edges() const;
     inline unsigned long num_tris() const;
     inline unsigned long num_tets() const;
+    inline unsigned long num_boundary_tris() const;
 
     inline void add_vert(Vertex*);
     inline void add_edge(Edge*);
@@ -69,6 +72,12 @@ inline unsigned long Mesh::num_tris() const
 inline unsigned long Mesh::num_tets() const
 {
     return this->tets.size();
+}
+
+
+inline unsigned long Mesh::num_boundary_tris() const
+{
+    return this->boundary_tris.size();
 }
 
 

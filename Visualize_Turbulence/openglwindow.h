@@ -35,14 +35,16 @@ public:
     // functions
     openGLWindow(QWidget *parent);
     ~openGLWindow();
-    void mat_ident( Matrix m ) const;
-    void set_scene() const;
-    void multmatrix( const Matrix ) const;
-    void reset_scene();
 protected:
     void  initializeGL() override;
     void	paintGL() override;
     //void	resizeGL(int w, int h) override;
+
+public:
+    void mat_ident( Matrix m ) const;
+    void set_scene() const;
+    void multmatrix( const Matrix ) const;
+    void reset_scene();
 
 private:
     // mouse events
