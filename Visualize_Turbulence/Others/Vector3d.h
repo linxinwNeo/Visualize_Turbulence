@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+
 class Vector3d{
 public:
     double entry[3];
@@ -22,6 +23,10 @@ public:
 
     inline Vector3d &set(const Vector3d &a);
     inline Vector3d &set(const double    *a);
+
+    inline double x() const;
+    inline double y() const ;
+    inline double z() const;
 
     inline Vector3d &operator=(double d);
     inline Vector3d &operator=(const Vector3d &a);
@@ -65,6 +70,7 @@ inline Vector3d operator*(double a, const Vector3d &b);
 
 
 inline double    length(const Vector3d &a);
+inline double    length(const Vector3d &a, const Vector3d &b);
 inline void normalize(Vector3d &a);
 
 
@@ -138,6 +144,21 @@ inline Vector3d &Vector3d::set(const double *a) {
     return (*this);
 }
 
+inline double Vector3d::x() const
+{
+    return this->entry[0];
+}
+
+inline double Vector3d::y() const
+{
+    return this->entry[1];
+}
+
+inline double Vector3d::z() const
+{
+    return this->entry[2];
+}
+
 inline Vector3d operator-(const Vector3d &a) {
     return Vector3d(-a.entry[0],-a.entry[1],-a.entry[2]);
 }
@@ -203,6 +224,11 @@ inline Vector3d &Vector3d::operator*=(double d) {
     return (*this);
 }
 
+inline double Vector3d::length(const Vector3d &a)
+{
+    return ::length(*this, a);
+}
+
 inline Vector3d &Vector3d::operator+=(const Vector3d &a) {
     entry[0] += a.entry[0];
     entry[1] += a.entry[1];
@@ -264,6 +290,11 @@ inline Vector3d operator-(double a,const Vector3d &b){
 
 inline Vector3d operator*(double a,const Vector3d &b){
     return Vector3d(a * b.entry[0], a * b.entry[1], a * b.entry[2]);
+}
+
+
+inline double length(const Vector3d &a, const Vector3d &b ){
+    return length(a - b);
 }
 
 inline double length(const Vector3d &a) {

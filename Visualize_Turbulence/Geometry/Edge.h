@@ -14,7 +14,6 @@ class Edge {
 public:
     // member variables
     unsigned long  idx;
-    double length;
     vector<Vertex*> verts;    // an edge has two vertices
     vector<Triangle*> tris;    // faces that contain this edge
     vector<Tet*> tets;      // tetrahedrons that contain this edge
@@ -40,7 +39,6 @@ public:
 inline Edge::Edge()
 {
     this->idx = 0;
-    this->length = 0.;
     // reserve memories
     this->verts.reserve(2); // an edge should only have 2 verts
 }

@@ -17,7 +17,6 @@ SOURCES += \
     Geometry/Vertex.cpp \
     Lines/PathLine.cpp \
     Others/ColorTable.cpp \
-    Others/PointVector.cpp \
     Others/TraceBall.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -35,8 +34,6 @@ HEADERS += \
     Others/GlobalVars.h \
     Others/Matrix2x2.h \
     Others/Matrix3x3.h \
-    Others/Point.h \
-    Others/PointVector.h \
     Others/Predefined.h \
     Others/TraceBall.h \
     Others/Utility_functions.h \

@@ -6,7 +6,6 @@
 #include "Geometry/Mesh.h"
 #include "Others/Predefined.h"
 #include "Others/Utility_functions.h"
-#include "Others/ColorTable.h"
 
 extern Mesh* mesh;
 extern bool LeftButtonDown;

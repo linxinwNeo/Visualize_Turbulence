@@ -5,7 +5,6 @@
 #include <QString>
 #include <unordered_map>
 
-#include "Others/Point.h"
 #include "Others/Vector3d.h"
 
 // forward class declarations
@@ -20,7 +19,7 @@ class Vertex {
 public:
     // public member variables
     unsigned long idx;
-    Point cords;
+    Vector3d cords;
 
     // velocity vectors
     unordered_map<double, Vector3d*> vels; // <time, velocity>
@@ -35,12 +34,10 @@ public:
 
     // public member functions
     inline Vertex();
-    inline Vertex( const Point );
-    inline Vertex( const Point* );
+    inline Vertex(Vector3d* v);
+    inline Vertex(Vector3d v);
     inline Vertex( const double x, const double y, const double z );
     ~Vertex();
-
-    inline Vector3d cordsVect() const ;
 
     inline unsigned long num_edges() const;
     inline unsigned long num_tris() const;
@@ -59,7 +56,6 @@ public:
 
     void set_vor(const double time, Vector3d* vor_ptr);
     void set_vor(const double time, const double x, const double, const double);
-
     void set_mu(const double time, const double mu);
 
     inline double x() const;
@@ -68,14 +64,16 @@ public:
     inline bool has_vel_at_t(const double time) const;
     inline bool has_vor_at_t(const double time) const;
     inline bool has_mu_at_t(const double time) const;
-    Vector3d linear_interpolate_vel(const int t1, const int t2, const double target_t);
-    Vector3d linear_interpolate_vor(const int t1, const int t2, const double target_t);
-    double linear_interpolate_mu(const int t1, const int t2, const double target_t);
+
+    Vector3d* linear_interpolate_vel(const double target_t);
+    Vector3d* linear_interpolate_vor(const double target_t);
+    double linear_interpolate_mu(const double target_t);
 
     inline QString cords_str() const;
     QString vel_str(const double time) const;
     QString vor_str(const double time) const;
 
+    inline double dist_to(const Vector3d cord) const;
 };
 
 
@@ -85,27 +83,19 @@ inline Vertex::Vertex()
     this->idx = 0;
 }
 
-
-inline Vertex::Vertex( const Point p )
+inline Vertex::Vertex(Vector3d *v)
 {
-    this->cords = p;
+    this->cords = Vector3d(v);
 }
 
-
-inline Vertex::Vertex( const Point* p )
+inline Vertex::Vertex(Vector3d v)
 {
-    this->cords.set_cords(p->x, p->y, p->z);
+    this->cords = v;
 }
 
 
 inline  Vertex::Vertex( const double x, const double y, const double z ){
     this->set_cords(x, y, z);
-}
-
-
-inline Vector3d Vertex::cordsVect() const
-{
-    return Vector3d(this->x(), this->y(), this->z());
 }
 
 
@@ -162,7 +152,7 @@ inline void Vertex::add_tet(Tet* tet){
 
 inline void Vertex::set_cords(const double x, const double y, const double z)
 {
-    this->cords.set_cords(x, y, z);
+    this->cords.set(x, y, z);
 }
 
 
@@ -192,19 +182,19 @@ inline bool Vertex::has_mu_at_t(const double time) const
 
 inline double Vertex::x() const
 {
-    return this->cords.x;
+    return this->cords.x();
 }
 
 
 inline double Vertex::y() const
 {
-    return this->cords.y;
+    return this->cords.y();
 }
 
 
 inline double Vertex::z() const
 {
-    return this->cords.z;
+    return this->cords.z();
 }
 
 
@@ -213,5 +203,12 @@ inline QString Vertex::cords_str() const
     QString str = QString( "%1, %2, %3" ).arg(this->x()).arg(this->y()).arg(this->z());
     return str;
 }
+
+
+inline double Vertex::dist_to(const Vector3d v) const
+{
+    return length(this->cords, v);
+}
+
 
 #endif // VERTEX_H

@@ -14,8 +14,12 @@
 #define M_PI 3.14159265358979324
 #endif
 
-#ifndef UNSIGNEDLONG
+#ifndef UL
 #define UL unsigned long
+#endif
+
+#ifndef UI
+#define UI unsigned int
 #endif
 
 #ifndef MSECS_PER_SEC

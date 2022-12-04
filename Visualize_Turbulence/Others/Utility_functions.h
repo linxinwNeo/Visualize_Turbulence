@@ -3,6 +3,8 @@
 
 #include <QString>
 #include <QMessageBox>
+#include <set>
+#include "Geometry/Tet.h"
 
 inline void throwErrorMessage( const QString message ){
     QMessageBox messageBox;
@@ -26,6 +28,13 @@ inline void ScreenToSecondWin(
 
     s = (double) world_leftx + ratiox * win_world_sizex;
     t = (double) world_bottomy + ratioy * win_world_sizey;
+}
+
+
+inline bool is_in_set(set<Tet*> s, Tet* tet)
+{
+    if(s.find(tet) == s.end()) return false;
+    return true;
 }
 
 

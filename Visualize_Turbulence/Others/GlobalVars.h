@@ -28,7 +28,9 @@ bool RightButtonDown = false;
 // each element in pathlines is a trajectory over space and time
 vector<PathLine*> pathlines;
 const unsigned int NUM_SEEDS = 10;
-unsigned int max_num_steps = 60;
-const double step_size = 1;
+const unsigned int max_num_steps = 600;
+const double time_step_size = 0.1;
+// when trace a point, we don't care the position that may be too far away
+const double dist_scale = 5.;
 
 #endif // GLOBALVARS_H
