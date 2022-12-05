@@ -85,7 +85,7 @@ void Vertex::set_mu(const double time, const double mu)
 }
 
 
-// using linear interpolation to find the
+// using linear interpolation to find the state of the vertex at target_t
 Vector3d* Vertex::linear_interpolate_vel(const double target_t)
 {
     int t1 = floor(target_t);

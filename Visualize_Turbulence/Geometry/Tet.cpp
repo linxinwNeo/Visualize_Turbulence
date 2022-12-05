@@ -2,7 +2,7 @@
 #include "Geometry/Vertex.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Edge.h"
-#include "Others/Utility_functions.h"
+#include "Others/Utilities.h"
 #include <math.h>
 #include <QDebug>
 
