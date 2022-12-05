@@ -4,6 +4,19 @@
 #include <QMainWindow>
 #include <QKeyEvent>
 
+#include "FileLoader/ReadFile.h"
+#include "Geometry/Mesh.h"
+#include "Lines/PathLine.h"
+
+extern Mesh* mesh;
+extern vector<PathLine*> pathlines;
+extern ReadFile* file;
+extern const QString meshFilePath, dataFilePath;
+extern const unsigned int NUM_SEEDS;
+extern const unsigned int max_num_steps;
+extern const double time_step_size;
+extern const double dist_scale;
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE

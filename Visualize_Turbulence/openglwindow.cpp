@@ -1,17 +1,11 @@
 #define GL_SILENCE_DEPRECATION
 #include <QMouseEvent>
 #include <QSurfaceFormat>
+#include <GLUT/glut.h>
 
 #include "openglwindow.h"
-#include "Geometry/Mesh.h"
-#include "Others/Predefined.h"
-#include "Others/Utility_functions.h"
-
-extern Mesh* mesh;
-extern bool LeftButtonDown;
-extern bool MiddleButtonDown;
-extern bool RightButtonDown;
-double vor_MIN = 0, vor_MAX = 0;
+#include "Others/Utilities.h"
+#include "Others/Draw.h"
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -24,7 +18,7 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     this->trans_y = 0.;
 
     // init matrices
-    this->mat_ident( this->rotmat );
+    mat_ident( this->rotmat );
 
     for(int i = 0; i < 16; i++)
         this->ObjXmat[i]=0.;
@@ -80,100 +74,36 @@ void openGLWindow::paintGL()
         }
         time_idx = floor(msecs/MSECS_PER_SEC);
     }
-    mesh->max_vor_mag(time_idx, vor_MIN, vor_MAX);
 
     glMatrixMode(GL_PROJECTION);
     glEnable(GL_DEPTH_TEST);
 
-    glLineWidth(3);
-    glPushMatrix();
+    glPushMatrix(); // push 1st projection matrix
     glLoadIdentity();
     glOrtho(-1.5, 1.5, -1, 1., -1000.0, 4000.0);
 
-
     glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+    glPushMatrix(); // push 1st modelView matrix
     glLoadIdentity();
     this->set_scene();
-    glClearColor (0.7, 0.7, 0.7, 1.0);  // background for rendering color coding and lighting
+
+    glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // fixing z-fighting
-    glEnable(GL_POLYGON_OFFSET_FILL);
-    glPolygonOffset(1.0, 1.0);
-    glDepthFunc(GL_LESS);
+    draw_axis();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glColor3f(0, 0, 1);
-    glBegin(GL_TRIANGLES);
-    for( const Triangle* tri : mesh->boundary_tris ){
-        vector<Vertex*> verts = tri->verts;
-        Vertex* v1 = verts[0];
-        Vertex* v2 = verts[1];
-        Vertex* v3 = verts[2];
-
-       glVertex3f(v1->x(), v1->y(), v1->z());
-       glVertex3f(v2->x(), v2->y(), v2->z());
-       glVertex3f(v3->x(), v3->y(), v3->z());
+    draw_wireframe(mesh->boundary_tris);
+    double max, min;
+    mesh->max_vel_mag(0, min, max);
+    for(const auto& pl: pathlines){
+            draw_pathlines(pl, min, max);
     }
 
-    glEnd();
-    glDisable(GL_POLYGON_OFFSET_FILL);
 
-
-    glDepthFunc(GL_LEQUAL);
-    glColor3f(0., 0., 0.);
-
-    glBegin(GL_LINES);
-    for( unsigned int i = 0 ; i < mesh->num_tets(); i++ ){
-        Tet* tet = mesh->tets[i];
-        Vertex* v1 = tet->verts[0];
-        Vertex* v2 = tet->verts[1];
-        Vertex* v3 = tet->verts[2];
-        Vertex* v4 = tet->verts[3];
-
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v2->x(), v2->y(), v2->z());
-
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v3->x(), v3->y(), v3->z());
-
-        glVertex3f(v1->x(), v1->y(), v1->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
-
-        glVertex3f(v2->x(), v2->y(), v2->z());
-        glVertex3f(v3->x(), v3->y(), v3->z());
-
-        glVertex3f(v2->x(), v2->y(), v2->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
-
-        glVertex3f(v3->x(), v3->y(), v3->z());
-        glVertex3f(v4->x(), v4->y(), v4->z());
-    }
-    glEnd();
-    glDisable(GL_DEPTH_TEST);
-    glPopMatrix();
+    glPopMatrix(); // pop 1st modelView matrix
 
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-
-    this->update();
-}
-
-
-void openGLWindow::mat_ident(Matrix m) const
-{
-    int i;
-
-    for (i = 0; i <= 3; i++) {
-        m[i][0] = 0.0;
-        m[i][1] = 0.0;
-        m[i][2] = 0.0;
-        m[i][3] = 0.0;
-        m[i][i] = 1.0;
-    }
+    glPopMatrix(); // pop 1st projection matrix
 }
 
 
@@ -198,20 +128,6 @@ void openGLWindow::set_scene() const
 }
 
 
-void openGLWindow::multmatrix(const Matrix m) const
-{
-    int i, j, index = 0;
-
-    GLfloat mat[16];
-
-    for ( i = 0; i < 4; i++)
-        for (j = 0; j < 4; j++)
-            mat[index++] = m[i][j];
-
-    glMultMatrixf( mat );
-}
-
-
 // reset all the modelView transformation variables
 void openGLWindow::reset_scene()
 {
@@ -219,7 +135,7 @@ void openGLWindow::reset_scene()
     this->zoom_factor = 1.;
 
     // init matrices
-    this->mat_ident( this->rotmat );
+    mat_ident( this->rotmat );
 
     for(int i = 0; i < 16; i++)
         this->ObjXmat[i]=0.;
@@ -334,26 +250,6 @@ void openGLWindow::leftButtonUp(const QMouseEvent *event)
 }
 
 
-void openGLWindow::middleButtonDown(const QMouseEvent *event)
-{
-    MiddleButtonDown = true;
-    return;
-}
-
-
-void openGLWindow::middleButtonMoved(const QMouseEvent *event)
-{
-    return;
-}
-
-
-void openGLWindow::middleButtonUp(const QMouseEvent *event)
-{
-    MiddleButtonDown = false;
-    return;
-}
-
-
 void openGLWindow::rightButtonDown(const QMouseEvent *event)
 {
     RightButtonDown = true;
@@ -409,3 +305,25 @@ void openGLWindow::rightButtonUp(const QMouseEvent *event)
 {
     RightButtonDown = false;
 }
+
+
+void openGLWindow::middleButtonDown(const QMouseEvent *event)
+{
+    MiddleButtonDown = true;
+    return;
+}
+
+
+void openGLWindow::middleButtonMoved(const QMouseEvent *event)
+{
+    return;
+}
+
+
+void openGLWindow::middleButtonUp(const QMouseEvent *event)
+{
+    MiddleButtonDown = false;
+    return;
+}
+
+

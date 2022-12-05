@@ -31,12 +31,12 @@ HEADERS += \
     Geometry/Vertex.h \
     Lines/PathLine.h \
     Others/ColorTable.h \
-    Others/GlobalVars.h \
+    Others/Draw.h \
     Others/Matrix2x2.h \
     Others/Matrix3x3.h \
     Others/Predefined.h \
     Others/TraceBall.h \
-    Others/Utility_functions.h \
+    Others/Utilities.h \
     Others/Vector2d.h \
     Others/Vector3d.h \
     mainwindow.h \

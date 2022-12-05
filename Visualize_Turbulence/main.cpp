@@ -1,25 +1,54 @@
+#include "Others/ColorTable.h"
 #include "mainwindow.h"
 
 #include <queue>
 #include <QApplication>
 #include <cstdlib>
 #include <set>
-#include "Others/GlobalVars.h"
-#include "Others/Utility_functions.h"
+
+#include "FileLoader/ReadFile.h"
+#include "Others/Utilities.h"
+#include "Geometry/Mesh.h"
+#include "Lines/PathLine.h"
 
 typedef pair<double, Tet*> qPair;
 
-extern ReadFile* file;
-extern Mesh* mesh;
-extern const QString meshFilePath;
-extern const QString dataFilePath;
+// the obj that used to read the file
+ReadFile* file = NULL;
 
-// seed generation related
-extern vector<PathLine*> pathlines;
-extern const unsigned int NUM_SEEDS;
-extern const unsigned int max_num_steps;
-extern const double time_step_size;
-extern const double dist_scale;
+
+// the data of the file is saved orderly in mesh obj
+Mesh* mesh = NULL;
+
+
+// the file path, should be entered before starting the program
+// TODO dynamiclly import files
+const QString meshFilePath = "/Users/linxinw/Desktop/fast_mesh.txt";
+const QString dataFilePath = "/Users/linxinw/Desktop/fast_data.txt";
+
+// boolean variables used to enable orbit control
+bool LeftButtonDown = false;
+bool MiddleButtonDown = false;
+bool RightButtonDown = false;
+
+// calculated pathlines used for animation
+// each element in pathlines is a trajectory over space and time
+vector<PathLine*> pathlines;
+//const unsigned int NUM_SEEDS = 1;
+const unsigned int max_num_steps = 60;
+const double time_step_size = 1;
+// when trace a point, we don't care the position that may be too far away
+const double dist_scale = 5.;
+
+// arrow parameters
+const double cone_base_radius=0.01;
+const double cone_height=cone_base_radius*2;
+const double cylinder_height = cone_height*2;
+const double cylinder_radius = cone_base_radius/2;
+const int slices = 10;
+const double arrow_color[] = {1, 0, 0};
+ColorTable CT;
+
 
 void read_files();
 void place_seeds();
@@ -36,11 +65,18 @@ int main(int argc, char *argv[])
     // place inital seeds
     place_seeds();
     // trace seeds and form pathlines
+    // mainwindow.cpp will clear the memory of pathlines
     build_pathlines_from_seeds();
-    for(PathLine* PL : pathlines){
-        qDebug() << PL->num_verts();
-    }
-    // mainwindow.cpp will clear the memory
+
+
+//    PathLine* pl = pathlines[0];
+//    Vertex*v = pl->verts[0];
+//    qDebug() << v->cords_str();
+//    qDebug() << v->vel_str(0);
+//    Vertex*v2 = pl->verts[1];
+//    qDebug() << v2->cords_str();
+//    qDebug() << v2->vel_str(time_step_size);
+
 
     MainWindow w;
     w.show();
@@ -66,21 +102,32 @@ void place_seeds()
     set<UL> seeded_tets;
     unsigned int cur_num_seeds = 0;
 
-    pathlines.reserve(NUM_SEEDS);
+    pathlines.reserve(40000);
 
-    while(cur_num_seeds < NUM_SEEDS){
-        int random_idx = rand() % mesh->num_tets();
-        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
-        else{
-            seeded_tets.insert(random_idx);
-            Tet* tet = mesh->tets[random_idx];
+//    while(cur_num_seeds < NUM_SEEDS)
+//    {
+//        int random_idx = rand() % mesh->num_tets();
+//        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
+//        else{
+//            seeded_tets.insert(random_idx);
+//            Tet* tet = mesh->tets[random_idx];
+//            PathLine* PL = new PathLine();
+//            Vector3d seed = tet->centroid();
+//            Vertex* seed_v = tet->get_vert_at(seed, 0.); // interpolate this seed at time 0
+//            PL->verts.push_back( seed_v );
+//            pathlines.push_back(PL);
+//            cur_num_seeds ++;
+//        }
+//    }
+
+
+    for(Tet* tet : mesh->tets)
+    {
             PathLine* PL = new PathLine();
             Vector3d seed = tet->centroid();
             Vertex* seed_v = tet->get_vert_at(seed, 0.); // interpolate this seed at time 0
             PL->verts.push_back( seed_v );
             pathlines.push_back(PL);
-            cur_num_seeds ++;
-        }
     }
 }
 
@@ -101,8 +148,7 @@ void build_pathlines_from_seeds(){
         */
         double cur_time = 0;
         double moving_dist = 0;
-        for(UI i = 0; i < max_num_steps && cur_time < mesh->num_time_steps - time_step_size; i++){
-            qDebug() << cur_time;
+        for(UI i = 0; i < max_num_steps && cur_time < mesh->num_time_steps - 1 - time_step_size; i++){
             Vector3d newCords = trace_one_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
             moving_dist = length(cords, newCords); // calculate how long we moved
             Tet* newTet = inWhichTet(newCords, tet, moving_dist); // find the corresponding tet
@@ -118,6 +164,8 @@ void build_pathlines_from_seeds(){
             seed_vert = newVert;
         }
     }
+
+    qDebug() << "num of pathlines: " << pathlines.size();
 }
 
 
@@ -143,6 +191,7 @@ Tet* inWhichTet(const Vector3d& target, Tet* prev_tet, double moved_dist)
             targetTet = whichTet;
             break;
         }
+
         // place the neighbors of tets into the pq which the weights of the distance between the seed to them
         for( Tet* nbTet : whichTet->tets ){
             if(is_in_set(used, nbTet)) continue; // don't add tet that has been used

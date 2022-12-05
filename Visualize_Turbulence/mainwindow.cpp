@@ -1,10 +1,6 @@
 #include "mainwindow.h"
-#include "Lines/PathLine.h"
-#include "Others/Predefined.h"
 #include "ui_mainwindow.h"
 
-// external vars
-extern vector<PathLine*> pathlines;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

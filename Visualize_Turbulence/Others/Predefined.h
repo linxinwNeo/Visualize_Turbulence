@@ -10,8 +10,8 @@
 #define WIN_HEIGHT 800 // openGL window height
 #endif
 
-#ifndef M_PI
-#define M_PI 3.14159265358979324
+#ifndef PI
+#define PI 3.14159265358979324
 #endif
 
 #ifndef UL

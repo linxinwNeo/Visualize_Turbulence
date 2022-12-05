@@ -47,7 +47,8 @@ public:
     void build_edges( );
     void assign_triangle(Tet*, Tet*, Vertex*, Vertex*, Vertex*); // without edges
     void assign_edge(Vertex*, Vertex*);
-    void max_vor_mag(const unsigned int, double&, double&) const;
+    void max_vor_mag(const unsigned int, double& min, double& max) const;
+    void max_vel_mag(const unsigned int, double& min, double& max) const;
 };
 
 

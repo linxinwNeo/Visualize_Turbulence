@@ -4,8 +4,11 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QTime>
+
+#include "Geometry/Mesh.h"
 #include "Others/TraceBall.h"
 #include "Others/Vector3d.h"
+
 
 class openGLWindow : public QOpenGLWidget, public QOpenGLFunctions
 {
@@ -41,9 +44,7 @@ protected:
     //void	resizeGL(int w, int h) override;
 
 public:
-    void mat_ident( Matrix m ) const;
     void set_scene() const;
-    void multmatrix( const Matrix ) const;
     void reset_scene();
 
 private:
@@ -65,5 +66,6 @@ private:
     void rightButtonMoved(const QMouseEvent * event);
     void rightButtonUp(const QMouseEvent * event);
 };
+
 
 #endif // OPENGLWINDOW_H

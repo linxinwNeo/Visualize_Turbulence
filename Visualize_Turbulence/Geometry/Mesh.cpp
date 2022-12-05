@@ -216,17 +216,32 @@ void Mesh::assign_edge(Vertex* v1, Vertex* v2){
 }
 
 
-void Mesh::max_vor_mag(const unsigned int time, double& min, double& max) const
+void Mesh::max_vor_mag(const unsigned int time, double& min_vor, double& max_vor) const
 {
     if(time < 0 || time > this->num_time_steps) return;
 
-    min = DBL_MAX;
-    max = DBL_MIN;
+    min_vor = DBL_MAX;
+    max_vor = DBL_MIN;
     for( const Vertex* v : this->verts ){
         Vector3d vor = v->vors.at(time);
         double mag = length(vor);
-        if(mag < min) min = mag;
-        if(mag > max) max = mag;
+        if(mag < min_vor) min_vor = mag;
+        if(mag > max_vor) max_vor = mag;
+    }
+}
+
+
+void Mesh::max_vel_mag(const unsigned int time, double& min_vel, double& max_vel) const
+{
+    if(time < 0 || time > this->num_time_steps) return;
+
+    min_vel = DBL_MAX;
+    max_vel = DBL_MIN;
+    for( const Vertex* v : this->verts ){
+        Vector3d vel = v->vels.at(time);
+        double mag = length(vel);
+        if(mag < min_vel) min_vel = mag;
+        if(mag > max_vel) max_vel = mag;
     }
 }
 
@@ -235,7 +250,10 @@ void Mesh::max_vor_mag(const unsigned int time, double& min, double& max) const
 void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vertex *v3)
 {
     Triangle* new_tri = new Triangle(v1, v2, v3);
-    new_tri->on_boundary = true;
+    if(tet2 == NULL) {
+        new_tri->on_boundary = true;
+        this->boundary_tris.push_back(new_tri);
+    }
     // add triangle to the neighbor tri list of vertices
     v1->add_triangle(new_tri);
     v2->add_triangle(new_tri);
@@ -245,7 +263,7 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
     if(tet2!=NULL) tet2->add_triangle(new_tri);
     // add triangle to the mesh
     this->add_triangle(new_tri);
-    this->boundary_tris.push_back((new_tri));
+    this->tris.push_back((new_tri));
 }
 
 
