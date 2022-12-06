@@ -14,7 +14,20 @@ MainWindow::~MainWindow()
 {
     delete ui;
 
-    UL i;
+    UL i, j;
+    // clear memoery for streamlines
+    for( i = 0; i < streamlines_for_all_t.size(); i++ ){
+        vector<StreamLine*> sls = streamlines_for_all_t[i];
+        for( j = 0; j < sls.size(); j++ ){
+            StreamLine* sl = sls[j];
+            if(sl != NULL){
+                delete sl;
+            }
+            sls[j] = NULL;
+        }
+        sls.clear();
+    }
+    streamlines_for_all_t.clear();
 
     // clear memoery for pathlines
     for( i = 0; i < pathlines.size(); i++ ){

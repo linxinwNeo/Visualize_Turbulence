@@ -90,14 +90,21 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    draw_axis();
+    //draw_axis();
 
     draw_wireframe(mesh->boundary_tris);
+
+    glPushMatrix();
     double max, min;
     mesh->max_vel_mag(0, min, max);
-    for(const auto& pl: pathlines){
-            draw_pathlines(pl, min, max);
+    for(const auto& sls : streamlines_for_all_t){
+        for(StreamLine* sl:sls){
+            draw_streamlines(sl, min, max);
+        }
+        break;
     }
+
+    glPopMatrix();
 
 
     glPopMatrix(); // pop 1st modelView matrix

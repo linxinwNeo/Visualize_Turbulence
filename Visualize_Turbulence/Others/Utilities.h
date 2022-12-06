@@ -1,5 +1,6 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
+
 #define GL_SILENCE_DEPRECATION
 
 #include <QString>
@@ -13,6 +14,7 @@
 #include "Geometry/Mesh.h"
 #include "Geometry/Tet.h"
 #include "Lines/PathLine.h"
+#include "Lines/StreamLine.h"
 #include "Others/TraceBall.h"
 #include "Others/ColorTable.h"
 
@@ -25,6 +27,7 @@ extern const double cylinder_radius;
 extern const int slices;
 extern const double arrow_color[];
 extern vector<PathLine*> pathlines;
+extern vector< vector<StreamLine*> > streamlines_for_all_t;
 extern ColorTable CT;
 
 // function prototypes
@@ -122,6 +125,24 @@ inline void mat_ident(Matrix m)
         m[i][2] = 0.0;
         m[i][3] = 0.0;
         m[i][i] = 1.0;
+    }
+}
+
+
+// output is saved in min_idx and min_val
+inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val )
+{
+    if(size <= 0) {
+        qDebug() << "min_val: pasing an array of incorrect size!";
+        return;
+    }
+    min_idx = 0;
+    min_val = ds[0];
+    for(unsigned int i = 1; i < size; i++ ){
+        if(ds[i] < min_val){
+            min_idx = i;
+            min_val = ds[i];
+        }
     }
 }
 #endif // UTILITIES_H

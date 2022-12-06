@@ -221,12 +221,10 @@ Vector3d Tet::centroid() const
 
 // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
 // check if the pt is on the same side of other vertices
-bool Tet::is_same_side(const Vector3d &v1, const Vector3d &v2, const Vector3d &v3, const Vector3d &v4, const Vector3d &p) const
+bool is_same_side(const Vector3d &v1, const Vector3d &v2, const Vector3d &v3, const Vector3d &v4, const Vector3d &p)
 {
-    Vector3d normal = cross(v2 - v1, v3 - v1);
-    double dotV4 = dot(normal, v4 - v1);
-    double dotP = dot(normal, p - v1);
-    return signbit(dotV4) == signbit(dotP);
+    Vector3d normal = cross(v2-v1, v3-v1);
+    return dot(normal, v4-v1) * dot(normal, p-v1) >= 0;
 }
 
 
@@ -234,14 +232,100 @@ bool Tet::is_same_side(const Vector3d &v1, const Vector3d &v2, const Vector3d &v
 // check is parameter point is in this tet
 bool Tet::is_pt_in(const Vector3d& v) const
 {
-    Vector3d v1 = this->verts[0]->cords;
-    Vector3d v2 = this->verts[1]->cords;
-    Vector3d v3 = this->verts[2]->cords;
-    Vector3d v4 = this->verts[3]->cords;
-    Vector3d p = Vector3d(v);
+    const Vector3d v1 = this->verts[0]->cords;
+    const Vector3d v2 = this->verts[1]->cords;
+    const Vector3d v3 = this->verts[2]->cords;
+    const Vector3d v4 = this->verts[3]->cords;
+    const Vector3d p = Vector3d(v);
 
-    return  this->is_same_side(v1, v2, v3, v4, p) &&
-            this->is_same_side(v2, v3, v4, v1, p) &&
-            this->is_same_side(v3, v4, v1, v2, p) &&
-            this->is_same_side(v4, v1, v2, v3, p);
+    return  is_same_side(v1, v2, v3, v4, p) &&
+            is_same_side(v2, v3, v4, v1, p) &&
+            is_same_side(v3, v4, v1, v2, p) &&
+            is_same_side(v4, v1, v2, v3, p);
+}
+
+
+// https://www.researchgate.net/publication/226339789_Virtual_Reality-Based_Interactive_Scientific_Visualization_Environments
+// using barycentric cords
+bool Tet::is_pt_in2(const Vector3d& p, double ds[4]) const
+{
+    this->bary_tet(p, ds);
+    for(int i = 0; i<4; i++ ){
+        if(ds[i] < 0) return false;
+    }
+    return true;
+}
+
+
+// find the missing v4
+Vertex* Tet::missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3)
+{
+    set<Vertex*> vs{this->verts[0], this->verts[1], this->verts[2], this->verts[3]};
+
+    vs.erase(v1);
+    vs.erase(v2);
+    vs.erase(v3);
+
+    return *vs.begin();
+}
+
+
+// https://math.stackexchange.com/questions/183030/given-a-tetrahedron-how-to-find-the-outward-surface-normals-for-each-side
+// compute the normal vector of the specfied triangle
+Vector3d Tet::normal_of( unsigned short tri_idx )
+{
+    Triangle* tri = this->tris[tri_idx];
+    Vector3d v1 = tri->verts[0]->cords;
+    Vector3d v2 = tri->verts[1]->cords;
+    Vector3d v3 = tri->verts[2]->cords;
+    Vector3d v4 = missing_vertex(tri->verts[0], tri->verts[1], tri->verts[2])->cords;
+    Vector3d normal = cross( v3-v1, v3-v2 );
+    Vector3d& p = v1;
+    Vector3d vp = v4 - p;
+    if(dot(vp, normal) > 0) // facing inward
+    {
+        normal = normal * (-1.);
+    }
+    normalize(normal);
+    return normal;
+}
+
+
+// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
+double Tet::ScTP(const Vector3d &a, const Vector3d &b, const Vector3d &c) const
+{
+    // computes scalar triple product
+    return dot(a, cross(b, c));
+}
+
+
+// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
+// the weights are saved in vs[4];
+void Tet::bary_tet(const Vector3d & p, double ds[4]) const
+{
+    const Vector3d& a = this->verts[0]->cords;
+    const Vector3d& b = this->verts[1]->cords;
+    const Vector3d& c = this->verts[2]->cords;
+    const Vector3d& d = this->verts[3]->cords;
+
+    const Vector3d vap = p - a;
+    const Vector3d vbp = p - b;
+
+    const Vector3d vab = b - a;
+    const Vector3d vac = c - a;
+    const Vector3d vad = d - a;
+
+    const Vector3d vbc = c - b;
+    const Vector3d vbd = d - b;
+    // ScTP computes the scalar triple product
+    const double va6 = ScTP(vbp, vbd, vbc);
+    const double vb6 = ScTP(vap, vac, vad);
+    const double vc6 = ScTP(vap, vad, vab);
+    const double vd6 = ScTP(vap, vab, vac);
+    const double v6 = 1 / ScTP(vab, vac, vad);
+    ds[0] = va6*v6;
+    ds[1] = vb6*v6;
+    ds[2] = vc6*v6;
+    ds[3] = vd6*v6;
+    return;
 }

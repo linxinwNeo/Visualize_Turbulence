@@ -2,7 +2,6 @@
 #define TRIANGLE_H
 
 #include <vector>
-#include "Others/Predefined.h"
 #include "Others/Vector3d.h"
 
 // forward class declarations
@@ -19,17 +18,16 @@ public:
     vector<Vertex*> verts;      // a face can have 3/4/5... number of vertices, depending on the element type
     vector<Edge*> edges;        // edges that made of this face, can be more than 3.
     vector<Tet*> tets;          // tets that uses this face, should be one/two only.
-    Vector3d normal;
-    bool on_boundary;
+    bool is_boundary;
 
     // member functions
     Triangle();
     Triangle(Vertex*, Vertex*, Vertex*);
     ~Triangle();
 
-    inline UL num_verts() const;
-    inline UL num_edges() const;
-    inline unsigned long num_tets() const;
+    inline short num_verts() const;
+    inline short num_edges() const;
+    inline short num_tets() const;
 
     inline void add_vert(Vertex*);
     inline void add_edge(Edge*);
@@ -40,19 +38,19 @@ public:
 };
 
 
-inline UL Triangle::num_verts() const
+inline short Triangle::num_verts() const
 {
     return this->verts.size();
 }
 
 
-inline UL Triangle::num_edges() const
+inline short Triangle::num_edges() const
 {
     return this->edges.size();
 }
 
 
-inline UL Triangle::num_tets() const
+inline short Triangle::num_tets() const
 {
     return this->tets.size();
 }

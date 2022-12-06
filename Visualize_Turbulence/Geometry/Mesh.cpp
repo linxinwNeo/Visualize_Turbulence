@@ -1,4 +1,5 @@
 #include "Geometry/Mesh.h"
+#include "Others/Utilities.h"
 #include <set>
 #include <float.h>
 
@@ -89,7 +90,7 @@ void Mesh::calc_Bounding_Sphere()
 // the verts, tets
 void Mesh::build_triangles()
 {
-    this->boundary_tris.reserve(this->num_tets()); // a rough number
+    this->boundary_tris.reserve(this->num_tets() * 4); // a rough number
 
     for( Tet* tet : this->tets ) // loop every tet
     {
@@ -189,6 +190,29 @@ void Mesh::build_edges()
 }
 
 
+// should be called after tris are generated
+// for each tet, add neighbor tets to its neighbor tet list
+void Mesh::build_tetNeighbors()
+{
+    for(Tet* tet : this->tets)
+    {
+        set<Tet*> uniq_tets;
+        for(Triangle* tri : tet->tris){
+            for(Tet* tri_tet : tri->tets){
+                if(tri_tet != tet) uniq_tets.insert(tri_tet);
+            }
+        }
+        // for each unique tet in the set, add it to the current tet
+        // additional checkings
+        if(uniq_tets.size() > 4) throwErrorMessage(QString("build_tetNeighbors: tet %1 tet has more than 4 neighbor tets!").arg(tet->idx));
+        if(uniq_tets.size() <= 0) throwErrorMessage(QString("build_tetNeighbors: tet %1 has less than 1 neighbor tets!").arg(tet->idx));
+        for(Tet* uniq_tet : uniq_tets){
+            tet->add_tet(uniq_tet);
+        }
+    }
+}
+
+
 void Mesh::assign_edge(Vertex* v1, Vertex* v2){
     // create edge and add this edge to the mesh
     Edge* e = new Edge(v1, v2);
@@ -251,7 +275,7 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
 {
     Triangle* new_tri = new Triangle(v1, v2, v3);
     if(tet2 == NULL) {
-        new_tri->on_boundary = true;
+        new_tri->is_boundary = true;
         this->boundary_tris.push_back(new_tri);
     }
     // add triangle to the neighbor tri list of vertices
@@ -260,11 +284,17 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
     v3->add_triangle(new_tri);
     // add triangle to the tri list of tets
     tet1->add_triangle(new_tri);
-    if(tet2!=NULL) tet2->add_triangle(new_tri);
+    // add tet1 to the triangle
+    new_tri->add_tets(tet1);
+    if(tet2!=NULL) {
+        // add triangle to the tet1
+        tet2->add_triangle(new_tri);
+        // add tet2 to the triangle
+        new_tri->add_tets(tet2);
+    }
     // add triangle to the mesh
     this->add_triangle(new_tri);
     this->tris.push_back((new_tri));
 }
-
 
 

@@ -39,23 +39,25 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
     this->mesh->calc_Bounding_Sphere();
     this->mesh->build_triangles();
     this->mesh->build_edges();
+    this->mesh->build_tetNeighbors();
 
     // correctness check
-    qDebug() << "Mesh: num of triangless:" << this->mesh->num_tris();
+    qDebug() << "Mesh: num of triangles:" << this->mesh->num_tris();
+    qDebug() << "Mesh: num of boundary triangles: " <<  this->mesh->num_boundary_tris();
     qDebug() << "Mesh: num of tets: " <<  this->mesh->num_tets();
     qDebug() << "Mesh: num of verts: " <<  this->mesh->num_verts();
     qDebug() << "Mesh: num of edges: " <<  this->mesh->num_edges();
-    qDebug() << "Mesh: num of boundary triangles: " <<  this->mesh->num_boundary_tris();
 
-    for(Triangle* t : this->mesh->tris){
-        if(t->num_tets() > 2){
-            qDebug() << "Triangle: num of tets not right!: " <<  t->num_tets();
+
+    for(Triangle* tri : this->mesh->tris){
+        if(tri->num_tets() > 2 || tri->num_tets() == 0){
+            qDebug() << "Triangle: num of tets not right!: " <<  tri->num_tets();
         }
-        if(t->num_verts() != 3){
-            qDebug() << "Triangle: num of verts not right! " <<  t->num_verts();
+        if(tri->num_verts() != 3){
+            qDebug() << "Triangle: num of verts not right! " <<  tri->num_verts();
         }
-        if(t->num_edges() != 3){
-            qDebug() << "Triangle: num of edges not right! " <<  t->num_edges();
+        if(tri->num_edges() != 3){
+            qDebug() << "Triangle: num of edges not right! " <<  tri->num_edges();
         }
     }
 

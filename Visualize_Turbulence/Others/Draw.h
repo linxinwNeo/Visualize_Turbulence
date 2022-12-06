@@ -1,5 +1,6 @@
 #ifndef DRAW_H
 #define DRAW_H
+
 #define GL_SILENCE_DEPRECATION
 
 
@@ -14,6 +15,7 @@
 #include "Geometry/Triangle.h"
 #include "Geometry/Vertex.h"
 #include "Lines/PathLine.h"
+#include "Lines/StreamLine.h"
 
 // function prototypes
 inline void draw_cylinder(
@@ -131,7 +133,8 @@ inline void draw_triangles(vector<Triangle*>& tris)
 
 inline void draw_wireframe(vector<Triangle*>& tris)
 {
-    glLineWidth(1);
+    glLineWidth(2);
+    glColor3f(0, 0, 1);
     for( const Triangle* tri : tris ){
         glBegin(GL_LINE_STRIP);
             vector<Vertex*> verts = tri->verts;
@@ -181,12 +184,32 @@ inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double 
         const Vector3d& p = v->cords;
         const Vector3d& vel = v->vels.begin()->second;
         double vel_mag = length(vel);
-        const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
-        glColor3f(color.R, color.G, color.B);
+        //const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
+        glColor3f(1, 0, 0);
         glVertex3f(p.x(), p.y(), p.z());
     }
     glEnd();
     glPopMatrix();
+}
+
+
+inline void draw_streamlines(StreamLine* sl, const double min_vel_mag, const double max_vel_mag)
+{
+//    glLineWidth(4);
+//    glMatrixMode(GL_MODELVIEW);
+//    glPushMatrix();
+    glBegin(GL_LINE_STRIP);
+    for(const Vertex* v : sl->verts){
+        const Vector3d& p = v->cords;
+        const Vector3d& vel = v->vels.begin()->second;
+        //double vel_mag = length(vel);
+        //const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
+        //glColor3f(color.R, color.G, color.B);
+        glColor3f(1, 0, 0);
+        glVertex3f(p.x(), p.y(), p.z());
+    }
+    glEnd();
+//    glPopMatrix();
 }
 
 inline void draw_arrows( PathLine* pl )

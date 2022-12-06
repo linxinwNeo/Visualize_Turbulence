@@ -16,6 +16,7 @@ SOURCES += \
     Geometry/Triangle.cpp \
     Geometry/Vertex.cpp \
     Lines/PathLine.cpp \
+    Lines/StreamLine.cpp \
     Others/ColorTable.cpp \
     Others/TraceBall.cpp \
     main.cpp \
@@ -30,6 +31,7 @@ HEADERS += \
     Geometry/Triangle.h \
     Geometry/Vertex.h \
     Lines/PathLine.h \
+    Lines/StreamLine.h \
     Others/ColorTable.h \
     Others/Draw.h \
     Others/Matrix2x2.h \

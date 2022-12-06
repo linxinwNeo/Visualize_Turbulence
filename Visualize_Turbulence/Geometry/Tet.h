@@ -45,10 +45,17 @@ public:
     Vector3d centroid() const;
 
     // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
-    bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&) const;
     bool is_pt_in(const Vector3d&) const;
-};
+    bool is_pt_in2(const Vector3d&, double ds[4]) const;
 
+    Vector3d normal_of( unsigned short tri_idx );
+    Vertex* missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3);
+
+    double ScTP(const Vector3d &a, const Vector3d &b, const Vector3d &c) const;
+    void bary_tet(const Vector3d & p, double vs[4]) const;
+
+};
+bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);
 
 inline unsigned long Tet::num_verts() const
 {

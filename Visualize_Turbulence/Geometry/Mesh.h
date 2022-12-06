@@ -45,6 +45,7 @@ public:
     void calc_Bounding_Sphere();
     void build_triangles();
     void build_edges( );
+    void build_tetNeighbors();
     void assign_triangle(Tet*, Tet*, Vertex*, Vertex*, Vertex*); // without edges
     void assign_edge(Vertex*, Vertex*);
     void max_vor_mag(const unsigned int, double& min, double& max) const;

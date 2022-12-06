@@ -1,3 +1,4 @@
+#include "Lines/StreamLine.h"
 #include "Others/ColorTable.h"
 #include "mainwindow.h"
 
@@ -34,49 +35,46 @@ bool RightButtonDown = false;
 // calculated pathlines used for animation
 // each element in pathlines is a trajectory over space and time
 vector<PathLine*> pathlines;
-//const unsigned int NUM_SEEDS = 1;
-const unsigned int max_num_steps = 60;
-const double time_step_size = 1;
+// we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
+vector< vector<StreamLine*> > streamlines_for_all_t;
+const unsigned int NUM_SEEDS = 20;
+const unsigned int max_num_steps = 1000;
+const double time_step_size = 0.5;
+const double dist_step_size = 0.001;
 // when trace a point, we don't care the position that may be too far away
-const double dist_scale = 5.;
+const double dist_scale = 10.;
 
 // arrow parameters
 const double cone_base_radius=0.01;
 const double cone_height=cone_base_radius*2;
 const double cylinder_height = cone_height*2;
 const double cylinder_radius = cone_base_radius/2;
-const int slices = 10;
+const int slices = 5;
 const double arrow_color[] = {1, 0, 0};
 ColorTable CT;
 
-
 void read_files();
-void place_seeds();
+void place_seeds(vector<PathLine*>&);
+void place_seeds(vector< vector<StreamLine*> > &);
 void build_pathlines_from_seeds();
-Vector3d trace_one_step(const Vector3d& start_cords, const Vector3d& vel);
-Tet* inWhichTet(const Vector3d& target, Tet* prev_tet, double moved_dist);
+Vector3d trace_one_time_step(const Vector3d& start_cords, const Vector3d& vel);
+Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
+Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]);
+vector<UL> generate_unique_random_Tet_idx();
+void build_streamlines_from_seeds();
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    // read files and build mesh
     read_files();
 
     // place inital seeds
-    place_seeds();
+    place_seeds(streamlines_for_all_t);
     // trace seeds and form pathlines
-    // mainwindow.cpp will clear the memory of pathlines
-    build_pathlines_from_seeds();
-
-
-//    PathLine* pl = pathlines[0];
-//    Vertex*v = pl->verts[0];
-//    qDebug() << v->cords_str();
-//    qDebug() << v->vel_str(0);
-//    Vertex*v2 = pl->verts[1];
-//    qDebug() << v2->cords_str();
-//    qDebug() << v2->vel_str(time_step_size);
-
+    // mainwindow.cpp will clear the memory of pathlines and streamlines
+    build_streamlines_from_seeds();
 
     MainWindow w;
     w.show();
@@ -95,40 +93,123 @@ void read_files(){
 // for a random tet, if we choose to place a seed,
 // a seed will be generated in the center of that tet
 // we set number of seeds to be generated
-void place_seeds()
+void place_seeds(vector<PathLine*>& pls)
 {
     srand((unsigned) time(NULL));
 
     set<UL> seeded_tets;
     unsigned int cur_num_seeds = 0;
 
-    pathlines.reserve(40000);
+    pls.reserve(NUM_SEEDS);
 
-//    while(cur_num_seeds < NUM_SEEDS)
-//    {
-//        int random_idx = rand() % mesh->num_tets();
-//        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
-//        else{
-//            seeded_tets.insert(random_idx);
-//            Tet* tet = mesh->tets[random_idx];
-//            PathLine* PL = new PathLine();
-//            Vector3d seed = tet->centroid();
-//            Vertex* seed_v = tet->get_vert_at(seed, 0.); // interpolate this seed at time 0
-//            PL->verts.push_back( seed_v );
-//            pathlines.push_back(PL);
-//            cur_num_seeds ++;
-//        }
-//    }
-
-
-    for(Tet* tet : mesh->tets)
+    while(cur_num_seeds < NUM_SEEDS)
     {
+        int random_idx = rand() % mesh->num_tets();
+        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
+        else{
+            seeded_tets.insert(random_idx);
+            Tet* tet = mesh->tets[random_idx];
             PathLine* PL = new PathLine();
             Vector3d seed = tet->centroid();
             Vertex* seed_v = tet->get_vert_at(seed, 0.); // interpolate this seed at time 0
             PL->verts.push_back( seed_v );
-            pathlines.push_back(PL);
+            pls.push_back(PL);
+            cur_num_seeds ++;
+        }
     }
+}
+
+
+void place_seeds(vector< vector<StreamLine*> >& all_sls)
+{
+    all_sls.reserve(mesh->num_time_steps);
+    // make sure we are using same seeds every time step
+    vector<UL> seeds = generate_unique_random_Tet_idx();
+
+    // for each time step, place streamline seeds
+    for(UI i = 0; i < mesh->num_time_steps; i++)
+    {
+        vector<StreamLine*> sls; // create a vector of streamlines to store seeds
+        sls.reserve(NUM_SEEDS); // we have num_seeds streamlines for each time step
+
+        unsigned int cur_num_seeds = 0;
+        while(cur_num_seeds < NUM_SEEDS)
+        {
+            // set up the streamline
+            StreamLine* SL = new StreamLine();
+            SL->verts.reserve(max_num_steps);
+            SL->time = (double) i;
+
+            UL tet_idx = seeds[cur_num_seeds];
+            Tet* rdm_tet = mesh->tets[tet_idx];
+            Vector3d center_pt = rdm_tet->centroid();
+            Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)i);
+            SL->verts.push_back( center_vert );
+            cur_num_seeds ++;
+            sls.push_back(SL);
+        }
+
+        all_sls.push_back(sls);
+    }
+}
+
+
+vector<UL> generate_unique_random_Tet_idx()
+{
+    srand((unsigned) time(NULL));
+    set<UL> seeded_tets;
+    unsigned int cur_num_seeds = 0;
+    while(cur_num_seeds < NUM_SEEDS)
+    {
+        int random_idx = rand() % mesh->num_tets();
+        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
+        else{
+            seeded_tets.insert(random_idx);
+            cur_num_seeds ++;
+        }
+    }
+
+    vector<UL> seeds;
+    seeds.reserve(NUM_SEEDS);
+    for(UL idx : seeded_tets){
+        qDebug() << idx;
+        seeds.push_back(idx);
+    }
+
+    return seeds;
+}
+
+
+// now every streamline at any time has a seed point as a starting point, we want to calculate their trajectory individually
+void build_streamlines_from_seeds(){
+    // for each time step
+    double cur_time = 0;
+    for( vector<StreamLine*>& sls : streamlines_for_all_t ){
+        // for each (the beginning of) trajectory
+        for( StreamLine* sl : sls ){
+            Vertex* seed_vert = sl->verts[0];
+            Vector3d cords = seed_vert->cords;
+            Tet* tet = seed_vert->tets[0];
+            for(UI i = 0; i < max_num_steps; i++){
+                Vector3d newCords = trace_one_dist_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
+                double ds[4]; // saving barycentric coordinates
+                Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
+                if(newTet == NULL) {
+                    break; // newTet is null means we couldn't proceed
+                }
+                // interpolate vertex's vel, vor, mu at time t
+                Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+                if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
+                newVert->add_tet(newTet);
+                sl->verts.push_back(newVert); // new vert into the pathline
+                cords = newCords; // update cords for the next iteration
+                seed_vert = newVert;
+            }
+        }
+        cur_time += 1.;
+        break;
+    }
+    qDebug() << "num of streamlines in first frame: " << streamlines_for_all_t[0].size();
 }
 
 
@@ -147,11 +228,10 @@ void build_pathlines_from_seeds(){
          *      add new vert into the pathline
         */
         double cur_time = 0;
-        double moving_dist = 0;
         for(UI i = 0; i < max_num_steps && cur_time < mesh->num_time_steps - 1 - time_step_size; i++){
-            Vector3d newCords = trace_one_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
-            moving_dist = length(cords, newCords); // calculate how long we moved
-            Tet* newTet = inWhichTet(newCords, tet, moving_dist); // find the corresponding tet
+            Vector3d newCords = trace_one_time_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
+            double ds[4];
+            Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
             if(newTet == NULL) break; // newTet is null means we couldn't proceed
             cur_time += time_step_size;
 
@@ -172,45 +252,57 @@ void build_pathlines_from_seeds(){
 // target is the vertex and we are interested in which tet it is in
 // prev_tet is the tet that contains the previous vertex. we should find the tet of target by using the neighbors
 // of the start_tet.
-Tet* inWhichTet(const Vector3d& target, Tet* prev_tet, double moved_dist)
+// ds contains barycentric coordinate of this pt in that tet if found
+Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4])
 {
-    Tet* targetTet = NULL;
-    // create a pq to save the 'closest' tets
-    priority_queue< qPair, vector<qPair>, std::greater<qPair> > pq; // pop the smallest weight
-    set<Tet*> used; // keep track of used tets
-    pq.push( {0., prev_tet} ); // place the first tet into the pq
-    used.insert(prev_tet);
-
-    while(!pq.empty())
-    {
-        qPair p = pq.top(); pq.pop();
-        Tet* whichTet = p.second;
-        // check if this Tet is the tet we are looking for
-        // if yes, process it and exit the while loop
-        if(whichTet->is_pt_in(target)){
-            targetTet = whichTet;
-            break;
+    // it only breaks if we found the target
+    while(!prev_tet->is_pt_in2(target_pt, ds)){
+        unsigned int min_idx; double min_val;
+        array_min(ds, 4, min_idx, min_val);
+        if(min_val > 0){ // the pt is in prev_tet
+            return prev_tet;
         }
-
-        // place the neighbors of tets into the pq which the weights of the distance between the seed to them
-        for( Tet* nbTet : whichTet->tets ){
-            if(is_in_set(used, nbTet)) continue; // don't add tet that has been used
-            double dist = length(target, nbTet->centroid());
-            if(dist > dist_scale * moved_dist) continue; // don't add tet that is really far away
-            pq.push( {dist, nbTet} );
-            used.insert( nbTet );
+//        qDebug() << min_val;
+        // the pt is not in prev_tet
+        // we should move to the neighbor whose barycentric coordinate is smallest.
+        Vertex* min_vert = prev_tet->verts[min_idx];
+        Triangle* exit_tri = NULL;
+        for(unsigned int i = 0; i<prev_tet->num_tris(); i++ ){
+            // find the triangle that does not have this min_vert
+            if(!prev_tet->tris[i]->has_vert(min_vert)){
+                exit_tri = prev_tet->tris[i];
+            }
+        }
+        // if we couldn't find exit_tri or the exit_tri is a dead end, we couldn't proceed
+        if(exit_tri == NULL || exit_tri->is_boundary){
+            if(exit_tri == NULL) qDebug() << "exit_tri is null!";
+            if(exit_tri->is_boundary) qDebug() << "we reach boundaty!";
+            return NULL;
+        }
+        // then we set up the next iteration
+        for(int i = 0; i < 2; i++){
+            if(exit_tri->tets[i] != prev_tet){
+                prev_tet = exit_tri->tets[i];
+                break;
+            }
         }
     }
-
-    used.clear();
-    return targetTet;
+    return prev_tet;
 }
 
 
 // tracing the start_cords one time step
 // vel is the velocity vector
 // return the resultant cords
-Vector3d trace_one_step(const Vector3d& start_cords, const Vector3d& vel)
+Vector3d trace_one_time_step(const Vector3d& start_cords, const Vector3d& vel)
 {
     return start_cords + vel*time_step_size;
+}
+
+
+Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel)
+{
+    Vector3d v = Vector3d(vel);
+    normalize(v);
+    return start_cords + v*dist_step_size;
 }

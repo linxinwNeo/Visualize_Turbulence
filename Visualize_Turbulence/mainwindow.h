@@ -7,9 +7,11 @@
 #include "FileLoader/ReadFile.h"
 #include "Geometry/Mesh.h"
 #include "Lines/PathLine.h"
+#include "Lines/StreamLine.h"
 
 extern Mesh* mesh;
 extern vector<PathLine*> pathlines;
+extern vector< vector<StreamLine*> > streamlines_for_all_t;
 extern ReadFile* file;
 extern const QString meshFilePath, dataFilePath;
 extern const unsigned int NUM_SEEDS;
