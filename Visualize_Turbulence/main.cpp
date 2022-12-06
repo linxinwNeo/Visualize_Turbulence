@@ -37,10 +37,10 @@ bool RightButtonDown = false;
 vector<PathLine*> pathlines;
 // we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
 vector< vector<StreamLine*> > streamlines_for_all_t;
-const unsigned int NUM_SEEDS = 20;
-const unsigned int max_num_steps = 1000;
+const unsigned int NUM_SEEDS = 100;
+const unsigned int max_num_steps = 2000;
 const double time_step_size = 0.5;
-const double dist_step_size = 0.001;
+const double dist_step_size = 0.0005;
 // when trace a point, we don't care the position that may be too far away
 const double dist_scale = 10.;
 
@@ -137,14 +137,15 @@ void place_seeds(vector< vector<StreamLine*> >& all_sls)
         {
             // set up the streamline
             StreamLine* SL = new StreamLine();
-            SL->verts.reserve(max_num_steps);
+            SL->fw_verts.reserve(max_num_steps);
+            SL->bw_verts.reserve(max_num_steps);
             SL->time = (double) i;
 
             UL tet_idx = seeds[cur_num_seeds];
             Tet* rdm_tet = mesh->tets[tet_idx];
             Vector3d center_pt = rdm_tet->centroid();
             Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)i);
-            SL->verts.push_back( center_vert );
+            SL->set_seed( center_vert );
             cur_num_seeds ++;
             sls.push_back(SL);
         }
@@ -172,10 +173,8 @@ vector<UL> generate_unique_random_Tet_idx()
     vector<UL> seeds;
     seeds.reserve(NUM_SEEDS);
     for(UL idx : seeded_tets){
-        qDebug() << idx;
         seeds.push_back(idx);
     }
-
     return seeds;
 }
 
@@ -187,29 +186,53 @@ void build_streamlines_from_seeds(){
     for( vector<StreamLine*>& sls : streamlines_for_all_t ){
         // for each (the beginning of) trajectory
         for( StreamLine* sl : sls ){
-            Vertex* seed_vert = sl->verts[0];
-            Vector3d cords = seed_vert->cords;
-            Tet* tet = seed_vert->tets[0];
-            for(UI i = 0; i < max_num_steps; i++){
-                Vector3d newCords = trace_one_dist_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
-                double ds[4]; // saving barycentric coordinates
-                Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
-                if(newTet == NULL) {
-                    break; // newTet is null means we couldn't proceed
+            // forward tracing
+            {
+                Vertex* seed_vert = sl->seed;
+                Vector3d cords = seed_vert->cords;
+                Tet* tet = seed_vert->tets[0];
+                for(UI i = 0; i < max_num_steps; i++){
+                    Vector3d newCords = trace_one_dist_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
+                    double ds[4]; // saving barycentric coordinates
+                    Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
+                    if(newTet == NULL) {
+                        break; // newTet is null means we couldn't proceed
+                    }
+                    // interpolate vertex's vel, vor, mu at time t
+                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+                    if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
+                    newVert->add_tet(newTet);
+                    sl->fw_verts.push_back(newVert); // new vert into the pathline
+                    cords = newCords; // update cords for the next iteration
+                    seed_vert = newVert;
                 }
-                // interpolate vertex's vel, vor, mu at time t
-                Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
-                if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
-                newVert->add_tet(newTet);
-                sl->verts.push_back(newVert); // new vert into the pathline
-                cords = newCords; // update cords for the next iteration
-                seed_vert = newVert;
+            }
+
+            // backward tracing
+            {
+                Vertex* vert = sl->seed;
+                Tet* tet = vert->tets[0];
+                for(UI i = 0; i < max_num_steps; i++){
+                    Vector3d vel = Vector3d( vert->vels.at(cur_time) ) * - 1.; // -1 means backward
+                    Vector3d cords = vert->cords;
+                    Vector3d newCords = trace_one_dist_step(cords, vel); // trace 1 time step
+                    double ds[4]; // saving barycentric coordinates
+                    Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
+                    if(newTet == NULL) {
+                        break; // newTet is null means we couldn't proceed
+                    }
+                    // interpolate vertex's vel, vor, mu at time t
+                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+                    if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
+                    newVert->add_tet(newTet);
+                    sl->bw_verts.push_back(newVert); // new vert into the pathline
+                    vert = newVert;
+                }
             }
         }
         cur_time += 1.;
         break;
     }
-    qDebug() << "num of streamlines in first frame: " << streamlines_for_all_t[0].size();
 }
 
 
@@ -262,7 +285,6 @@ Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4])
         if(min_val > 0){ // the pt is in prev_tet
             return prev_tet;
         }
-//        qDebug() << min_val;
         // the pt is not in prev_tet
         // we should move to the neighbor whose barycentric coordinate is smallest.
         Vertex* min_vert = prev_tet->verts[min_idx];
@@ -276,7 +298,6 @@ Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4])
         // if we couldn't find exit_tri or the exit_tri is a dead end, we couldn't proceed
         if(exit_tri == NULL || exit_tri->is_boundary){
             if(exit_tri == NULL) qDebug() << "exit_tri is null!";
-            if(exit_tri->is_boundary) qDebug() << "we reach boundaty!";
             return NULL;
         }
         // then we set up the next iteration

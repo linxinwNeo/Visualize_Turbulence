@@ -195,21 +195,40 @@ inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double 
 
 inline void draw_streamlines(StreamLine* sl, const double min_vel_mag, const double max_vel_mag)
 {
-//    glLineWidth(4);
-//    glMatrixMode(GL_MODELVIEW);
-//    glPushMatrix();
+    glLineWidth(4);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
     glBegin(GL_LINE_STRIP);
-    for(const Vertex* v : sl->verts){
-        const Vector3d& p = v->cords;
-        const Vector3d& vel = v->vels.begin()->second;
-        //double vel_mag = length(vel);
-        //const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
-        //glColor3f(color.R, color.G, color.B);
-        glColor3f(1, 0, 0);
+
+    long int i;
+    // draw back_ward vertices in reverse order
+    for(i = sl->num_bw_verts() - 1; i >= 0; i--){
+        Vertex* vert = sl->bw_verts[i];
+        const Vector3d& p = vert->cords;
+        const Vector3d& vel = vert->vels.begin()->second;
+        double vel_mag = length(vel);
+        const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
+        glColor3f(color.R, color.G, color.B);
+        glVertex3f(p.x(), p.y(), p.z());
+    }
+
+    // draw seed
+    const Vertex* seed = sl->seed;
+    const Vector3d seed_cord = seed->cords;
+    glVertex3f(seed_cord.x(), seed_cord.y(), seed_cord.z());
+
+    // draw fw vertices in order
+    for(i = 0; i < sl->num_fw_verts() ; i++){
+        Vertex* vert = sl->fw_verts[i];
+        const Vector3d& p = vert->cords;
+        const Vector3d& vel = vert->vels.begin()->second;
+        double vel_mag = length(vel);
+        const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
+        glColor3f(color.R, color.G, color.B);
         glVertex3f(p.x(), p.y(), p.z());
     }
     glEnd();
-//    glPopMatrix();
+    glPopMatrix();
 }
 
 inline void draw_arrows( PathLine* pl )

@@ -11,19 +11,57 @@ class StreamLine
 {
 public:
     double time; // indicates which time this streamline is for
-    vector<Vertex*> verts;
+    Vertex* seed;
+    vector<Vertex*> fw_verts; // first vertex is connected to the seed
+    vector<Vertex*> bw_verts; // first vertex is connected to the seed
 
     StreamLine();
     StreamLine(vector<Vertex*> vs, const double& t);
     ~StreamLine();
 
+    inline void set_seed(Vertex* seed);
+    void add_fw_vert(Vertex* vert);
+    void add_bw_vert(Vertex* vert);
+
     inline UL num_verts();
+    inline UL num_fw_verts();
+    inline UL num_bw_verts();
 };
+
+
+inline void StreamLine::set_seed(Vertex *seed_vert)
+{
+    this->seed = seed_vert;
+}
+
+
+inline void StreamLine::add_fw_vert(Vertex *vert)
+{
+    this->fw_verts.push_back(vert);
+}
+
+
+inline void StreamLine::add_bw_vert(Vertex *vert)
+{
+    this->bw_verts.push_back(vert);
+}
 
 
 inline UL StreamLine::num_verts()
 {
-    return this->verts.size();
+    return this->fw_verts.size() + this->bw_verts.size();
+}
+
+
+inline UL StreamLine::num_fw_verts()
+{
+    return this->fw_verts.size();
+}
+
+
+inline UL StreamLine::num_bw_verts()
+{
+    return this->bw_verts.size();
 }
 
 #endif // STREAMLINE_H

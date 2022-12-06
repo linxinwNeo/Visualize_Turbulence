@@ -92,9 +92,8 @@ void openGLWindow::paintGL()
 
     //draw_axis();
 
-    draw_wireframe(mesh->boundary_tris);
+    //draw_wireframe(mesh->boundary_tris);
 
-    glPushMatrix();
     double max, min;
     mesh->max_vel_mag(0, min, max);
     for(const auto& sls : streamlines_for_all_t){
@@ -103,9 +102,6 @@ void openGLWindow::paintGL()
         }
         break;
     }
-
-    glPopMatrix();
-
 
     glPopMatrix(); // pop 1st modelView matrix
 
