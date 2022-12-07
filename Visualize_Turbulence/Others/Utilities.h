@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+
 #define GL_SILENCE_DEPRECATION
 
 #include <QString>
@@ -15,6 +16,7 @@
 #include "Geometry/Tet.h"
 #include "Lines/PathLine.h"
 #include "Lines/StreamLine.h"
+#include "Surfaces/Isosurface.h"
 #include "Others/TraceBall.h"
 #include "Others/ColorTable.h"
 
@@ -27,7 +29,8 @@ extern const double cylinder_radius;
 extern const int slices;
 extern const double arrow_color[];
 extern vector<PathLine*> pathlines;
-extern vector< vector<StreamLine*> > streamlines_for_all_t;
+extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
+extern unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 extern ColorTable CT;
 extern const UI frames_per_sec;
 extern const double sec_per_frame;

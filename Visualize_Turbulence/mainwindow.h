@@ -11,7 +11,7 @@
 
 extern Mesh* mesh;
 extern vector<PathLine*> pathlines;
-extern vector< vector<StreamLine*> > streamlines_for_all_t;
+extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
 extern ReadFile* file;
 extern const QString meshFilePath, dataFilePath;
 extern const unsigned int NUM_SEEDS;

@@ -1,7 +1,3 @@
-#include "Lines/StreamLine.h"
-#include "Others/ColorTable.h"
-#include "mainwindow.h"
-
 #include <queue>
 #include <QApplication>
 #include <cstdlib>
@@ -10,7 +6,11 @@
 #include "FileLoader/ReadFile.h"
 #include "Others/Utilities.h"
 #include "Geometry/Mesh.h"
+#include "Surfaces/Isosurface.h"
+#include "Lines/StreamLine.h"
+#include "Others/ColorTable.h"
 #include "Lines/PathLine.h"
+#include "mainwindow.h"
 
 typedef pair<double, Tet*> qPair;
 
@@ -36,7 +36,8 @@ bool RightButtonDown = false;
 // each element in pathlines is a trajectory over space and time
 vector<PathLine*> pathlines;
 // we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
-vector< vector<StreamLine*> > streamlines_for_all_t;
+unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
+unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 const unsigned int NUM_SEEDS = 30;
 const unsigned int max_num_steps = 800;
 const double time_step_size = 0.1;
@@ -55,7 +56,7 @@ ColorTable CT;
 
 void read_files();
 void place_seeds(vector<PathLine*>&);
-void place_seeds(vector< vector<StreamLine*> > &);
+void place_seeds(unordered_map< double, vector<StreamLine*> > &);
 void build_pathlines_from_seeds();
 Vector3d trace_one_time_step(const Vector3d& start_cords, const Vector3d& vel);
 Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
@@ -79,6 +80,7 @@ int main(int argc, char *argv[])
     // trace seeds and form pathlines
     // mainwindow.cpp will clear the memory of pathlines and streamlines
     build_streamlines_from_seeds();
+
 
     MainWindow w;
     w.show();
@@ -125,15 +127,15 @@ void place_seeds(vector<PathLine*>& pls)
 }
 
 
-void place_seeds(vector< vector<StreamLine*> >& all_sls)
+void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls)
 {
     all_sls.reserve(mesh->num_time_steps * frames_per_sec);
     // make sure we are using same seeds every time step
     vector<UL> seeds = generate_unique_random_Tet_idx();
 
     // for each time step, place streamline
-    double i = 0.;
-    while(i < mesh->num_time_steps - 1.)
+    double time = 0.;
+    while(time < mesh->num_time_steps - 1.)
     {
         vector<StreamLine*> sls; // create a vector of streamlines to store seeds
         sls.reserve(NUM_SEEDS); // we have num_seeds streamlines for each time step
@@ -145,21 +147,21 @@ void place_seeds(vector< vector<StreamLine*> >& all_sls)
             StreamLine* SL = new StreamLine();
             SL->fw_verts.reserve(max_num_steps);
             SL->bw_verts.reserve(max_num_steps);
-            SL->time = (double) i;
+            SL->time = (double) time;
 
             UL tet_idx = seeds[cur_num_seeds];
             Tet* rdm_tet = mesh->tets[tet_idx];
             Vector3d center_pt = rdm_tet->centroid();
             double ws[4];
-            Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)i, ws, true);
+            Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)time, ws, true);
             SL->set_seed( center_vert );
             cur_num_seeds ++;
             sls.push_back(SL);
         }
 
-        all_sls.push_back(sls);
+        all_sls[time] = sls;
 
-        i += sec_per_frame; // increment time
+        time += sec_per_frame; // increment time
     }
 }
 
@@ -192,8 +194,9 @@ vector<UL> generate_unique_random_Tet_idx()
 void build_streamlines_from_seeds(){
     // for each time step
     double cur_time = 0;
-    for( vector<StreamLine*>& sls : streamlines_for_all_t ){
+    while( cur_time < mesh->num_time_steps - 1. ){
         qDebug() << "Building StreamLines for time" << cur_time;
+        vector<StreamLine*> sls = streamlines_for_all_t.at(cur_time);
         // for each (the beginning of) trajectory
         for( StreamLine* sl : sls ){
             // forward tracing
@@ -212,7 +215,7 @@ void build_streamlines_from_seeds(){
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ds); // interpolate new cords in the tet
                     if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
-                    sl->fw_verts.push_back(newVert); // new vert into the pathline
+                    sl->fw_verts.push_back(newVert); // new vert into the streamline
                     cords = newCords; // update cords for the next iteration
                     seed_vert = newVert;
                 }
@@ -223,7 +226,7 @@ void build_streamlines_from_seeds(){
                 Vertex* vert = sl->seed;
                 Tet* tet = vert->tets[0];
                 for(UI i = 0; i < max_num_steps; i++){
-                    Vector3d vel = Vector3d( vert->vels.at(cur_time) ) * - 1.; // -1 means backward
+                    Vector3d vel = Vector3d( vert->vels.at(cur_time) ) * (- 1.); // -1 means backward
                     Vector3d cords = vert->cords;
                     Vector3d newCords = trace_one_dist_step(cords, vel); // trace 1 time step
                     double ws[4]; // saving barycentric coordinates
@@ -235,7 +238,7 @@ void build_streamlines_from_seeds(){
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ws); // interpolate new cords in the tet
                     if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
-                    sl->bw_verts.push_back(newVert); // new vert into the pathline
+                    sl->bw_verts.push_back(newVert); // new vert into the streamline
                     vert = newVert;
                 }
             }
@@ -322,14 +325,19 @@ Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4])
 
 
 void interpolate_vertices(){
-    for(double i = 0.; i < mesh->num_time_steps - 1.; i += sec_per_frame){
+    double i = 0.;
+    while( i < mesh->num_time_steps - 1. )
+    {
         for(Vertex* vert : mesh->verts){
-            if(!vert->has_vel_at_t(i)) vert->linear_interpolate_vel(i);
 
-            if(!vert->has_vor_at_t(i)) vert->linear_interpolate_vor(i);
+            vert->linear_interpolate_vel(i);
 
-            if(!vert->has_mu_at_t(i)) vert->linear_interpolate_mu(i);
+            vert->linear_interpolate_vor(i);
+
+            vert->linear_interpolate_mu(i);
         }
+
+        i += sec_per_frame;
     }
 }
 

@@ -90,6 +90,7 @@ Vector3d* Vertex::linear_interpolate_vel(const double target_t)
 {
     int t1 = floor(target_t);
     int t2 = ceil(target_t);
+
     if(target_t < t1 || target_t > t2 || t1 > t2) return NULL;
     if(target_t == t1) {
         if ( this->has_vel_at_t(t1) ) return this->vels.at(t1);

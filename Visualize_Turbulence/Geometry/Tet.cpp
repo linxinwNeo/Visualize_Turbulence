@@ -97,12 +97,10 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], boo
     Vertex* pt_vert = new Vertex(v);
     pt_vert->add_tet(this);
 
-    const vector<Vertex*> vs = this->verts;
-
     Vector3d vel ,  vor;
     double mu = 0.;
-    for( UL i = 0; i < vs.size(); i++ ){
-        Vertex* vert = vs[i];
+    for( unsigned short i = 0; i < this->verts.size(); i++ ){
+        Vertex* vert = this->verts[i];
         if(vert == NULL) throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
 
         Vector3d* temp_vel = NULL, *temp_vor = NULL;

@@ -50,7 +50,8 @@ openGLWindow::~openGLWindow()
 
 void openGLWindow::increment_time(){
     this->time += sec_per_frame;
-    if(this->time >= mesh->num_time_steps - 1.){
+    //if(this->time >= mesh->num_time_steps - 1.){
+    if(this->time > mesh->num_time_steps - 1.){
         this->time = 0.;
     }
 
@@ -95,7 +96,7 @@ void openGLWindow::paintGL()
     // https://web.engr.oregonstate.edu/~mjb/cs550/PDFs/Transparency.2pp.pdf
     double max, min;
     mesh->max_vel_mag(time, min, max);
-    const auto& sls = streamlines_for_all_t[time];
+    const auto& sls = streamlines_for_all_t.at(time);
     for(StreamLine* sl:sls){
         draw_streamlines(sl, min, max);
     }
