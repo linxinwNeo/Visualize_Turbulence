@@ -93,27 +93,30 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // https://web.engr.oregonstate.edu/~mjb/cs550/PDFs/Transparency.2pp.pdf
-    double max, min;
-    mesh->max_vel_mag(time, min, max);
-    const auto& sls = streamlines_for_all_t.at(time);
-    for(StreamLine* sl:sls){
-        draw_streamlines(sl, min, max);
+    if(show_streamlines){
+        // https://web.engr.oregonstate.edu/~mjb/cs550/PDFs/Transparency.2pp.pdf
+        double max, min;
+        mesh->max_vel_mag(time, min, max);
+        const auto& sls = streamlines_for_all_t.at(time);
+        for(StreamLine* sl:sls){
+            draw_streamlines(sl, min, max);
+        }
     }
 
-    //draw_axis();
+    if(show_isosurfaces){
 
-    //draw_wireframe(mesh->boundary_tris);
+    }
 
-    glEnable(GL_BLEND); //Enable blending.
-    glDepthMask( GL_FALSE );
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+    if(show_pathlines){
 
-    glColor4f( 0, 0, 1, 0.1 );
-    draw_triangles(mesh->boundary_tris);
+    }
 
-    glDepthMask( GL_TRUE );
-    glDisable( GL_BLEND );
+
+    if(show_boundary_wireframe)
+        draw_wireframe(mesh->boundary_tris);
+
+    if(show_opage_boundary_tris)
+        draw_opague_boundary_tris(boundary_tri_alpha, mesh->boundary_tris);
 
     glPopMatrix(); // pop 1st modelView matrix
 

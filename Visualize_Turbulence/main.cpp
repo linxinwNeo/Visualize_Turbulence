@@ -31,6 +31,13 @@ const QString dataFilePath = "/Users/linxinw/Desktop/fast_data.txt";
 bool LeftButtonDown = false;
 bool MiddleButtonDown = false;
 bool RightButtonDown = false;
+// boolean variables used to enable modes
+bool show_streamlines = false;
+bool show_pathlines = false;
+bool show_isosurfaces = true;
+bool show_boundary_wireframe = false;
+bool show_axis = false;
+bool show_opage_boundary_tris = true;
 
 // calculated pathlines used for animation
 // each element in pathlines is a trajectory over space and time
@@ -52,9 +59,18 @@ const double cylinder_height = cone_height*2;
 const double cylinder_radius = cone_base_radius/2;
 const int slices = 5;
 const double arrow_color[] = {1, 0, 0};
+
 ColorTable CT;
 
+// rendering parameters
+const double boundary_tri_alpha = 0.1;
+
+// main functions
 void read_files();
+inline void tracing_streamlines();
+inline void constuct_isosurfaces();
+
+// support functions
 void place_seeds(vector<PathLine*>&);
 void place_seeds(unordered_map< double, vector<StreamLine*> > &);
 void build_pathlines_from_seeds();
@@ -65,6 +81,7 @@ vector<UL> generate_unique_random_Tet_idx();
 void build_streamlines_from_seeds();
 void interpolate_vertices();
 
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -72,15 +89,12 @@ int main(int argc, char *argv[])
     // read files and build mesh
     read_files();
 
-    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
-    interpolate_vertices();
-    // place inital seeds
-    place_seeds(streamlines_for_all_t);
+    // constucting the data for rendering
+    if(show_streamlines)
+        tracing_streamlines();
 
-    // trace seeds and form pathlines
-    // mainwindow.cpp will clear the memory of pathlines and streamlines
-    build_streamlines_from_seeds();
-
+    if(show_isosurfaces)
+        constuct_isosurfaces();
 
     MainWindow w;
     w.show();
@@ -94,6 +108,24 @@ void read_files(){
     mesh = file->mesh;
 }
 
+
+inline void constuct_isosurfaces()
+{
+
+}
+
+
+inline void tracing_streamlines()
+{
+    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
+    interpolate_vertices();
+    // place inital seeds
+    place_seeds(streamlines_for_all_t);
+
+    // trace seeds and form pathlines
+    // mainwindow.cpp will clear the memory of pathlines and streamlines
+    build_streamlines_from_seeds();
+}
 
 // we try to place seeds randomly in the domain
 // for a random tet, if we choose to place a seed,

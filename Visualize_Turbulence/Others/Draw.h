@@ -241,4 +241,17 @@ inline void draw_arrows( PathLine* pl )
     }
 }
 
+inline void draw_opague_boundary_tris(double alpha, vector<Triangle*> tris)
+{
+    glEnable(GL_BLEND); //Enable blending.
+    glDepthMask( GL_FALSE );
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+
+    glColor4f( 0, 0, 1, alpha );
+    draw_triangles(tris);
+
+    glDepthMask( GL_TRUE );
+    glDisable( GL_BLEND );
+}
+
 #endif // DRAW_H

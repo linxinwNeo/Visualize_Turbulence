@@ -35,6 +35,15 @@ extern ColorTable CT;
 extern const UI frames_per_sec;
 extern const double sec_per_frame;
 
+extern bool show_streamlines;
+extern bool show_pathlines;
+extern bool show_isosurfaces;
+extern bool show_boundary_wireframe;
+extern bool show_opage_boundary_tris;
+extern bool show_axis;
+
+extern const double boundary_tri_alpha;
+
 
 // function prototypes
 inline void throwErrorMessage( const QString message );

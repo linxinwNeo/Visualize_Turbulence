@@ -16,8 +16,8 @@ MainWindow::~MainWindow()
 
     UL i, j;
     // clear memoery for streamlines
-    for( i = 0; i < streamlines_for_all_t.size(); i++ ){
-        vector<StreamLine*> sls = streamlines_for_all_t[i];
+    for( auto& slsPair : streamlines_for_all_t ){
+        auto& sls = slsPair.second;
         for( j = 0; j < sls.size(); j++ ){
             StreamLine* sl = sls[j];
             if(sl != NULL){
