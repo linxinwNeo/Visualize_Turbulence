@@ -45,8 +45,8 @@ RGB ColorTable::lookUp(double s)
     // if between 0 and 0.5
     if( s > 0 && s < 0.5 )
     {
-        double w1 = s*2.;
-        double w2 = (0.5-s)*2.;
+        double w1 = s * 2.;
+        double w2 = 1. - w1;
         RGB color1 = convert_ptr(this->levels[0]);
         RGB color2 = convert_ptr(this->levels[1]);
         color1.R = color1.R*w1;
@@ -64,8 +64,8 @@ RGB ColorTable::lookUp(double s)
     // if between 0.5 and 1
     else
     {
-        double w1 = (s-0.5)*2.;
-        double w2 = (1-s)*2.;
+        double w1 = (s-0.5) * 2.;
+        double w2 = 1. - w1;
         RGB color1 = convert_ptr(this->levels[1]);
         RGB color2 = convert_ptr(this->levels[2]);
         color1.R = color1.R*w1;

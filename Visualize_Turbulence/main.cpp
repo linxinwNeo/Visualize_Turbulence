@@ -37,12 +37,12 @@ bool RightButtonDown = false;
 vector<PathLine*> pathlines;
 // we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
 vector< vector<StreamLine*> > streamlines_for_all_t;
-const unsigned int NUM_SEEDS = 100;
-const unsigned int max_num_steps = 2000;
-const double time_step_size = 0.5;
-const double dist_step_size = 0.0005;
-// when trace a point, we don't care the position that may be too far away
-const double dist_scale = 10.;
+const unsigned int NUM_SEEDS = 30;
+const unsigned int max_num_steps = 800;
+const double time_step_size = 0.1;
+const double dist_step_size = 0.003;
+const UI frames_per_sec = 5; // frames per sec
+const double sec_per_frame = ((double)1.)/(double)frames_per_sec; // sec for each frame
 
 // arrow parameters
 const double cone_base_radius=0.01;
@@ -62,6 +62,7 @@ Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
 Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]);
 vector<UL> generate_unique_random_Tet_idx();
 void build_streamlines_from_seeds();
+void interpolate_vertices();
 
 int main(int argc, char *argv[])
 {
@@ -70,8 +71,11 @@ int main(int argc, char *argv[])
     // read files and build mesh
     read_files();
 
+    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
+    interpolate_vertices();
     // place inital seeds
     place_seeds(streamlines_for_all_t);
+
     // trace seeds and form pathlines
     // mainwindow.cpp will clear the memory of pathlines and streamlines
     build_streamlines_from_seeds();
@@ -111,7 +115,8 @@ void place_seeds(vector<PathLine*>& pls)
             Tet* tet = mesh->tets[random_idx];
             PathLine* PL = new PathLine();
             Vector3d seed = tet->centroid();
-            Vertex* seed_v = tet->get_vert_at(seed, 0.); // interpolate this seed at time 0
+            double ws[4];
+            Vertex* seed_v = tet->get_vert_at(seed, 0., ws, true); // interpolate this seed at time 0
             PL->verts.push_back( seed_v );
             pls.push_back(PL);
             cur_num_seeds ++;
@@ -122,12 +127,13 @@ void place_seeds(vector<PathLine*>& pls)
 
 void place_seeds(vector< vector<StreamLine*> >& all_sls)
 {
-    all_sls.reserve(mesh->num_time_steps);
+    all_sls.reserve(mesh->num_time_steps * frames_per_sec);
     // make sure we are using same seeds every time step
     vector<UL> seeds = generate_unique_random_Tet_idx();
 
-    // for each time step, place streamline seeds
-    for(UI i = 0; i < mesh->num_time_steps; i++)
+    // for each time step, place streamline
+    double i = 0.;
+    while(i < mesh->num_time_steps - 1.)
     {
         vector<StreamLine*> sls; // create a vector of streamlines to store seeds
         sls.reserve(NUM_SEEDS); // we have num_seeds streamlines for each time step
@@ -144,13 +150,16 @@ void place_seeds(vector< vector<StreamLine*> >& all_sls)
             UL tet_idx = seeds[cur_num_seeds];
             Tet* rdm_tet = mesh->tets[tet_idx];
             Vector3d center_pt = rdm_tet->centroid();
-            Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)i);
+            double ws[4];
+            Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)i, ws, true);
             SL->set_seed( center_vert );
             cur_num_seeds ++;
             sls.push_back(SL);
         }
 
         all_sls.push_back(sls);
+
+        i += sec_per_frame; // increment time
     }
 }
 
@@ -184,6 +193,7 @@ void build_streamlines_from_seeds(){
     // for each time step
     double cur_time = 0;
     for( vector<StreamLine*>& sls : streamlines_for_all_t ){
+        qDebug() << "Building StreamLines for time" << cur_time;
         // for each (the beginning of) trajectory
         for( StreamLine* sl : sls ){
             // forward tracing
@@ -199,7 +209,7 @@ void build_streamlines_from_seeds(){
                         break; // newTet is null means we couldn't proceed
                     }
                     // interpolate vertex's vel, vor, mu at time t
-                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ds); // interpolate new cords in the tet
                     if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
                     sl->fw_verts.push_back(newVert); // new vert into the pathline
@@ -216,13 +226,13 @@ void build_streamlines_from_seeds(){
                     Vector3d vel = Vector3d( vert->vels.at(cur_time) ) * - 1.; // -1 means backward
                     Vector3d cords = vert->cords;
                     Vector3d newCords = trace_one_dist_step(cords, vel); // trace 1 time step
-                    double ds[4]; // saving barycentric coordinates
-                    Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
+                    double ws[4]; // saving barycentric coordinates
+                    Tet* newTet = inWhichTet(newCords, tet, ws); // find the corresponding tet
                     if(newTet == NULL) {
                         break; // newTet is null means we couldn't proceed
                     }
                     // interpolate vertex's vel, vor, mu at time t
-                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+                    Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ws); // interpolate new cords in the tet
                     if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
                     sl->bw_verts.push_back(newVert); // new vert into the pathline
@@ -230,8 +240,7 @@ void build_streamlines_from_seeds(){
                 }
             }
         }
-        cur_time += 1.;
-        break;
+        cur_time += sec_per_frame;
     }
 }
 
@@ -253,13 +262,13 @@ void build_pathlines_from_seeds(){
         double cur_time = 0;
         for(UI i = 0; i < max_num_steps && cur_time < mesh->num_time_steps - 1 - time_step_size; i++){
             Vector3d newCords = trace_one_time_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
-            double ds[4];
-            Tet* newTet = inWhichTet(newCords, tet, ds); // find the corresponding tet
+            double ws[4];
+            Tet* newTet = inWhichTet(newCords, tet, ws); // find the corresponding tet
             if(newTet == NULL) break; // newTet is null means we couldn't proceed
             cur_time += time_step_size;
 
             // interpolate vertex's vel, vor, mu at time t
-            Vertex* newVert = newTet->get_vert_at(newCords, cur_time); // interpolate new cords in the tet
+            Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ws); // interpolate new cords in the tet
             if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
             newVert->add_tet(newTet);
             pathline->verts.push_back(newVert); // new vert into the pathline
@@ -309,6 +318,19 @@ Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4])
         }
     }
     return prev_tet;
+}
+
+
+void interpolate_vertices(){
+    for(double i = 0.; i < mesh->num_time_steps - 1.; i += sec_per_frame){
+        for(Vertex* vert : mesh->verts){
+            if(!vert->has_vel_at_t(i)) vert->linear_interpolate_vel(i);
+
+            if(!vert->has_vor_at_t(i)) vert->linear_interpolate_vor(i);
+
+            if(!vert->has_mu_at_t(i)) vert->linear_interpolate_mu(i);
+        }
+    }
 }
 
 

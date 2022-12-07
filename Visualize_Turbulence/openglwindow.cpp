@@ -2,10 +2,12 @@
 #include <QMouseEvent>
 #include <QSurfaceFormat>
 #include <GLUT/glut.h>
+#include <QTimer>
 
 #include "openglwindow.h"
 #include "Others/Utilities.h"
 #include "Others/Draw.h"
+#include "Geometry/Mesh.h"
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -46,6 +48,14 @@ openGLWindow::~openGLWindow()
 }
 
 
+void openGLWindow::increment_time(){
+    this->time += sec_per_frame;
+    if(this->time >= mesh->num_time_steps - 1.){
+        this->time = 0.;
+    }
+}
+
+
 void openGLWindow::initializeGL()
 {
     this->initializeOpenGLFunctions();
@@ -54,26 +64,16 @@ void openGLWindow::initializeGL()
 
     glEnable(GL_MULTISAMPLE_ARB);
 
+    // set timer
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(increment_time()));
+    timer->start(sec_per_frame * MSECS_PER_SEC);
 }
 
 
 void openGLWindow::paintGL()
 {
     if( mesh == NULL ) return;
-    int time_idx = 0;
-    if(!this->timer){ // first time running paintGL
-        this->timer = new QTime();
-        this->start_t = this->timer->currentTime();
-    }
-    else{
-        QTime cur_t = this->timer->currentTime();
-        unsigned int msecs = this->start_t.msecsTo(cur_t);
-        if(msecs > mesh->num_time_steps * MSECS_PER_SEC){
-            this->start_t = cur_t;
-            msecs = 0;
-        }
-        time_idx = floor(msecs/MSECS_PER_SEC);
-    }
 
     glMatrixMode(GL_PROJECTION);
     glEnable(GL_DEPTH_TEST);
@@ -90,23 +90,34 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // https://web.engr.oregonstate.edu/~mjb/cs550/PDFs/Transparency.2pp.pdf
+    double max, min;
+    mesh->max_vel_mag(time, min, max);
+    const auto& sls = streamlines_for_all_t[time];
+    for(StreamLine* sl:sls){
+        draw_streamlines(sl, min, max);
+    }
+
     //draw_axis();
 
     //draw_wireframe(mesh->boundary_tris);
 
-    double max, min;
-    mesh->max_vel_mag(0, min, max);
-    for(const auto& sls : streamlines_for_all_t){
-        for(StreamLine* sl:sls){
-            draw_streamlines(sl, min, max);
-        }
-        break;
-    }
+    glEnable(GL_BLEND); //Enable blending.
+    glDepthMask( GL_FALSE );
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //Set blending function.
+
+    glColor4f( 0, 0, 1, 0.1 );
+    draw_triangles(mesh->boundary_tris);
+
+    glDepthMask( GL_TRUE );
+    glDisable( GL_BLEND );
 
     glPopMatrix(); // pop 1st modelView matrix
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix(); // pop 1st projection matrix
+
+    this->update();
 }
 
 

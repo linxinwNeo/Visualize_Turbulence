@@ -5,7 +5,6 @@
 #include <QOpenGLFunctions>
 #include <QTime>
 
-#include "Geometry/Mesh.h"
 #include "Others/TraceBall.h"
 #include "Others/Vector3d.h"
 
@@ -21,8 +20,8 @@ public:
     double last_x;
     double last_y;
 
-    QTime* timer;
-    QTime start_t;
+    QTimer* timer;
+    double time;
 
     CTraceBall traceball;
     Quaternion rvec;
@@ -65,6 +64,9 @@ private:
     void rightButtonDown(const QMouseEvent *event);
     void rightButtonMoved(const QMouseEvent * event);
     void rightButtonUp(const QMouseEvent * event);
+
+private slots:
+    void increment_time();
 };
 
 

@@ -29,6 +29,9 @@ extern const double arrow_color[];
 extern vector<PathLine*> pathlines;
 extern vector< vector<StreamLine*> > streamlines_for_all_t;
 extern ColorTable CT;
+extern const UI frames_per_sec;
+extern const double sec_per_frame;
+
 
 // function prototypes
 inline void throwErrorMessage( const QString message );

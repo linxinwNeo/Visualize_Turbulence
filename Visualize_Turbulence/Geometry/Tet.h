@@ -40,7 +40,7 @@ public:
     bool has_triangle(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_edge(const Vertex*, const Vertex*) const;
 
-    Vertex* get_vert_at(const Vector3d&, const double time);
+    Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws  = false);
     double volume() const;
     Vector3d centroid() const;
 

@@ -240,7 +240,7 @@ void Mesh::assign_edge(Vertex* v1, Vertex* v2){
 }
 
 
-void Mesh::max_vor_mag(const unsigned int time, double& min_vor, double& max_vor) const
+void Mesh::max_vor_mag(const double time, double& min_vor, double& max_vor) const
 {
     if(time < 0 || time > this->num_time_steps) return;
 
@@ -255,7 +255,7 @@ void Mesh::max_vor_mag(const unsigned int time, double& min_vor, double& max_vor
 }
 
 
-void Mesh::max_vel_mag(const unsigned int time, double& min_vel, double& max_vel) const
+void Mesh::max_vel_mag(const double time, double& min_vel, double& max_vel) const
 {
     if(time < 0 || time > this->num_time_steps) return;
 

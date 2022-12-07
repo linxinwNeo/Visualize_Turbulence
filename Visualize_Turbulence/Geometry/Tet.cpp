@@ -88,58 +88,22 @@ bool Tet::has_edge(const Vertex *v1, const Vertex *v2) const
 
 // assume v is inside this tet
 // Using barycentric interpolation scheme, calculate the new Vertex at pt's position
-Vertex* Tet::get_vert_at(const Vector3d& v, const double time)
+// weights are calculated already
+Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws)
 {
+    // only calculate ws if cal_ws is set to true
+    if(cal_ws) this->bary_tet(v, ws);
+
     Vertex* pt_vert = new Vertex(v);
     pt_vert->add_tet(this);
 
-    // calculate weights
-    // weights are calculated by using the volume ratio
-    // we need to divide the tetrahedron into 4 smaller tets
-    Triangle* tri1 = this->tris[0];
-    Triangle* tri2 = this->tris[1];
-    Triangle* tri3 = this->tris[2];
-    Triangle* tri4 = this->tris[3];
-
-    Tet tet1 = Tet(tri1, pt_vert);
-    Tet tet2 = Tet(tri2, pt_vert);
-    Tet tet3 = Tet(tri3, pt_vert);
-    Tet tet4 = Tet(tri4, pt_vert);
-
-    vector<double> vols;
-    vols.push_back(tet1.volume());
-    vols.push_back(tet2.volume());
-    vols.push_back(tet3.volume());
-    vols.push_back(tet4.volume());
-
-    double total_vol = 0.;
-    for( const auto& vol : vols ){
-        total_vol += vol;
-    }
-
-    if(total_vol == 0.) throwErrorMessage( QString("Tet %1 has volume of 0.0 m^3").arg(this->idx) );
-
-    // calculate the weight for each vertex in tet
-    vector<double> weights;
-    for( const auto& vol : vols ){
-        weights.push_back( vol / total_vol );
-    }
-
-    // finding the vertices that each weight is corresponding to
-    vector<Vertex*> vs;
-    vs.push_back( tri1->not_has_vert(this->verts) );
-    vs.push_back( tri2->not_has_vert(this->verts) );
-    vs.push_back( tri3->not_has_vert(this->verts) );
-    vs.push_back( tri4->not_has_vert(this->verts) );
+    const vector<Vertex*> vs = this->verts;
 
     Vector3d vel ,  vor;
     double mu = 0.;
-    for( int i = 0; i < 4; i++ ){
+    for( UL i = 0; i < vs.size(); i++ ){
         Vertex* vert = vs[i];
-        if(vert == NULL)
-        {
-            throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
-        }
+        if(vert == NULL) throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
 
         Vector3d* temp_vel = NULL, *temp_vor = NULL;
         double temp_mu = 0.;
@@ -177,9 +141,9 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time)
             temp_mu = vert->linear_interpolate_mu(time);
         }
 
-        vel =  vel + (*temp_vel) * weights[i];
-        vor =  vor + (*temp_vor) * weights[i];
-        mu = mu + temp_mu * weights[i];
+        vel =  vel + (*temp_vel) * ws[i];
+        vor =  vor + (*temp_vor) * ws[i];
+        mu = mu + temp_mu * ws[i];
     }
 
     pt_vert->set_vel(time, new Vector3d(vel) ); // adding new vel in order to avoid double deletion
