@@ -53,6 +53,8 @@ void openGLWindow::increment_time(){
     if(this->time >= mesh->num_time_steps - 1.){
         this->time = 0.;
     }
+
+    this->update();
 }
 
 
@@ -116,8 +118,6 @@ void openGLWindow::paintGL()
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix(); // pop 1st projection matrix
-
-    this->update();
 }
 
 
