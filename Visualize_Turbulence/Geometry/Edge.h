@@ -34,7 +34,7 @@ public:
     bool is_same(const Edge*) const;
     inline bool has_vert(const Vertex* v) const;
 
-    Vertex* linear_interpolate_basedOn_vorMag( const double& time, const double& target_val ) const;
+    Vertex* linear_interpolate_basedOn_vorMag( const double& time, const double& target_val );
 };
 
 

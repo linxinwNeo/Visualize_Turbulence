@@ -53,7 +53,7 @@ const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for ea
 //const double time_step_size = 0.1;
 
 // surface_level is defined to be the voriticity
-const double surface_level = 0.8;
+const double surface_level = 0.5;
 
 // arrow parameters
 const double cone_base_radius=0.01;

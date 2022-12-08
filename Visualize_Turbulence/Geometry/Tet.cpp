@@ -314,7 +314,7 @@ void Tet::calc_marching_indices()
 
 
 // http://paulbourke.net/geometry/polygonise/
-vector<Triangle *> Tet::create_isosurface_tris(const double& time) const
+vector<Triangle *> Tet::create_isosurface_tris(const double& time)
 {
     vector<Triangle*> new_tris;
     // 7 cases
@@ -364,12 +364,13 @@ vector<Triangle *> Tet::create_isosurface_tris(const double& time) const
 
 
 // v is the one on the different level than other 3 in the tet
-Triangle *Tet::create_isosurface_tris_case1234(const Vertex *v, const double time) const
+Triangle *Tet::create_isosurface_tris_case1234(const Vertex *v, const double time)
 {
     vector<Vertex*> newVerts;
     for(Edge* e : edges){
         if(e->has_vert(v)){
             Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            newVert->add_tet(this);
             newVerts.push_back(newVert);
         }
     }
@@ -394,7 +395,7 @@ inline bool is_IDP_edges(Edge* e1, Edge* e2){
 
 // v1v2 are the two on the different level than other 2 in the tet
 // will create two triangles in this case
-vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const Vertex *v2, const double time) const
+vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const Vertex *v2, const double time)
 {
     vector<VertOnEdge> newPairs;
     for(Edge* e : edges){
@@ -404,6 +405,7 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
 
         if(has_v1 || has_v2){
             Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            newVert->add_tet(this);
             VertOnEdge newPair = {e, newVert};
             newPairs.push_back(newPair);
         }

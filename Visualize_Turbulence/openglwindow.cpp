@@ -71,6 +71,33 @@ void openGLWindow::initializeGL()
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(increment_time()));
     timer->start(time_step_size * MSECS_PER_SEC);
+
+    glShadeModel (GL_SMOOTH);
+
+    float White[ ] = { 1.,1.,1.,1. };
+    float color[ ] = { 1.,0.,0. };
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, MulArray3( .3f, White )  ) ;
+    glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION, Array3( 0., 0., 0. ) );
+
+    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, color );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, Array3( 1., 1., 1. ) );
+    glMaterialf ( GL_FRONT_AND_BACK, GL_SHININESS, 2.f );
+
+
+    GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
+    float LightColor[] = {1, 1, 1};
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glEnable( GL_LIGHTING );
+    glEnable( GL_LIGHT0 );
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, MulArray3( .2, White ) );
+    glLightModeli ( GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE );
+    glLightfv( GL_LIGHT0, GL_AMBIENT, Array3( 0., 0., 0. ) );
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, LightColor );
+    glLightfv( GL_LIGHT0, GL_SPECULAR, LightColor );
+    glLightf ( GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1. );
+    glLightf ( GL_LIGHT0, GL_LINEAR_ATTENUATION, 0. );
+    glLightf ( GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0. );
 }
 
 
@@ -93,8 +120,10 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
     if(show_streamlines){
-        // https://web.engr.oregonstate.edu/~mjb/cs550/PDFs/Transparency.2pp.pdf
         double max, min;
         mesh->max_vel_mag(time, min, max);
         const auto& sls = streamlines_for_all_t.at(time);
@@ -104,8 +133,10 @@ void openGLWindow::paintGL()
     }
 
     if(show_isosurfaces){
+        double max = 0, min = 0;
+//        mesh->max_vor_mag(time, min, max);
         const auto& isosurface = isosurfaces_for_all_t.at(time);
-        draw_isosurfaces(isosurface);
+        draw_isosurfaces(isosurface, min, max);
     }
 
     if(show_pathlines){
@@ -116,8 +147,13 @@ void openGLWindow::paintGL()
     if(show_boundary_wireframe)
         draw_wireframe(mesh->boundary_tris);
 
-    if(show_opage_boundary_tris)
+    if(show_opage_boundary_tris){
+        glDisable(GL_LIGHTING);
+        glDisable(GL_LIGHT0);
         draw_opague_boundary_tris(boundary_tri_alpha, mesh->boundary_tris);
+
+    }
+
 
     glPopMatrix(); // pop 1st modelView matrix
 

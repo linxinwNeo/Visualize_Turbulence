@@ -25,7 +25,7 @@ inline void draw_arrow();
 inline void draw_arrow(PathLine* pl);
 inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double max_vel_mag);
 inline void draw_triangles(vector<Triangle*>& tris);
-
+inline void draw_isosurfaces(const Isosurface* isosurface, const double min, const double max);
 
 /*---------------------------------------------------------------------*/
 
@@ -252,19 +252,28 @@ inline void draw_opague_boundary_tris(double alpha, vector<Triangle*> tris)
     glDisable( GL_BLEND );
 }
 
-inline void draw_isosurfaces(const Isosurface* isosurface)
+
+inline void draw_isosurfaces(const Isosurface* isosurface, const double min, const double max)
 {
     if(isosurface == NULL){
         qDebug() << "draw_isosurfaces: isosurface is null!";
+        return;
     }
+
+    double d = max-min;
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glBegin(GL_TRIANGLES);
-    for(const Triangle* tri : isosurface->tris){
+    for(Triangle* tri : isosurface->tris){
+        const Vector3d& normal = tri->cal_normal();
+        glNormal3f(normal.x(), normal.y(), normal.z());
         Vector3d v1 = tri->verts[0]->cords;
         Vector3d v2 = tri->verts[1]->cords;
         Vector3d v3 = tri->verts[2]->cords;
+//        Vector3d* vor1 = tri->verts[0]->vors.begin()->second;
+//        Vector3d* vor2 = tri->verts[1]->vors.begin()->second;
+//        Vector3d* vor3 = tri->verts[2]->vors.begin()->second;
         glVertex3f(v1.x(), v1.y(), v1.z());
         glVertex3f(v2.x(), v2.y(), v2.z());
         glVertex3f(v3.x(), v3.y(), v3.z());

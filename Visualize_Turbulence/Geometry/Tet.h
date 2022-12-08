@@ -59,9 +59,9 @@ public:
     void bary_tet(const Vector3d & p, double vs[4]) const;
     void calc_marching_indices();
 
-    vector<Triangle*> create_isosurface_tris(const double& time) const;
-    Triangle* create_isosurface_tris_case1234( const Vertex* v, const double time ) const;
-    vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time ) const;
+    vector<Triangle*> create_isosurface_tris(const double& time);
+    Triangle* create_isosurface_tris_case1234( const Vertex* v, const double time );
+    vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time );
 };
 bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);
 
