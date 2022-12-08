@@ -50,6 +50,8 @@ public:
     void assign_edge(Vertex*, Vertex*);
     void max_vor_mag(const double t, double& min, double& max) const;
     void max_vel_mag(const double t, double& min, double& max) const;
+    void cal_center_for_all_tets();
+    void cal_normal_for_all_tris();
 };
 
 

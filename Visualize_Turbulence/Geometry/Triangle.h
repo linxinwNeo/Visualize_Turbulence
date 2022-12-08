@@ -15,6 +15,7 @@ class Triangle {
 public:
     // member variables
     unsigned long idx;
+    Vector3d normal;
     vector<Vertex*> verts;      // a face can have 3/4/5... number of vertices, depending on the element type
     vector<Edge*> edges;        // edges that made of this face, can be more than 3.
     vector<Tet*> tets;          // tets that uses this face, should be one/two only.
@@ -35,6 +36,7 @@ public:
     bool has_vert(const Vertex*) const;
     bool has_edge(const Vertex*, const Vertex*) const;
     Vertex* not_has_vert(const vector<Vertex*>) const;
+    const Vector3d& cal_normal();
 };
 
 

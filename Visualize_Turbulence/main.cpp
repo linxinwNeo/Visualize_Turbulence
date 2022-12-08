@@ -46,11 +46,14 @@ vector<PathLine*> pathlines;
 unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
 unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 const unsigned int NUM_SEEDS = 30;
-const unsigned int max_num_steps = 800;
-const double time_step_size = 0.1;
+const unsigned int max_num_steps = 400;
 const double dist_step_size = 0.003;
-const UI frames_per_sec = 5; // frames per sec
-const double sec_per_frame = ((double)1.)/(double)frames_per_sec; // sec for each frame
+const UI frames_per_sec = 1; // frames per sec
+const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
+//const double time_step_size = 0.1;
+
+// surface_level is defined to be the voriticity
+const double surface_level = 0.8;
 
 // arrow parameters
 const double cone_base_radius=0.01;
@@ -80,7 +83,9 @@ Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]);
 vector<UL> generate_unique_random_Tet_idx();
 void build_streamlines_from_seeds();
 void interpolate_vertices();
-
+void classify_vertex_levels_for_all_t();
+void calc_marching_indices_for_all_t();
+void create_isosurface_tris_for_all_t();
 
 int main(int argc, char *argv[])
 {
@@ -111,7 +116,64 @@ void read_files(){
 
 inline void constuct_isosurfaces()
 {
+    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
+    interpolate_vertices();
 
+    // for each vertex, check if it is above the surface level or below and mark them
+    classify_vertex_levels_for_all_t();
+
+    // for each tet, calculate the marching tetrahedron index
+    calc_marching_indices_for_all_t();
+
+    // for each tet, create triangles based on the index
+    create_isosurface_tris_for_all_t();
+}
+
+
+void create_isosurface_tris_for_all_t()
+{
+    double time = 0.;
+    while(time < mesh->num_time_steps - 1.)
+    {
+        Isosurface* isosurf= new Isosurface();
+        for(Tet* tet:mesh->tets){
+            vector<Triangle*> new_tris = tet->create_isosurface_tris(time);
+            isosurf->add_tri(new_tris);
+        }
+
+        isosurfaces_for_all_t[time] = isosurf;
+        time += time_step_size; // increment time
+    }
+}
+
+
+void calc_marching_indices_for_all_t(){
+    for(Tet* tet:mesh->tets){
+        tet->calc_marching_indices();
+    }
+}
+
+
+// assume all vertices are interpolated for all time levels
+void classify_vertex_levels_for_all_t()
+{
+    double time = 0.;
+    while(time < mesh->num_time_steps - 1.)
+    {
+        // for each vert
+        for(Vertex* vert : mesh->verts){
+            // check if this vert is above the surface level (>=)
+            const double vert_vor_mag = length( vert->vors.at(time) );
+            if(vert_vor_mag >= surface_level){
+                vert->is_above_surface[time] = true;
+            }
+            else{
+                vert->is_above_surface[time] = false;
+            }
+        }
+
+        time += time_step_size; // increment time
+    }
 }
 
 
@@ -119,6 +181,7 @@ inline void tracing_streamlines()
 {
     // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
     interpolate_vertices();
+
     // place inital seeds
     place_seeds(streamlines_for_all_t);
 
@@ -148,7 +211,7 @@ void place_seeds(vector<PathLine*>& pls)
             seeded_tets.insert(random_idx);
             Tet* tet = mesh->tets[random_idx];
             PathLine* PL = new PathLine();
-            Vector3d seed = tet->centroid();
+            const Vector3d& seed = tet->center;
             double ws[4];
             Vertex* seed_v = tet->get_vert_at(seed, 0., ws, true); // interpolate this seed at time 0
             PL->verts.push_back( seed_v );
@@ -183,7 +246,7 @@ void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls)
 
             UL tet_idx = seeds[cur_num_seeds];
             Tet* rdm_tet = mesh->tets[tet_idx];
-            Vector3d center_pt = rdm_tet->centroid();
+            const Vector3d& center_pt = rdm_tet->center;
             double ws[4];
             Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)time, ws, true);
             SL->set_seed( center_vert );
@@ -193,7 +256,7 @@ void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls)
 
         all_sls[time] = sls;
 
-        time += sec_per_frame; // increment time
+        time += time_step_size; // increment time
     }
 }
 
@@ -275,7 +338,7 @@ void build_streamlines_from_seeds(){
                 }
             }
         }
-        cur_time += sec_per_frame;
+        cur_time += time_step_size;
     }
 }
 
@@ -369,7 +432,7 @@ void interpolate_vertices(){
             vert->linear_interpolate_mu(i);
         }
 
-        i += sec_per_frame;
+        i += time_step_size;
     }
 }
 

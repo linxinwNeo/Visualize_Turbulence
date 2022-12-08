@@ -32,6 +32,9 @@ public:
     inline void add_tet(Tet*);
 
     bool is_same(const Edge*) const;
+    inline bool has_vert(const Vertex* v) const;
+
+    Vertex* linear_interpolate_basedOn_vorMag( const double& time, const double& target_val ) const;
 };
 
 
@@ -89,6 +92,14 @@ inline void Edge::add_triangle(Triangle* f){
 
 inline void Edge::add_tet(Tet* tet){
     this->tets.push_back(tet);
+}
+
+inline bool Edge::has_vert(const Vertex *v) const
+{
+    for(Vertex* vert : this->verts){
+        if(vert == v) return true;
+    }
+    return false;
 }
 
 

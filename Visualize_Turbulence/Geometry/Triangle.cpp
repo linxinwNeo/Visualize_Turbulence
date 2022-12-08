@@ -67,3 +67,14 @@ Vertex* Triangle::not_has_vert(const vector<Vertex *> vs) const
     }
     return NULL;
 }
+
+
+const Vector3d& Triangle::cal_normal()
+{
+    Vector3d v1 = verts[0]->cords;
+    Vector3d v2 = verts[1]->cords;
+    Vector3d v3 = verts[2]->cords;
+    this->normal = cross( v2-v1, v3-v1 );
+    normalize(this->normal);
+    return this->normal;
+}

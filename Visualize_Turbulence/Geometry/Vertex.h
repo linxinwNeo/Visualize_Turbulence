@@ -21,6 +21,9 @@ public:
     unsigned long idx;
     Vector3d cords;
 
+    // at each time step, is this vertex above the surface level
+    unordered_map<double, bool> is_above_surface;
+
     // velocity vectors
     unordered_map<double, Vector3d*> vels; // <time, velocity>
     // vorticity vectors

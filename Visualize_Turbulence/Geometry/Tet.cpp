@@ -9,6 +9,7 @@
 Tet::Tet()
 {
     this->idx = -1; // use -1 to indicate the obj is new
+
     // reserve memories
     this->verts.reserve(4); // a tet can only have exact 4 vertices
     this->edges.reserve(4); // a tet can only have exact 4 edges
@@ -40,6 +41,7 @@ Tet::~Tet()
     this->edges.clear();
     this->tris.clear();
     this->tets.clear();
+    this->marching_idices.clear();
 }
 
 
@@ -234,21 +236,18 @@ Vertex* Tet::missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3)
 
 // https://math.stackexchange.com/questions/183030/given-a-tetrahedron-how-to-find-the-outward-surface-normals-for-each-side
 // compute the normal vector of the specfied triangle
-Vector3d Tet::normal_of( unsigned short tri_idx )
+Vector3d Tet::actual_normal_of( unsigned short tri_idx )
 {
     Triangle* tri = this->tris[tri_idx];
-    Vector3d v1 = tri->verts[0]->cords;
-    Vector3d v2 = tri->verts[1]->cords;
-    Vector3d v3 = tri->verts[2]->cords;
+    const Vector3d& p = tri->verts[0]->cords;
     Vector3d v4 = missing_vertex(tri->verts[0], tri->verts[1], tri->verts[2])->cords;
-    Vector3d normal = cross( v3-v1, v3-v2 );
-    Vector3d& p = v1;
+    Vector3d normal = tri->normal; // the triangle's normal, maybe opposite, but already normalized
     Vector3d vp = v4 - p;
-    if(dot(vp, normal) > 0) // facing inward
+    if(dot(vp, normal) > 0) // the normal is facing inward, flip it
     {
         normal = normal * (-1.);
     }
-    normalize(normal);
+    // else: the normal is facing outward, don't need to do anthing
     return normal;
 }
 
@@ -290,4 +289,152 @@ void Tet::bary_tet(const Vector3d & p, double ds[4]) const
     ds[2] = vc6*v6;
     ds[3] = vd6*v6;
     return;
+}
+
+
+// assume vertices->is_above_surface are calculated
+void Tet::calc_marching_indices()
+{
+    double time = 0.;
+    const unsigned char one = 0b01;
+    while(time < mesh->num_time_steps - 1.)
+    {
+        this->marching_idices[time] = 0;
+        for( unsigned int i = 0; i< this->verts.size(); i++ ){
+            const Vertex* vert = verts[i];
+            bool is_above = vert->is_above_surface.at(time);
+            if(is_above) // if it is above, we set the bit
+                this->marching_idices[time] = this->marching_idices.at(time) | (one << i);
+        }
+        time += time_step_size;
+    }
+}
+
+
+
+
+// http://paulbourke.net/geometry/polygonise/
+vector<Triangle *> Tet::create_isosurface_tris(const double& time) const
+{
+    vector<Triangle*> new_tris;
+    // 7 cases
+    switch(this->marching_idices.at(time)){
+    case 0b0001:
+    case 0b1110:{ // the first vert is different than others
+        new_tris.push_back(create_isosurface_tris_case1234(verts[0], time));
+        break;
+    }
+    case 0b0010:
+    case 0b1101:{ // the second vert is different than others
+        new_tris.push_back(create_isosurface_tris_case1234(verts[1], time));
+        break;
+    }
+    case 0b0100:
+    case 0b1011:{ // the third vert is different than others
+        new_tris.push_back(create_isosurface_tris_case1234(verts[2], time));
+        break;
+    }
+    case 0b1000:
+    case 0b0111:{ // the forth vert is different than others
+        new_tris.push_back(create_isosurface_tris_case1234(verts[3], time));
+        break;
+    }
+    case 0b0011:
+    case 0b1100:{ // a cut between nodes 12 and 34, two triangles
+        vector<Triangle*> temp = create_isosurface_tris_case567(verts[0], verts[1], time);
+        new_tris.push_back(temp[0]); new_tris.push_back(temp[1]);
+        break;
+    }
+    case 0b0101:
+    case 0b1010:{ // a cut between nodes 13 and 24, two triangles
+        vector<Triangle*> temp = create_isosurface_tris_case567(verts[0], verts[2], time);
+        new_tris.push_back(temp[0]); new_tris.push_back(temp[1]);
+        break;
+    }
+    case 0b0110:
+    case 0b1001:{ // a cut between nodes 14 and 23,, two triangles
+        vector<Triangle*> temp = create_isosurface_tris_case567(verts[0], verts[3], time);
+        new_tris.push_back(temp[0]); new_tris.push_back(temp[1]);
+        break;
+    }
+    }
+
+    return new_tris;
+}
+
+
+// v is the one on the different level than other 3 in the tet
+Triangle *Tet::create_isosurface_tris_case1234(const Vertex *v, const double time) const
+{
+    vector<Vertex*> newVerts;
+    for(Edge* e : edges){
+        if(e->has_vert(v)){
+            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            newVerts.push_back(newVert);
+        }
+    }
+    Triangle* new_tri = new Triangle(newVerts[0], newVerts[1], newVerts[2]);
+    return new_tri;
+}
+
+
+struct VertOnEdge{
+    Edge* edge;
+    Vertex* vert;
+};
+
+
+inline bool is_IDP_edges(Edge* e1, Edge* e2){
+    Vertex* v1 = e1->verts[0];
+    Vertex* v2 = e1->verts[1];
+    Vertex* v3 = e2->verts[0];
+    Vertex* v4 = e2->verts[1];
+    return (v1 != v3 && v1 != v4 && v2 != v3 && v2 != v4);
+}
+
+// v1v2 are the two on the different level than other 2 in the tet
+// will create two triangles in this case
+vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const Vertex *v2, const double time) const
+{
+    vector<VertOnEdge> newPairs;
+    for(Edge* e : edges){
+        bool has_v1 = e->has_vert(v1);
+        bool has_v2 = e->has_vert(v2);
+        if(has_v1 && has_v2) continue;
+
+        if(has_v1 || has_v2){
+            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            VertOnEdge newPair = {e, newVert};
+            newPairs.push_back(newPair);
+        }
+    }
+
+    // looking for 'independent' verts
+    // independent := two verts do not share original verts
+    short idpVert1 = -1, idpVert2 = -1;
+    for( UI i = 0; i < newPairs.size(); i++ ){
+        VertOnEdge pair1 = newPairs[i];
+        for( UI j = 0; j < newPairs.size(); j++){
+            VertOnEdge pair2 = newPairs[j];
+            if(is_IDP_edges(pair1.edge, pair2.edge)){
+                idpVert1 = i;
+                idpVert2 = j;
+            }
+        }
+    }
+
+    short vert3 = -1, vert4 = -1;
+    for(UI i = 0; i < newPairs.size(); i++){
+        if(i != idpVert1 && i != idpVert2){
+            if(vert3 == -1) vert3 = i;
+            else{
+                vert4 = i;
+            }
+        }
+    }
+
+    Triangle* new_tri1 = new Triangle(newPairs[idpVert1].vert, newPairs[idpVert2].vert, newPairs[vert3].vert);
+    Triangle* new_tri2 = new Triangle(newPairs[idpVert1].vert, newPairs[idpVert2].vert, newPairs[vert4].vert);
+    vector<Triangle*> newTris = {new_tri1, new_tri2};
+    return newTris;
 }

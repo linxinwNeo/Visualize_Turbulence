@@ -298,3 +298,19 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
 }
 
 
+void Mesh::cal_center_for_all_tets()
+{
+    for(Tet* tet : this->tets){
+        tet->center = tet->centroid();
+    }
+}
+
+
+void Mesh::cal_normal_for_all_tris()
+{
+    for(Triangle* tri : this->tris){
+        tri->cal_normal();
+    }
+}
+
+

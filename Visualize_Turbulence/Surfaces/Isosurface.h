@@ -17,6 +17,7 @@ public:
 
     inline UL num_tris() const ;
     inline void add_tri(Triangle* tri);
+    inline void add_tri(vector<Triangle*> tris);
 };
 
 
@@ -32,5 +33,11 @@ inline void Isosurface::add_tri(Triangle *tri)
 }
 
 
+inline void Isosurface::add_tri(vector<Triangle*> tris)
+{
+    for(Triangle* tri : tris){
+        this->tris.push_back(tri);
+    }
+}
 
 #endif // ISOSURFACE_H

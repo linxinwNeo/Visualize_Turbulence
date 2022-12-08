@@ -36,10 +36,14 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
     this->ReadMeshFile(this->meshPath); // read Mesh file first
     this->ReadDataFile(this->dataPath); // then read data file
 
-    this->mesh->calc_Bounding_Sphere();
+    // calculate addition things about mesh
     this->mesh->build_triangles();
     this->mesh->build_edges();
     this->mesh->build_tetNeighbors();
+
+    this->mesh->calc_Bounding_Sphere();
+    this->mesh->cal_center_for_all_tets();
+    this->mesh->cal_normal_for_all_tris();
 
     // correctness check
     qDebug() << "Mesh: num of triangles:" << this->mesh->num_tris();

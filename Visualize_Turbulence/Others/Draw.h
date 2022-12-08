@@ -3,8 +3,6 @@
 
 #define GL_SILENCE_DEPRECATION
 
-
-
 #include <cmath>
 #include <GLUT/glut.h>
 #include <OpenGL/gl.h>
@@ -252,6 +250,26 @@ inline void draw_opague_boundary_tris(double alpha, vector<Triangle*> tris)
 
     glDepthMask( GL_TRUE );
     glDisable( GL_BLEND );
+}
+
+inline void draw_isosurfaces(const Isosurface* isosurface)
+{
+    if(isosurface == NULL){
+        qDebug() << "draw_isosurfaces: isosurface is null!";
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glBegin(GL_TRIANGLES);
+    for(const Triangle* tri : isosurface->tris){
+        Vector3d v1 = tri->verts[0]->cords;
+        Vector3d v2 = tri->verts[1]->cords;
+        Vector3d v3 = tri->verts[2]->cords;
+        glVertex3f(v1.x(), v1.y(), v1.z());
+        glVertex3f(v2.x(), v2.y(), v2.z());
+        glVertex3f(v3.x(), v3.y(), v3.z());
+    }
+    glEnd();
 }
 
 #endif // DRAW_H

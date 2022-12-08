@@ -33,7 +33,8 @@ extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
 extern unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 extern ColorTable CT;
 extern const UI frames_per_sec;
-extern const double sec_per_frame;
+extern const double time_step_size;
+extern const double surface_level;
 
 extern bool show_streamlines;
 extern bool show_pathlines;
@@ -43,7 +44,6 @@ extern bool show_opage_boundary_tris;
 extern bool show_axis;
 
 extern const double boundary_tri_alpha;
-
 
 // function prototypes
 inline void throwErrorMessage( const QString message );

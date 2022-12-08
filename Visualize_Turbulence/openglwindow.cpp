@@ -49,7 +49,7 @@ openGLWindow::~openGLWindow()
 
 
 void openGLWindow::increment_time(){
-    this->time += sec_per_frame;
+    this->time += time_step_size;
     //if(this->time >= mesh->num_time_steps - 1.){
     if(this->time > mesh->num_time_steps - 1.){
         this->time = 0.;
@@ -70,7 +70,7 @@ void openGLWindow::initializeGL()
     // set timer
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(increment_time()));
-    timer->start(sec_per_frame * MSECS_PER_SEC);
+    timer->start(time_step_size * MSECS_PER_SEC);
 }
 
 
@@ -104,7 +104,8 @@ void openGLWindow::paintGL()
     }
 
     if(show_isosurfaces){
-
+        const auto& isosurface = isosurfaces_for_all_t.at(time);
+        draw_isosurfaces(isosurface);
     }
 
     if(show_pathlines){
