@@ -191,42 +191,53 @@ inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double 
 }
 
 
-inline void draw_streamlines(StreamLine* sl, const double min_vel_mag, const double max_vel_mag)
+inline void draw_streamlines(StreamLine* sl, const double min, const double max)
 {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
+
     glLineWidth(4);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glBegin(GL_LINE_STRIP);
+
+    const double dmag = max - min;
 
     long int i;
     // draw back_ward vertices in reverse order
     for(i = sl->num_bw_verts() - 1; i >= 0; i--){
         Vertex* vert = sl->bw_verts[i];
         const Vector3d& p = vert->cords;
-        const Vector3d& vel = vert->vels.begin()->second;
-        double vel_mag = length(vel);
-        const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
-        glColor3f(color.R, color.G, color.B);
+        const Vector3d& vor = vert->vors.begin()->second;
+        const double vor_mag = length(vor);
+        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        glColor3f(color.x(), color.y(), color.z());
         glVertex3f(p.x(), p.y(), p.z());
     }
 
-    // draw seed
-    const Vertex* seed = sl->seed;
-    const Vector3d seed_cord = seed->cords;
-    glVertex3f(seed_cord.x(), seed_cord.y(), seed_cord.z());
+    {
+        // draw seed
+        const Vertex* seed = sl->seed;
+        const Vector3d seed_cord = seed->cords;
+        const double vor_mag = length(seed->vors.begin()->second);
+        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        glColor3f(color.x(), color.y(), color.z());
+        glVertex3f(seed_cord.x(), seed_cord.y(), seed_cord.z());
+    }
 
     // draw fw vertices in order
     for(i = 0; i < sl->num_fw_verts() ; i++){
         Vertex* vert = sl->fw_verts[i];
         const Vector3d& p = vert->cords;
-        const Vector3d& vel = vert->vels.begin()->second;
-        double vel_mag = length(vel);
-        const RGB color = CT.lookUp((vel_mag - min_vel_mag) / (max_vel_mag-min_vel_mag));
-        glColor3f(color.R, color.G, color.B);
+        const Vector3d& vor = vert->vors.begin()->second;
+        const double vor_mag = length(vor);
+        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        glColor3f(color.x(), color.y(), color.z());
         glVertex3f(p.x(), p.y(), p.z());
     }
     glEnd();
     glPopMatrix();
+
 }
 
 inline void draw_arrows( PathLine* pl )
@@ -260,7 +271,14 @@ inline void draw_isosurfaces(const Isosurface* isosurface, const double min, con
         return;
     }
 
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
     double d = max-min;
+
+    float color[ ] = { 1.,0.,0. };
+    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, color );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color );
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -268,17 +286,20 @@ inline void draw_isosurfaces(const Isosurface* isosurface, const double min, con
     for(Triangle* tri : isosurface->tris){
         const Vector3d& normal = tri->cal_normal();
         glNormal3f(normal.x(), normal.y(), normal.z());
+
         Vector3d v1 = tri->verts[0]->cords;
         Vector3d v2 = tri->verts[1]->cords;
         Vector3d v3 = tri->verts[2]->cords;
-//        Vector3d* vor1 = tri->verts[0]->vors.begin()->second;
-//        Vector3d* vor2 = tri->verts[1]->vors.begin()->second;
-//        Vector3d* vor3 = tri->verts[2]->vors.begin()->second;
         glVertex3f(v1.x(), v1.y(), v1.z());
         glVertex3f(v2.x(), v2.y(), v2.z());
         glVertex3f(v3.x(), v3.y(), v3.z());
     }
     glEnd();
+
+    glPopMatrix();
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
 }
 
 #endif // DRAW_H

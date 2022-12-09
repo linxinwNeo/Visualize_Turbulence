@@ -247,11 +247,18 @@ void Mesh::max_vor_mag(const double time, double& min_vor, double& max_vor) cons
     min_vor = DBL_MAX;
     max_vor = DBL_MIN;
     for( const Vertex* v : this->verts ){
-        Vector3d vor = v->vors.at(time);
-        double mag = length(vor);
+        const Vector3d vor = v->vors.at(time);
+        const double mag = length(vor);
         if(mag < min_vor) min_vor = mag;
         if(mag > max_vor) max_vor = mag;
     }
+
+    // shinking the difference
+    double diff = max_vor - min_vor;
+    diff *= 0.5;
+    diff /= 2;
+    max_vor -= diff;
+    min_vor += diff;
 }
 
 
@@ -267,6 +274,13 @@ void Mesh::max_vel_mag(const double time, double& min_vel, double& max_vel) cons
         if(mag < min_vel) min_vel = mag;
         if(mag > max_vel) max_vel = mag;
     }
+
+    // shinking the difference
+    double diff = max_vel-min_vel;
+    diff *= 0.5;
+    diff /= 2;
+    max_vel -= diff;
+    min_vel += diff;
 }
 
 

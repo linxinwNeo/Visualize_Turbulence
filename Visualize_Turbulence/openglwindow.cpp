@@ -1,3 +1,4 @@
+#include <cfloat>
 #define GL_SILENCE_DEPRECATION
 #include <QMouseEvent>
 #include <QSurfaceFormat>
@@ -50,8 +51,7 @@ openGLWindow::~openGLWindow()
 
 void openGLWindow::increment_time(){
     this->time += time_step_size;
-    //if(this->time >= mesh->num_time_steps - 1.){
-    if(this->time > mesh->num_time_steps - 1.){
+    if(this->time >= mesh->num_time_steps - 1.){
         this->time = 0.;
     }
 
@@ -88,8 +88,7 @@ void openGLWindow::initializeGL()
     GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
     float LightColor[] = {1, 1, 1};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glEnable( GL_LIGHTING );
-    glEnable( GL_LIGHT0 );
+
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, MulArray3( .2, White ) );
     glLightModeli ( GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE );
     glLightfv( GL_LIGHT0, GL_AMBIENT, Array3( 0., 0., 0. ) );
@@ -120,12 +119,9 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-
     if(show_streamlines){
-        double max, min;
-        mesh->max_vel_mag(time, min, max);
+        double max = DBL_MIN, min = DBL_MAX;
+        mesh->max_vor_mag(time, min, max);
         const auto& sls = streamlines_for_all_t.at(time);
         for(StreamLine* sl:sls){
             draw_streamlines(sl, min, max);
@@ -133,8 +129,7 @@ void openGLWindow::paintGL()
     }
 
     if(show_isosurfaces){
-        double max = 0, min = 0;
-//        mesh->max_vor_mag(time, min, max);
+        double max = DBL_MIN, min = DBL_MAX;
         const auto& isosurface = isosurfaces_for_all_t.at(time);
         draw_isosurfaces(isosurface, min, max);
     }
@@ -148,10 +143,7 @@ void openGLWindow::paintGL()
         draw_wireframe(mesh->boundary_tris);
 
     if(show_opage_boundary_tris){
-        glDisable(GL_LIGHTING);
-        glDisable(GL_LIGHT0);
         draw_opague_boundary_tris(boundary_tri_alpha, mesh->boundary_tris);
-
     }
 
 
