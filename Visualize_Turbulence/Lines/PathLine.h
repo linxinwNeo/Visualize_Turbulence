@@ -18,6 +18,9 @@ public:
     inline unsigned long num_verts();
 };
 
+void place_seeds(vector<PathLine*>& pls);
+void build_pathlines_from_seeds();
+Vector3d trace_one_time_step(const Vector3d& start_cords, const Vector3d& vel);
 
 inline unsigned long PathLine::num_verts()
 {

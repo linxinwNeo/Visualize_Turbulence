@@ -32,9 +32,13 @@ extern vector<PathLine*> pathlines;
 extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
 extern unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 extern ColorTable CT;
+extern const unsigned int NUM_SEEDS;
+extern const unsigned int max_num_steps;
 extern const UI frames_per_sec;
 extern const double time_step_size;
-extern const double surface_level;
+extern const double surface_level_ratio;
+extern unordered_map<double, double> surface_level_vals;
+extern const double dist_step_size;
 
 extern bool show_streamlines;
 extern bool show_pathlines;

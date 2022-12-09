@@ -369,7 +369,7 @@ Triangle *Tet::create_isosurface_tris_case1234(const Vertex *v, const double tim
     vector<Vertex*> newVerts;
     for(Edge* e : edges){
         if(e->has_vert(v)){
-            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level_vals.at(time));
             newVert->add_tet(this);
             newVerts.push_back(newVert);
         }
@@ -404,7 +404,7 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
         if(has_v1 && has_v2) continue;
 
         if(has_v1 || has_v2){
-            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level);
+            Vertex* newVert = e->linear_interpolate_basedOn_vorMag(time, surface_level_vals.at(time));
             newVert->add_tet(this);
             VertOnEdge newPair = {e, newVert};
             newPairs.push_back(newPair);

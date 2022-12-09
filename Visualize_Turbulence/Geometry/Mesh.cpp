@@ -5,7 +5,7 @@
 
 Mesh::Mesh()
 {
-    this->radius = 0.;
+    //this->radius = 0.;
     this->num_time_steps = 0;
     // reserve vector memories to save time
     this->edges.reserve(10000);
@@ -52,6 +52,8 @@ Mesh::~Mesh()
     this->edges.clear();
     this->tris.clear();
     this->tets.clear();
+    this->boundary_tris.clear();
+    this->min_max_at_verts_for_all_t.clear();
 }
 
 
@@ -81,7 +83,7 @@ void Mesh::calc_Bounding_Sphere()
         }
     }
     Vector3d center = (min + max) * 0.5;
-    this->radius = length(center - min);
+    //this->radius = length(center - min);
     this->rot_center = center * 1.0;
 }
 
@@ -312,7 +314,7 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
 }
 
 
-void Mesh::cal_center_for_all_tets()
+void Mesh::calc_center_for_all_tets()
 {
     for(Tet* tet : this->tets){
         tet->center = tet->centroid();
@@ -320,7 +322,7 @@ void Mesh::cal_center_for_all_tets()
 }
 
 
-void Mesh::cal_normal_for_all_tris()
+void Mesh::calc_normal_for_all_tris()
 {
     for(Triangle* tri : this->tris){
         tri->cal_normal();
@@ -328,3 +330,102 @@ void Mesh::cal_normal_for_all_tris()
 }
 
 
+void Mesh::calc_vor_min_max_at_verts_for_all_t()
+{
+    double time = 0.;
+    while( time < this->num_time_steps - 1. )
+    {
+        double min = DBL_MAX, max = DBL_MIN;
+        for(Vertex* v : verts){
+            Vector3d* vor = v->vors.at(time);
+            const double mag = length(vor);
+            if(mag < min) min = mag;
+            if(mag > max) max = mag;
+        }
+        this->add_vor_min_max_at_verts_for_all_t(time, {min, max});
+        time += time_step_size;
+    }
+}
+
+
+void Mesh::interpolate_vertices()
+{
+    double i = 0.;
+    while( i < this->num_time_steps - 1. )
+    {
+        for(Vertex* vert : this->verts){
+
+            vert->linear_interpolate_vel(i);
+
+            vert->linear_interpolate_vor(i);
+
+            vert->linear_interpolate_mu(i);
+        }
+
+        i += time_step_size;
+    }
+}
+
+
+// target is the vertex and we are interested in which tet it is in
+// prev_tet is the tet that contains the previous vertex. we should find the tet of target by using the neighbors
+// of the start_tet.
+// ds contains barycentric coordinate of this pt in that tet if found
+Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const
+{
+    // it only breaks if we found the target
+    while(!prev_tet->is_pt_in2(target_pt, ds)){
+        unsigned int min_idx; double min_val;
+        array_min(ds, 4, min_idx, min_val);
+        if(min_val > 0){ // the pt is in prev_tet
+            return prev_tet;
+        }
+        // the pt is not in prev_tet
+        // we should move to the neighbor whose barycentric coordinate is smallest.
+        Vertex* min_vert = prev_tet->verts[min_idx];
+        Triangle* exit_tri = NULL;
+        for(unsigned int i = 0; i<prev_tet->num_tris(); i++ ){
+            // find the triangle that does not have this min_vert
+            if(!prev_tet->tris[i]->has_vert(min_vert)){
+                exit_tri = prev_tet->tris[i];
+            }
+        }
+        // if we couldn't find exit_tri or the exit_tri is a dead end, we couldn't proceed
+        if(exit_tri == NULL || exit_tri->is_boundary){
+            if(exit_tri == NULL) qDebug() << "exit_tri is null!";
+            return NULL;
+        }
+        // then we set up the next iteration
+        for(int i = 0; i < 2; i++){
+            if(exit_tri->tets[i] != prev_tet){
+                prev_tet = exit_tri->tets[i];
+                break;
+            }
+        }
+    }
+    return prev_tet;
+}
+
+
+vector<UL> Mesh::generate_unique_random_Tet_idx() const
+{
+    srand((unsigned) time(NULL));
+    set<UL> seeded_tets;
+    unsigned int cur_num_seeds = 0;
+    while(cur_num_seeds < NUM_SEEDS)
+    {
+        int random_idx = rand() % mesh->num_tets();
+        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
+        else{
+            seeded_tets.insert(random_idx);
+            cur_num_seeds ++;
+        }
+    }
+
+    vector<UL> seeds;
+    seeds.reserve(NUM_SEEDS);
+    for(UL idx : seeded_tets){
+        seeds.push_back(idx);
+    }
+    return seeds;
+}

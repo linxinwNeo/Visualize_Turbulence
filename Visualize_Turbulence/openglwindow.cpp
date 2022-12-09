@@ -121,7 +121,7 @@ void openGLWindow::paintGL()
 
     if(show_streamlines){
         double max = DBL_MIN, min = DBL_MAX;
-        mesh->max_vor_mag(time, min, max);
+        mesh->max_vel_mag(time, min, max);
         const auto& sls = streamlines_for_all_t.at(time);
         for(StreamLine* sl:sls){
             draw_streamlines(sl, min, max);

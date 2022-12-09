@@ -28,6 +28,10 @@ public:
     inline UL num_bw_verts();
 };
 
+void tracing_streamlines();
+void build_streamlines_from_seeds();
+Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
+void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls);
 
 inline void StreamLine::set_seed(Vertex *seed_vert)
 {

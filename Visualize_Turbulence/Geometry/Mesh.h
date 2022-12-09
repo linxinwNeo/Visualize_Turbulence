@@ -9,6 +9,7 @@
 #include "Geometry/Edge.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Tet.h"
+#include "Others/Predefined.h"
 #include "Others/Vector3d.h"
 
 using namespace std;
@@ -24,8 +25,10 @@ public:
     vector<Triangle*> boundary_tris;
 
     Vector3d rot_center;
-    double radius;
+    //double radius;
     unsigned int num_time_steps;
+
+    unordered_map<double, pair<double,double>> min_max_at_verts_for_all_t;
 
     // member functions
     Mesh();
@@ -41,6 +44,7 @@ public:
     inline void add_edge(Edge*);
     inline void add_triangle(Triangle*);
     inline void add_tet(Tet*);
+    inline void add_vor_min_max_at_verts_for_all_t( const double time, const pair<double, double> min_max_pair );
 
     void calc_Bounding_Sphere();
     void build_triangles();
@@ -50,8 +54,14 @@ public:
     void assign_edge(Vertex*, Vertex*);
     void max_vor_mag(const double t, double& min, double& max) const;
     void max_vel_mag(const double t, double& min, double& max) const;
-    void cal_center_for_all_tets();
-    void cal_normal_for_all_tris();
+    void calc_center_for_all_tets();
+    void calc_normal_for_all_tris();
+    void calc_vor_min_max_at_verts_for_all_t();
+    vector<UL> generate_unique_random_Tet_idx() const;
+
+    // numerical procedures
+    void interpolate_vertices();
+    Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const;
 };
 
 
@@ -106,6 +116,12 @@ inline void Mesh::add_triangle(Triangle* tri){
 inline void Mesh::add_tet(Tet* tet){
     tet->idx = this->num_tets();
     this->tets.push_back(tet);
+}
+
+
+inline void Mesh::add_vor_min_max_at_verts_for_all_t(const double time, const pair<double, double> min_max_pair)
+{
+    this->min_max_at_verts_for_all_t[time] = min_max_pair;
 }
 
 

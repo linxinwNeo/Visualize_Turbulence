@@ -20,6 +20,11 @@ public:
     inline void add_tri(vector<Triangle*> tris);
 };
 
+void constuct_isosurfaces();
+void calc_actual_surface_levels_for_all_t();
+void classify_vertex_levels_for_all_t();
+void calc_marching_indices_for_all_t();
+void create_isosurface_tris_for_all_t();
 
 inline unsigned long Isosurface::num_tris() const
 {

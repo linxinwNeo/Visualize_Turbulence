@@ -42,8 +42,8 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
     this->mesh->build_tetNeighbors();
 
     this->mesh->calc_Bounding_Sphere();
-    this->mesh->cal_center_for_all_tets();
-    this->mesh->cal_normal_for_all_tris();
+    this->mesh->calc_center_for_all_tets();
+    this->mesh->calc_normal_for_all_tris();
 
     // correctness check
     qDebug() << "Mesh: num of triangles:" << this->mesh->num_tris();

@@ -208,9 +208,9 @@ inline void draw_streamlines(StreamLine* sl, const double min, const double max)
     for(i = sl->num_bw_verts() - 1; i >= 0; i--){
         Vertex* vert = sl->bw_verts[i];
         const Vector3d& p = vert->cords;
-        const Vector3d& vor = vert->vors.begin()->second;
-        const double vor_mag = length(vor);
-        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        const Vector3d& vel = vert->vels.begin()->second;
+        const double vel_mag = length(vel);
+        const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
         glVertex3f(p.x(), p.y(), p.z());
     }
@@ -219,8 +219,8 @@ inline void draw_streamlines(StreamLine* sl, const double min, const double max)
         // draw seed
         const Vertex* seed = sl->seed;
         const Vector3d seed_cord = seed->cords;
-        const double vor_mag = length(seed->vors.begin()->second);
-        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        const double vel_mag = length(seed->vels.begin()->second);
+        const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
         glVertex3f(seed_cord.x(), seed_cord.y(), seed_cord.z());
     }
@@ -229,9 +229,9 @@ inline void draw_streamlines(StreamLine* sl, const double min, const double max)
     for(i = 0; i < sl->num_fw_verts() ; i++){
         Vertex* vert = sl->fw_verts[i];
         const Vector3d& p = vert->cords;
-        const Vector3d& vor = vert->vors.begin()->second;
-        const double vor_mag = length(vor);
-        const Vector3d color = CT.lookUp((vor_mag - min) / dmag);
+        const Vector3d& vel = vert->vels.begin()->second;
+        const double vel_mag = length(vel);
+        const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
         glVertex3f(p.x(), p.y(), p.z());
     }
