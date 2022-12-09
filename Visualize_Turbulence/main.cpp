@@ -32,7 +32,7 @@ bool LeftButtonDown = false;
 bool MiddleButtonDown = false;
 bool RightButtonDown = false;
 // boolean variables used to enable modes
-bool show_streamlines = true;
+bool show_streamlines = false;
 bool show_pathlines = false;
 bool show_isosurfaces = true;
 bool show_boundary_wireframe = false;
@@ -48,12 +48,12 @@ unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 const unsigned int NUM_SEEDS = 50;
 const unsigned int max_num_steps = 400;
 const double dist_step_size = 0.003;
-const UI frames_per_sec = 10; // frames per sec
+const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
 
 // surface_level is defined to be the voriticity
-const double surface_level_ratio = 0.9;
+const double surface_level_ratio = 0.02;
 unordered_map<double, double> surface_level_vals;
 
 // arrow parameters
