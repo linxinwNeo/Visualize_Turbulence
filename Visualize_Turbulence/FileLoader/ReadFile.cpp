@@ -85,15 +85,13 @@ ReadFile::ReadFile(const QString meshPath, const QString dataPath)
         }
     }
 
-    qDebug() << "Reading Files takes" <<  t.msecsTo(t.currentTime())/1000. << "secs";
+    qDebug() << "Reading Files takes" <<  t.msecsTo(t.currentTime())/1000. << "secs\n\n";
 }
 
 
 ReadFile::~ReadFile()
 {
-    if( this->mesh != NULL ){
-        delete this->mesh;
-    }
+
 }
 
 
@@ -146,7 +144,7 @@ void ReadFile::ReadMeshFile(const QString f){
     }
 
     // checking if anything goes wrong
-    if( flag == false){
+    if( flag == false ){
         throwErrorMessage( "ReadFile::ReadMeshFile(QString f): something is wrong while reading mesh file" );
     }
 
@@ -171,7 +169,7 @@ void ReadFile::ReadMeshFile(const QString f){
     }
 
     // checking if we found the element part
-    if( flag == false){
+    if( flag == false ){
         throwErrorMessage( "ReadFile::ReadMeshFile(QString f): Couldn't find elements" );
     }
 

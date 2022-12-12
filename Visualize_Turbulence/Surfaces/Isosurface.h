@@ -5,6 +5,7 @@
 #include "Others/Predefined.h"
 #include "Geometry/Triangle.h"
 
+class Mesh;
 
 class Isosurface{
 public:
@@ -20,11 +21,11 @@ public:
     inline void add_tri(vector<Triangle*> tris);
 };
 
-void constuct_isosurfaces();
-void calc_actual_surface_levels_for_all_t();
-void classify_vertex_levels_for_all_t();
-void calc_marching_indices_for_all_t();
-void create_isosurface_tris_for_all_t();
+void construct_isosurfaces();
+void calc_actual_surface_levels_for_all_t(Mesh * mesh);
+void classify_vertex_levels_for_all_t(Mesh * mesh);
+void calc_marching_indices_for_all_t(Mesh * mesh);
+void create_isosurface_tris_for_all_t(Mesh * mesh);
 
 inline unsigned long Isosurface::num_tris() const
 {

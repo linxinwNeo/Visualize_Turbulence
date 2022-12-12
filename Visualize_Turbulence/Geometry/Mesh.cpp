@@ -8,15 +8,15 @@ Mesh::Mesh()
     //this->radius = 0.;
     this->num_time_steps = 0;
     // reserve vector memories to save time
-    this->edges.reserve(10000);
-    this->tris.reserve(10000);
+    this->edges.reserve(100000);
+    this->tris.reserve(100000);
 }
 
 
 Mesh::~Mesh()
 {
     // free memories of each vector
-    unsigned long i;
+    unsigned long i, j;
     for( i=0; i<this->num_verts(); i++ ){
         if( this->verts[i] != NULL ){
             delete this->verts[i];
@@ -46,8 +46,29 @@ Mesh::~Mesh()
             delete this->tets[i];
             this->tets[i] = NULL;
         }
-
     }
+
+    // clear memoery for streamlines
+    for( auto& slsPair : streamlines_for_all_t ){
+        auto& sls = slsPair.second;
+        for( j = 0; j < sls.size(); j++ ){
+            StreamLine* sl = sls[j];
+            if(sl != NULL){
+                delete sl;
+            }
+            sls[j] = NULL;
+        }
+        sls.clear();
+    }
+    streamlines_for_all_t.clear();
+
+
+    // clear isosurfaces
+    for(auto& pair : isosurfaces_for_all_t){
+        Isosurface* isosurf = pair.second;
+        delete isosurf;
+    }
+
     this->verts.clear();
     this->edges.clear();
     this->tris.clear();
@@ -310,7 +331,6 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
     }
     // add triangle to the mesh
     this->add_triangle(new_tri);
-    this->tris.push_back((new_tri));
 }
 
 
@@ -404,28 +424,4 @@ Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) co
         }
     }
     return prev_tet;
-}
-
-
-vector<UL> Mesh::generate_unique_random_Tet_idx() const
-{
-    srand((unsigned) time(NULL));
-    set<UL> seeded_tets;
-    unsigned int cur_num_seeds = 0;
-    while(cur_num_seeds < NUM_SEEDS)
-    {
-        int random_idx = rand() % mesh->num_tets();
-        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
-        else{
-            seeded_tets.insert(random_idx);
-            cur_num_seeds ++;
-        }
-    }
-
-    vector<UL> seeds;
-    seeds.reserve(NUM_SEEDS);
-    for(UL idx : seeded_tets){
-        seeds.push_back(idx);
-    }
-    return seeds;
 }

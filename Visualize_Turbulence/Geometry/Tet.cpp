@@ -293,11 +293,11 @@ void Tet::bary_tet(const Vector3d & p, double ds[4]) const
 
 
 // assume vertices->is_above_surface are calculated
-void Tet::calc_marching_indices()
+void Tet::calc_marching_indices(unsigned int num_time_steps)
 {
     double time = 0.;
     const unsigned char one = 0b01;
-    while(time < mesh->num_time_steps - 1.)
+    while(time < num_time_steps - 1.)
     {
         this->marching_idices[time] = 0;
         for( unsigned int i = 0; i< this->verts.size(); i++ ){

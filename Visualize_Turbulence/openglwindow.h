@@ -5,6 +5,7 @@
 #include <QOpenGLFunctions>
 #include <QTime>
 
+#include "Geometry/Mesh.h"
 #include "Others/TraceBall.h"
 #include "Others/Vector3d.h"
 
@@ -21,7 +22,8 @@ public:
     double last_y;
 
     QTimer* timer;
-    double time;
+    double animation_time;
+    double model_time;
 
     CTraceBall traceball;
     Quaternion rvec;
@@ -32,19 +34,22 @@ public:
     double trans_x;
     double trans_y;
     Vector3d rot_center;
+    Mesh* cur_mesh;
 
 
     // functions
     openGLWindow(QWidget *parent);
     ~openGLWindow();
 protected:
-    void  initializeGL() override;
-    void	paintGL() override;
+    void initializeGL() override;
+    void paintGL() override;
+    void main_routine() const;
     //void	resizeGL(int w, int h) override;
 
 public:
     void set_scene() const;
     void reset_scene();
+    void switch_cur_mesh(Mesh* mesh);
 
 private:
     // mouse events

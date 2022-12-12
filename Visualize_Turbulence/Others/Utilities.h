@@ -20,7 +20,7 @@
 #include "Others/TraceBall.h"
 #include "Others/ColorTable.h"
 
-extern Mesh* mesh;
+extern vector<Mesh*> meshes;
 extern bool LeftButtonDown, MiddleButtonDown, RightButtonDown;
 extern const double cone_base_radius;
 extern const double cone_height;
@@ -28,9 +28,6 @@ extern const double cylinder_height;
 extern const double cylinder_radius;
 extern const int slices;
 extern const double arrow_color[];
-extern vector<PathLine*> pathlines;
-extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
-extern unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 extern ColorTable CT;
 extern const unsigned int NUM_SEEDS;
 extern const unsigned int max_num_steps;
@@ -62,6 +59,7 @@ inline void ScreenToSecondWin(
 inline void Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4);
 inline void multmatrix(const Matrix m);
 inline void mat_ident(Matrix m);
+inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh);
 
 
 inline void throwErrorMessage( const QString message )
@@ -147,6 +145,15 @@ inline void mat_ident(Matrix m)
     }
 }
 
+inline void mat_ident(float m[16])
+{
+    unsigned int i;
+
+    for(i = 0; i < 16; i++)
+        m[i]=0.;
+    m[0] = m[5] = m[10] = m[15] = 1;
+}
+
 
 // output is saved in min_idx and min_val
 inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val )
@@ -176,6 +183,8 @@ inline float * Array3( float a, float b, float c )
     array[3] = 1.;
     return array;
 }
+
+
 // utility to create an array from a multiplier and an array:
 inline float * MulArray3( float factor, float array0[3] )
 {
@@ -185,5 +194,30 @@ inline float * MulArray3( float factor, float array0[3] )
     array[2] = factor * array0[2];
     array[3] = 1.;
     return array;
+}
+
+
+inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh)
+{
+    srand((unsigned) time(NULL));
+    set<UL> seeded_tets;
+    unsigned int cur_num_seeds = 0;
+    while(cur_num_seeds < NUM_SEEDS)
+    {
+        int random_idx = rand() % mesh->num_tets();
+        if( seeded_tets.find(random_idx) != seeded_tets.end() ) continue;
+        else{
+            seeded_tets.insert(random_idx);
+            cur_num_seeds ++;
+        }
+    }
+
+    vector<UL> seeds;
+    seeds.reserve(NUM_SEEDS);
+    for(UL idx : seeded_tets){
+        seeds.push_back(idx);
+    }
+
+    return seeds;
 }
 #endif // UTILITIES_H

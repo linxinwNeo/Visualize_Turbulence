@@ -9,8 +9,10 @@
 #include "Geometry/Edge.h"
 #include "Geometry/Triangle.h"
 #include "Geometry/Tet.h"
+#include "Lines/StreamLine.h"
 #include "Others/Predefined.h"
 #include "Others/Vector3d.h"
+#include "Surfaces/Isosurface.h"
 
 using namespace std;
 
@@ -29,6 +31,10 @@ public:
     unsigned int num_time_steps;
 
     unordered_map<double, pair<double,double>> min_max_at_verts_for_all_t;
+
+    // we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
+    unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
+    unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 
     // member functions
     Mesh();
@@ -57,7 +63,6 @@ public:
     void calc_center_for_all_tets();
     void calc_normal_for_all_tris();
     void calc_vor_min_max_at_verts_for_all_t();
-    vector<UL> generate_unique_random_Tet_idx() const;
 
     // numerical procedures
     void interpolate_vertices();

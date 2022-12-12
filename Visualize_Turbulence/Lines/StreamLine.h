@@ -7,6 +7,8 @@
 
 using namespace std;
 
+class Mesh;
+
 class StreamLine
 {
 public:
@@ -29,9 +31,9 @@ public:
 };
 
 void tracing_streamlines();
-void build_streamlines_from_seeds();
+void build_streamlines_from_seeds(Mesh* mesh);
 Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
-void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls);
+void place_seeds(Mesh* mesh);
 
 inline void StreamLine::set_seed(Vertex *seed_vert)
 {

@@ -30,26 +30,30 @@ StreamLine::~StreamLine()
 
 void tracing_streamlines()
 {
-    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
-    mesh->interpolate_vertices();
+    for(unsigned int i = 0; i < meshes.size(); i++){
+        auto& mesh = meshes[i];
+        qDebug()<< "Tracing streamlines for mesh"<< i+1;
+        // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
+        mesh->interpolate_vertices();
 
-    // place inital seeds
-    place_seeds(streamlines_for_all_t);
+        // place inital seeds
+        place_seeds(mesh);
 
-    // trace seeds and form pathlines
-    // mainwindow.cpp will clear the memory of pathlines and streamlines
-    build_streamlines_from_seeds();
+        // trace seeds and form pathlines
+        // mainwindow.cpp will clear the memory of pathlines and streamlines
+        build_streamlines_from_seeds(mesh);
+    }
+
 }
 
 
 // now every streamline at any time has a seed point as a starting point, we want to calculate their trajectory individually
-void build_streamlines_from_seeds()
+void build_streamlines_from_seeds( Mesh* mesh )
 {
     // for each time step
     double cur_time = 0;
     while( cur_time < mesh->num_time_steps - 1. ){
-        qDebug() << "Building StreamLines for time" << cur_time;
-        vector<StreamLine*> sls = streamlines_for_all_t.at(cur_time);
+        vector<StreamLine*> sls = mesh->streamlines_for_all_t.at(cur_time);
         // for each (the beginning of) trajectory
         for( StreamLine* sl : sls ){
             // forward tracing
@@ -109,11 +113,11 @@ inline Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d&
 }
 
 
-inline void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls)
+inline void place_seeds(Mesh* mesh)
 {
-    all_sls.reserve(mesh->num_time_steps * frames_per_sec);
+    mesh->streamlines_for_all_t.reserve(mesh->num_time_steps * frames_per_sec);
     // make sure we are using same seeds every time step
-    vector<UL> seeds = mesh->generate_unique_random_Tet_idx();
+    vector<UL> seeds = generate_unique_random_Tet_idx(mesh);
 
     // for each time step, place streamline
     double time = 0.;
@@ -140,11 +144,8 @@ inline void place_seeds(unordered_map< double, vector<StreamLine*> >& all_sls)
             cur_num_seeds ++;
             sls.push_back(SL);
         }
-
-        all_sls[time] = sls;
+        mesh->streamlines_for_all_t[time] = sls;
 
         time += time_step_size; // increment time
     }
 }
-
-

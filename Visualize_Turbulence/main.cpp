@@ -9,7 +9,6 @@
 #include "Surfaces/Isosurface.h"
 #include "Lines/StreamLine.h"
 #include "Others/ColorTable.h"
-#include "Lines/PathLine.h"
 #include "mainwindow.h"
 
 typedef pair<double, Tet*> qPair;
@@ -19,13 +18,29 @@ ReadFile* file = NULL;
 
 
 // the data of the file is saved orderly in mesh obj
-Mesh* mesh = NULL;
+vector<Mesh*> meshes;
 
 
 // the file path, should be entered before starting the program
 // TODO dynamiclly import files
-const QString meshFilePath = "/Users/linxinw/Desktop/fast_mesh.txt";
-const QString dataFilePath = "/Users/linxinw/Desktop/fast_data.txt";
+const QString meshFilePath1 = "/Users/linxinw/Desktop/no_boundary_slow_mesh.txt";
+const QString dataFilePath1 = "/Users/linxinw/Desktop/no_boundary_slow_data.txt";
+
+const QString meshFilePath2 = "/Users/linxinw/Desktop/no_boundary_medium_mesh.txt";
+const QString dataFilePath2 = "/Users/linxinw/Desktop/no_boundary_medium_data.txt";
+
+const QString meshFilePath3 = "/Users/linxinw/Desktop/no_boundary_fast_mesh.txt";
+const QString dataFilePath3 = "/Users/linxinw/Desktop/no_boundary_fast_data.txt";
+
+const QString meshFilePath4 = "/Users/linxinw/Desktop/with_boundary_slow_mesh.txt";
+const QString dataFilePath4 = "/Users/linxinw/Desktop/with_boundary_slow_data.txt";
+
+const QString meshFilePath5 = "/Users/linxinw/Desktop/with_boundary_medium_mesh.txt";
+const QString dataFilePath5 = "/Users/linxinw/Desktop/with_boundary_medium_data.txt";
+
+const QString meshFilePath6 = "/Users/linxinw/Desktop/with_boundary_fast_mesh.txt";
+const QString dataFilePath6 = "/Users/linxinw/Desktop/with_boundary_fast_data.txt";
+
 
 // boolean variables used to enable orbit control
 bool LeftButtonDown = false;
@@ -34,17 +49,11 @@ bool RightButtonDown = false;
 // boolean variables used to enable modes
 bool show_streamlines = false;
 bool show_pathlines = false;
-bool show_isosurfaces = true;
+bool show_isosurfaces = false;
 bool show_boundary_wireframe = false;
 bool show_axis = false;
 bool show_opage_boundary_tris = true;
 
-// calculated pathlines used for animation
-// each element in pathlines is a trajectory over space and time
-vector<PathLine*> pathlines;
-// we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
-unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
-unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 const unsigned int NUM_SEEDS = 50;
 const unsigned int max_num_steps = 400;
 const double dist_step_size = 0.003;
@@ -84,7 +93,7 @@ int main(int argc, char *argv[])
         tracing_streamlines();
 
     if(show_isosurfaces)
-        constuct_isosurfaces();
+        construct_isosurfaces();
 
     MainWindow w;
     w.show();
@@ -94,6 +103,27 @@ int main(int argc, char *argv[])
 
 
 void read_files(){
-    file = new ReadFile( meshFilePath, dataFilePath );
-    mesh = file->mesh;
+    file = new ReadFile( meshFilePath1, dataFilePath1 );
+    meshes.push_back( file->mesh );
+    delete file;
+
+    file = new ReadFile( meshFilePath2, dataFilePath2);
+    meshes.push_back( file->mesh );
+    delete file;
+
+    file = new ReadFile( meshFilePath3, dataFilePath3);
+    meshes.push_back( file->mesh );
+    delete file;
+
+    file = new ReadFile( meshFilePath4, dataFilePath4);
+    meshes.push_back( file->mesh );
+    delete file;
+
+    file = new ReadFile( meshFilePath5, dataFilePath5);
+    meshes.push_back( file->mesh );
+    delete file;
+
+    file = new ReadFile( meshFilePath6, dataFilePath6);
+    meshes.push_back( file->mesh );
+    delete file;
 }

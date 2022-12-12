@@ -4,6 +4,7 @@
 #include <vector>
 #include "Geometry/Vertex.h"
 
+class Mesh;
 // the pathline traced from a single seed
 class PathLine{
 public:
@@ -19,7 +20,7 @@ public:
 };
 
 void place_seeds(vector<PathLine*>& pls);
-void build_pathlines_from_seeds();
+void build_pathlines_from_seeds(Mesh* mesh);
 Vector3d trace_one_time_step(const Vector3d& start_cords, const Vector3d& vel);
 
 inline unsigned long PathLine::num_verts()

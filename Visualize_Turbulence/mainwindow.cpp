@@ -14,29 +14,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 
-    UL i, j;
-    // clear memoery for streamlines
-    for( auto& slsPair : streamlines_for_all_t ){
-        auto& sls = slsPair.second;
-        for( j = 0; j < sls.size(); j++ ){
-            StreamLine* sl = sls[j];
-            if(sl != NULL){
-                delete sl;
-            }
-            sls[j] = NULL;
-        }
-        sls.clear();
-    }
-    streamlines_for_all_t.clear();
 
-    // clear memoery for pathlines
-    for( i = 0; i < pathlines.size(); i++ ){
-        if(pathlines[i] != NULL){
-            delete pathlines[i];
-            pathlines[i] = NULL;
-        }
-    }
-    pathlines.clear();
 }
 
 

@@ -22,22 +22,28 @@ Isosurface::~Isosurface()
 }
 
 
-void constuct_isosurfaces()
+void construct_isosurfaces()
 {
-    // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
-    mesh->interpolate_vertices();
+    // for each mesh, construct isosurfaces for all times
+    for(unsigned int i = 0; i < meshes.size(); i++){
+        auto& mesh = meshes[i];
+        qDebug()<< "Constructing isosurface for mesh"<< i+1;
 
-    // calculate actual surface level using surface_level_ratio
-    calc_actual_surface_levels_for_all_t();
+        // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
+        mesh->interpolate_vertices();
 
-    // for each vertex, check if it is above the surface level or below and mark them
-    classify_vertex_levels_for_all_t();
+        // calculate actual surface level using surface_level_ratio
+        calc_actual_surface_levels_for_all_t(mesh);
 
-    // for each tet, calculate the marching tetrahedron index
-    calc_marching_indices_for_all_t();
+        // for each vertex, check if it is above the surface level or below and mark them
+        classify_vertex_levels_for_all_t(mesh);
 
-    // for each tet, create triangles based on the index
-    create_isosurface_tris_for_all_t();
+        // for each tet, calculate the marching tetrahedron index
+        calc_marching_indices_for_all_t(mesh);
+
+        // for each tet, create triangles based on the index
+        create_isosurface_tris_for_all_t(mesh);
+    }
 }
 
 
@@ -45,7 +51,7 @@ void constuct_isosurfaces()
 // we are currently using vorticity magnitude
 // so we calculate min and max vorticity magnitude at all vertices
 // using surface_level_ratio to calculate the actual levels we want for all t
-void calc_actual_surface_levels_for_all_t()
+void calc_actual_surface_levels_for_all_t(Mesh * mesh)
 {
     mesh->calc_vor_min_max_at_verts_for_all_t();
 
@@ -65,7 +71,7 @@ void calc_actual_surface_levels_for_all_t()
 
 
 // assume all vertices are interpolated for all time levels
-void classify_vertex_levels_for_all_t()
+void classify_vertex_levels_for_all_t(Mesh* mesh)
 {
     double time = 0.;
     while(time < mesh->num_time_steps - 1.)
@@ -87,27 +93,26 @@ void classify_vertex_levels_for_all_t()
 }
 
 
-void calc_marching_indices_for_all_t()
+void calc_marching_indices_for_all_t(Mesh* mesh)
 {
-    for(Tet* tet:mesh->tets){
-        tet->calc_marching_indices();
+    for(Tet* tet : mesh->tets){
+        tet->calc_marching_indices(mesh->num_time_steps);
     }
 }
 
 
-void create_isosurface_tris_for_all_t()
+void create_isosurface_tris_for_all_t( Mesh* mesh )
 {
     double time = 0.;
     while(time < mesh->num_time_steps - 1.)
     {
-        qDebug() << "Building isosurface for time" << time;
         Isosurface* isosurf= new Isosurface();
         for(Tet* tet:mesh->tets){
             vector<Triangle*> new_tris = tet->create_isosurface_tris(time);
             isosurf->add_tri(new_tris);
         }
 
-        isosurfaces_for_all_t[time] = isosurf;
+        mesh->isosurfaces_for_all_t[time] = isosurf;
         time += time_step_size; // increment time
     }
 }
