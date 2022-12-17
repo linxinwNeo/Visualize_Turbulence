@@ -14,6 +14,54 @@ bool Edge::is_same(const Edge* edge) const
 }
 
 
+bool Edge::is_vel_change_sign_in_x(const double time) const
+{
+    Vector3d* vel1 = this->verts[0]->vels.at(time);
+    Vector3d* vel2 = this->verts[1]->vels.at(time);
+    if(vel1->x() >= 0 && vel2->x() >= 0){ // if have same sign
+        return false;
+    }
+    else if(vel1->x() <= 0 && vel2->x() <= 0){ // if have same sign
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+
+bool Edge::is_vel_change_sign_in_y(const double time) const
+{
+    Vector3d* vel1 = this->verts[0]->vels.at(time);
+    Vector3d* vel2 = this->verts[1]->vels.at(time);
+    if(vel1->y() >= 0 && vel2->y() >= 0){ // if have same sign
+        return false;
+    }
+    else if(vel1->y() <= 0 && vel2->y() <= 0){ // if have same sign
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+
+bool Edge::is_vel_change_sign_in_z(const double time) const
+{
+    Vector3d* vel1 = this->verts[0]->vels.at(time);
+    Vector3d* vel2 = this->verts[1]->vels.at(time);
+    if(vel1->z() >= 0 && vel2->z() >= 0){ // if have same sign
+        return false;
+    }
+    else if(vel1->z() <= 0 && vel2->z() <= 0){ // if have same sign
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+
 // interpolate between two verts of this edge at time t
 Vertex* Edge::linear_interpolate_basedOn_vorMag(const double &t, const double &target_val)
 {

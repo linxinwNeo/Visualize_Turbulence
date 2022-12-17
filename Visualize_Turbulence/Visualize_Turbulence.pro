@@ -22,7 +22,8 @@ SOURCES += \
     Surfaces/Isosurface.cpp \
     main.cpp \
     mainwindow.cpp \
-    openglwindow.cpp
+    openglwindow.cpp \
+    singularities.cpp
 
 HEADERS += \
     FileLoader/ReadFile.h \

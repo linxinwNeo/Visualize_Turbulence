@@ -1,6 +1,7 @@
 #ifndef EDGE_H
 #define EDGE_H
 
+#include "Others/Vector3d.h"
 #include <vector>
 
 // forward class declarations
@@ -33,6 +34,9 @@ public:
 
     bool is_same(const Edge*) const;
     inline bool has_vert(const Vertex* v) const;
+    bool is_vel_change_sign_in_x( const double time ) const;
+    bool is_vel_change_sign_in_y( const double time ) const;
+    bool is_vel_change_sign_in_z( const double time ) const;
 
     Vertex* linear_interpolate_basedOn_vorMag( const double& time, const double& target_val );
 };

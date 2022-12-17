@@ -44,7 +44,7 @@ public:
     bool has_triangle(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_edge(const Vertex*, const Vertex*) const;
 
-    Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws  = false);
+    Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws = false);
     double volume() const;
     Vector3d centroid() const;
 
@@ -62,6 +62,8 @@ public:
     vector<Triangle*> create_isosurface_tris(const double& time);
     Triangle* create_isosurface_tris_case1234( const Vertex* v, const double time );
     vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time );
+    void make_edges();
+    vector<Tet*> make_4_tets(const double time);
 };
 
 bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);

@@ -43,7 +43,7 @@ public:
 protected:
     void initializeGL() override;
     void paintGL() override;
-    void main_routine() const;
+    void main_routine(Mesh* mesh) const;
     //void	resizeGL(int w, int h) override;
 
 public:

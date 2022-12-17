@@ -24,7 +24,9 @@ Tet::Tet(Vertex *v1, Vertex *v2, Vertex *v3,Vertex *v4)
     this->add_vert(v2);
     this->add_vert(v3);
     this->add_vert(v4);
+    this->center = this->centroid();
 }
+
 
 Tet::Tet(Triangle* tri, Vertex *v4)
 {
@@ -32,6 +34,7 @@ Tet::Tet(Triangle* tri, Vertex *v4)
     this->add_vert(tri->verts[1]);
     this->add_vert(tri->verts[2]);
     this->add_vert(v4);
+    this->center = this->centroid();
 }
 
 
@@ -439,4 +442,65 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
     Triangle* new_tri2 = new Triangle(newPairs[idpVert1].vert, newPairs[idpVert2].vert, newPairs[vert4].vert);
     vector<Triangle*> newTris = {new_tri1, new_tri2};
     return newTris;
+}
+
+
+void Tet::make_edges()
+{
+    Edge* e1, *e2, *e3, *e4, *e5, *e6;
+    e1 = new Edge(verts[0], verts[1]);
+    e2 = new Edge(verts[0], verts[2]);
+    e3 = new Edge(verts[0], verts[3]);
+    e4 = new Edge(verts[1], verts[2]);
+    e5 = new Edge(verts[1], verts[3]);
+    e6 = new Edge(verts[2], verts[3]);
+    this->edges.push_back(e1);
+    this->edges.push_back(e2);
+    this->edges.push_back(e3);
+    this->edges.push_back(e4);
+    this->edges.push_back(e5);
+    this->edges.push_back(e6);
+}
+
+
+// build 4 new tetrahedrons using the center point
+vector<Tet*> Tet::make_4_tets(const double time)
+{
+    double ws[4] = {0.25, 0.25, 0.25, 0.25};
+    Vertex* new_vert = get_vert_at(center, time, ws, false);
+    // copy vertices
+    Vertex* v1_copy = new Vertex( verts[0]->x(), verts[0]->y(), verts[0]->z() );
+    Vertex* v2_copy = new Vertex( verts[1]->x(), verts[1]->y(), verts[1]->z() );
+    Vertex* v3_copy = new Vertex( verts[2]->x(), verts[2]->y(), verts[2]->z() );
+    Vertex* v4_copy = new Vertex( verts[3]->x(), verts[3]->y(), verts[3]->z() );
+
+    v1_copy->vels[time] = new Vector3d( verts[0]->vels[time] );
+    v2_copy->vels[time] = new Vector3d( verts[1]->vels[time] );
+    v3_copy->vels[time] = new Vector3d( verts[2]->vels[time] );
+    v4_copy->vels[time] = new Vector3d( verts[3]->vels[time] );
+
+    v1_copy->vors[time] = new Vector3d( verts[0]->vors[time] );
+    v2_copy->vors[time] = new Vector3d( verts[1]->vors[time] );
+    v3_copy->vors[time] = new Vector3d( verts[2]->vors[time] );
+    v4_copy->vors[time] = new Vector3d( verts[3]->vors[time] );
+
+    v1_copy->mus[time] = verts[0]->mus[time];
+    v2_copy->mus[time] = verts[1]->mus[time];
+    v3_copy->mus[time] = verts[2]->mus[time];
+    v4_copy->mus[time] = verts[3]->mus[time];
+
+    // make 4 new tets from this tet
+    Tet* tet1 = new Tet(v1_copy, v2_copy, v3_copy, new_vert);
+    Tet* tet2 = new Tet(v1_copy, v2_copy, v4_copy, new_vert);
+    Tet* tet3 = new Tet(v2_copy, v3_copy, v4_copy, new_vert);
+    Tet* tet4 = new Tet(v1_copy, v3_copy, v4_copy, new_vert);
+    qDebug() << this->volume();
+    qDebug() << tet1->volume();
+    qDebug() << tet2->volume();
+    qDebug() << tet3->volume();
+    qDebug() << tet4->volume() << "\n";
+
+    vector<Tet*> new_tets = {tet1, tet2, tet3, tet4};
+
+    return new_tets;
 }

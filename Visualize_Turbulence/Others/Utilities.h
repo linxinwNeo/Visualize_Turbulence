@@ -1,7 +1,6 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-
 #define GL_SILENCE_DEPRECATION
 
 #include <QString>
@@ -14,9 +13,6 @@
 
 #include "Geometry/Mesh.h"
 #include "Geometry/Tet.h"
-#include "Lines/PathLine.h"
-#include "Lines/StreamLine.h"
-#include "Surfaces/Isosurface.h"
 #include "Others/TraceBall.h"
 #include "Others/ColorTable.h"
 
@@ -36,6 +32,8 @@ extern const double time_step_size;
 extern const double surface_level_ratio;
 extern unordered_map<double, double> surface_level_vals;
 extern const double dist_step_size;
+extern const unsigned int max_num_recursion;
+extern const double zero_threshold;
 
 extern bool show_streamlines;
 extern bool show_pathlines;
@@ -43,6 +41,7 @@ extern bool show_isosurfaces;
 extern bool show_boundary_wireframe;
 extern bool show_opage_boundary_tris;
 extern bool show_axis;
+extern bool show_critical_pts;
 
 extern const double boundary_tri_alpha;
 
@@ -219,5 +218,25 @@ inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh)
     }
 
     return seeds;
+}
+
+
+inline void clear_memory(vector<Vertex*> verts){
+    for(UI i = 0; i < verts.size(); i++){
+        if(verts[i] != NULL){
+            delete verts[i];
+        }
+    }
+    verts.clear();
+}
+
+
+inline void clear_memory(vector<Edge*> edges){
+    for(UI i = 0; i < edges.size(); i++){
+        if(edges[i] != NULL){
+            delete edges[i];
+        }
+    }
+    edges.clear();
 }
 #endif // UTILITIES_H

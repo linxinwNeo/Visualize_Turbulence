@@ -61,42 +61,24 @@ void openGLWindow::increment_time( ){
     this->animation_time += time_step_size;
     this->model_time += time_step_size;
 
-    // loop from beginning
-    if(this->animation_time >= 60){
+    if(this->animation_time >= cur_mesh->num_time_steps - 1.){
         this->animation_time = this->model_time = 0;
     }
 
-    // iteration through each model, last 10 secs for each
-    if( animation_time < 10 && this->cur_mesh != meshes[0]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[0]);
-        qDebug() << 0;
-    }
-    else if(animation_time >= 10 && animation_time < 20 && this->cur_mesh != meshes[1]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[1]);
-        qDebug() << 1;
-    }
-    else if(animation_time >= 20 && animation_time < 30 && this->cur_mesh != meshes[2]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[2]);
-        qDebug() << 2;
-    }
-    else if(animation_time >= 30 && animation_time < 40 && this->cur_mesh != meshes[3]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[3]);
-        qDebug() << 3;
-    }
-    else if(animation_time >= 40 && animation_time < 50 && this->cur_mesh != meshes[4]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[4]);
-        qDebug() << 4;
-    }
-    else if(animation_time >= 50 && animation_time < 60 && this->cur_mesh != meshes[5]){
-        this->model_time = 0.;
-        switch_cur_mesh(meshes[5]);
-        qDebug() << 5;
-    }
+    // loop from beginning
+//    if(this->animation_time >= 60){
+//        this->animation_time = this->model_time = 0;
+//    }
+
+//    // iteration through each model, last 10 secs for each
+//    if( animation_time < 30 && this->cur_mesh != meshes[1]){
+//        this->model_time = 0.;
+//        switch_cur_mesh(meshes[1]);
+//    }
+//    else if(animation_time >= 30 && animation_time < 60 && this->cur_mesh != meshes[4]){
+//        this->model_time = 0.;
+//        switch_cur_mesh(meshes[4]);
+//    }
 
     this->update();
 }
@@ -107,7 +89,7 @@ void openGLWindow::initializeGL()
     this->initializeOpenGLFunctions();
     if( meshes.size() == 0 ) return;
 
-    this->rot_center = meshes[0]->rot_center; //set the rotation center!
+    this->rot_center = cur_mesh->rot_center; //set the rotation center!
 
     glEnable(GL_MULTISAMPLE_ARB);
     glEnable(GL_DEPTH_TEST);
@@ -126,11 +108,11 @@ void openGLWindow::initializeGL()
 
     glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, color );
     glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color );
-    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, Array3( 1., 1., 1. ) );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, Array3( 0.7, 0.7, 0.7 ) );
     glMaterialf ( GL_FRONT_AND_BACK, GL_SHININESS, 2.f );
 
 
-    GLfloat light_position[] = { 2.0, 2.0, 2.0, 0.0 };
+    GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
     float LightColor[] = {1, 1, 1};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
@@ -164,7 +146,35 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    main_routine();
+    this->cur_mesh = meshes[0];
+    main_routine(meshes[0]);
+//    if(cur_mesh == meshes[1]){
+//        glPushMatrix();
+//        glTranslatef(-1.3, 0, 0);
+//        main_routine(meshes[0]);
+//        glPopMatrix();
+
+//        main_routine(meshes[1]);
+
+//        glPushMatrix();
+//        glTranslatef(1.3, 0, 0);
+//        main_routine(meshes[2]);
+//        glPopMatrix();
+//    }
+//    else{
+//        glPushMatrix();
+//        glTranslatef(-1.3, 0, 0);
+//        main_routine(meshes[3]);
+//        glPopMatrix();
+
+//        main_routine(meshes[4]);
+
+//        glPushMatrix();
+//        glTranslatef(1.3, 0, 0);
+//        main_routine(meshes[5]);
+//        glPopMatrix();
+//    }
+
 
     glPopMatrix(); // pop 1st modelView matrix
 
@@ -173,12 +183,12 @@ void openGLWindow::paintGL()
 }
 
 
-void openGLWindow::main_routine() const
+void openGLWindow::main_routine(Mesh * mesh) const
 {
     if(show_streamlines){
         double max = DBL_MIN, min = DBL_MAX;
-        cur_mesh->max_vel_mag(model_time, min, max);
-        const auto& sls = cur_mesh->streamlines_for_all_t.at(model_time);
+        mesh->max_vel_mag(model_time, min, max);
+        const auto& sls = mesh->streamlines_for_all_t.at(model_time);
         for(StreamLine* sl:sls){
             draw_streamlines(sl, min, max);
         }
@@ -186,7 +196,7 @@ void openGLWindow::main_routine() const
 
     if(show_isosurfaces){
         double max = DBL_MIN, min = DBL_MAX;
-        const auto& isosurface = cur_mesh->isosurfaces_for_all_t.at(model_time);
+        const auto& isosurface = mesh->isosurfaces_for_all_t.at(model_time);
         draw_isosurfaces(isosurface, min, max);
     }
 
@@ -194,10 +204,10 @@ void openGLWindow::main_routine() const
     //    }
 
     if(show_boundary_wireframe)
-        draw_wireframe(cur_mesh->boundary_tris);
+        draw_wireframe(mesh->boundary_tris);
 
     if(show_opage_boundary_tris){
-        draw_opague_boundary_tris(boundary_tri_alpha, cur_mesh->boundary_tris);
+        draw_opague_boundary_tris(boundary_tri_alpha, mesh->boundary_tris);
     }
 }
 
@@ -237,6 +247,7 @@ void openGLWindow::reset_scene()
         this->ObjXmat[i]=0.;
     this->ObjXmat[0] = this->ObjXmat[5] = this->ObjXmat[10] = this->ObjXmat[15] = 1;
 
+    this->rot_center = cur_mesh->rot_center;
     this->update();
 }
 

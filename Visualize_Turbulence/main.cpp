@@ -53,6 +53,7 @@ bool show_isosurfaces = false;
 bool show_boundary_wireframe = false;
 bool show_axis = false;
 bool show_opage_boundary_tris = true;
+bool show_critical_pts = true;
 
 const unsigned int NUM_SEEDS = 50;
 const unsigned int max_num_steps = 400;
@@ -60,6 +61,8 @@ const double dist_step_size = 0.003;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
+const unsigned int max_num_recursion = 20;
+const double zero_threshold = 1e-10;
 
 // surface_level is defined to be the voriticity
 const double surface_level_ratio = 0.02;
@@ -95,6 +98,9 @@ int main(int argc, char *argv[])
     if(show_isosurfaces)
         construct_isosurfaces();
 
+    if(show_critical_pts)
+        capture_critical_pts(meshes);
+
     MainWindow w;
     w.show();
 
@@ -103,27 +109,27 @@ int main(int argc, char *argv[])
 
 
 void read_files(){
-    file = new ReadFile( meshFilePath1, dataFilePath1 );
+    file = new ReadFile( meshFilePath2, dataFilePath2 );
     meshes.push_back( file->mesh );
     delete file;
 
-    file = new ReadFile( meshFilePath2, dataFilePath2);
-    meshes.push_back( file->mesh );
-    delete file;
+//    file = new ReadFile( meshFilePath2, dataFilePath2);
+//    meshes.push_back( file->mesh );
+//    delete file;
 
-    file = new ReadFile( meshFilePath3, dataFilePath3);
-    meshes.push_back( file->mesh );
-    delete file;
+//    file = new ReadFile( meshFilePath3, dataFilePath3);
+//    meshes.push_back( file->mesh );
+//    delete file;
 
-    file = new ReadFile( meshFilePath4, dataFilePath4);
-    meshes.push_back( file->mesh );
-    delete file;
+//    file = new ReadFile( meshFilePath4, dataFilePath4);
+//    meshes.push_back( file->mesh );
+//    delete file;
 
-    file = new ReadFile( meshFilePath5, dataFilePath5);
-    meshes.push_back( file->mesh );
-    delete file;
+//    file = new ReadFile( meshFilePath5, dataFilePath5);
+//    meshes.push_back( file->mesh );
+//    delete file;
 
-    file = new ReadFile( meshFilePath6, dataFilePath6);
-    meshes.push_back( file->mesh );
-    delete file;
+//    file = new ReadFile( meshFilePath6, dataFilePath6);
+//    meshes.push_back( file->mesh );
+//    delete file;
 }

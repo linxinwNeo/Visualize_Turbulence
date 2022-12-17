@@ -69,6 +69,16 @@ Mesh::~Mesh()
         delete isosurf;
     }
 
+    // clear singularities
+    for(auto& pair : singularities_for_all_t){
+        vector<Vertex*> singularities = pair.second;
+        for(auto& sing : singularities){
+            delete sing;
+        }
+        singularities.clear();
+    }
+    singularities_for_all_t.clear();
+
     this->verts.clear();
     this->edges.clear();
     this->tris.clear();
@@ -334,14 +344,6 @@ void Mesh::assign_triangle(Tet* tet1, Tet * tet2, Vertex * v1, Vertex * v2, Vert
 }
 
 
-void Mesh::calc_center_for_all_tets()
-{
-    for(Tet* tet : this->tets){
-        tet->center = tet->centroid();
-    }
-}
-
-
 void Mesh::calc_normal_for_all_tris()
 {
     for(Triangle* tri : this->tris){
@@ -364,6 +366,14 @@ void Mesh::calc_vor_min_max_at_verts_for_all_t()
         }
         this->add_vor_min_max_at_verts_for_all_t(time, {min, max});
         time += time_step_size;
+    }
+}
+
+
+void Mesh::calc_center_for_all_tet()
+{
+    for(Tet* tet:tets){
+        tet->center = tet->centroid();
     }
 }
 

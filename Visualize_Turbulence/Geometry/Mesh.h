@@ -36,6 +36,8 @@ public:
     unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
     unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 
+    unordered_map<double, vector<Vertex*>> singularities_for_all_t;
+
     // member functions
     Mesh();
     ~Mesh();
@@ -60,15 +62,24 @@ public:
     void assign_edge(Vertex*, Vertex*);
     void max_vor_mag(const double t, double& min, double& max) const;
     void max_vel_mag(const double t, double& min, double& max) const;
-    void calc_center_for_all_tets();
     void calc_normal_for_all_tris();
     void calc_vor_min_max_at_verts_for_all_t();
+    void calc_center_for_all_tet();
 
     // numerical procedures
     void interpolate_vertices();
     Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const;
-};
 
+    // singularity detection
+    void detect_fixed_pts();
+    bool is_candidate_tet(Tet* tet, const double time) const;
+    vector<Tet*> build_candidate_tets( const double time ) const;
+    void find_fixed_pt_location( Tet *tet, const double time, UI cur_depth,
+                                    vector<Vertex*> temp_verts, vector<Edge*> temp_edges,
+                                    vector<Vertex*> fixed_pts) const;
+};
+void capture_critical_pts(Mesh* mesh);
+void capture_critical_pts(vector<Mesh*> meshes);
 
 inline unsigned long Mesh::num_verts() const
 {
