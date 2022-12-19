@@ -164,9 +164,9 @@ inline void draw_arrow(const Vector3d& pos, const Vector3d& vel)
         to.normalize();
         q = q.rotationTo(from, to);
         Matrix mat4x4;
-        Quanternion_to_Matrix4x4(q, mat4x4);
+        Utility::Quanternion_to_Matrix4x4(q, mat4x4);
         glTranslatef(pos.x(), pos.y(), pos.z()); // then translate
-        multmatrix(mat4x4);  // rotate first
+        Utility::multmatrix(mat4x4);  // rotate first
         draw_arrow();
     glPopMatrix();
 }

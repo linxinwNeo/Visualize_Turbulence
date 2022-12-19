@@ -94,19 +94,19 @@ bool Tet::has_edge(const Vertex *v1, const Vertex *v2) const
 // assume v is inside this tet
 // Using barycentric interpolation scheme, calculate the new Vertex at pt's position
 // weights are calculated already
-Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws)
+Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws, bool add_this_tet)
 {
     // only calculate ws if cal_ws is set to true
     if(cal_ws) this->bary_tet(v, ws);
 
     Vertex* pt_vert = new Vertex(v);
-    pt_vert->add_tet(this);
+    if(add_this_tet) pt_vert->add_tet(this);
 
     Vector3d vel ,  vor;
     double mu = 0.;
     for( unsigned short i = 0; i < this->verts.size(); i++ ){
         Vertex* vert = this->verts[i];
-        if(vert == NULL) throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
+        if(vert == NULL) Utility::throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
 
         Vector3d* temp_vel = NULL, *temp_vor = NULL;
         double temp_mu = 0.;
@@ -447,60 +447,187 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
 
 void Tet::make_edges()
 {
-    Edge* e1, *e2, *e3, *e4, *e5, *e6;
-    e1 = new Edge(verts[0], verts[1]);
-    e2 = new Edge(verts[0], verts[2]);
-    e3 = new Edge(verts[0], verts[3]);
-    e4 = new Edge(verts[1], verts[2]);
-    e5 = new Edge(verts[1], verts[3]);
-    e6 = new Edge(verts[2], verts[3]);
-    this->edges.push_back(e1);
-    this->edges.push_back(e2);
-    this->edges.push_back(e3);
-    this->edges.push_back(e4);
-    this->edges.push_back(e5);
-    this->edges.push_back(e6);
+    UI i, j;
+    for(i = 0; i < 4; i++){
+        Vertex* v1 = verts[i];
+        for(j = i+1; j < 4; j++){
+            Vertex* v2 = verts[j];
+            Edge* e = new Edge(v1, v2);
+            v1->add_edge(e);
+            v2->add_edge(e);
+            this->add_edge(e);
+        }
+    }
 }
 
 
-// build 4 new tetrahedrons using the center point
-vector<Tet*> Tet::make_4_tets(const double time)
+// we subdivide the tetrahedron into 4 + 4 = 8 tetrahedrons
+// three big steps:
+// 1. calculate edges for the octahedron and their ajacency (also separate 4 tetrahedrons from the octahedron)
+// 2. identify the major diagonal edge (there are two possible diagonal edges, we just need one)
+// 3. separate the octahedron into 4 tetrahedrons by using the diagonal edge.
+void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets)
 {
-    double ws[4] = {0.25, 0.25, 0.25, 0.25};
-    Vertex* new_vert = get_vert_at(center, time, ws, false);
     // copy vertices
-    Vertex* v1_copy = new Vertex( verts[0]->x(), verts[0]->y(), verts[0]->z() );
-    Vertex* v2_copy = new Vertex( verts[1]->x(), verts[1]->y(), verts[1]->z() );
-    Vertex* v3_copy = new Vertex( verts[2]->x(), verts[2]->y(), verts[2]->z() );
-    Vertex* v4_copy = new Vertex( verts[3]->x(), verts[3]->y(), verts[3]->z() );
+    double ws[4];
+    unordered_map<Vertex*, Vertex*> vert_copies; vert_copies.reserve(4);
+    for(UI i = 0; i < 4; i++) vert_copies[verts[i]] = get_vert_at(verts[i]->cords, time, ws, true, false);
 
-    v1_copy->vels[time] = new Vector3d( verts[0]->vels[time] );
-    v2_copy->vels[time] = new Vector3d( verts[1]->vels[time] );
-    v3_copy->vels[time] = new Vector3d( verts[2]->vels[time] );
-    v4_copy->vels[time] = new Vector3d( verts[3]->vels[time] );
+    // find edge points
+    // keep track of newly created vertices
+    // these are actually the vertices of octahedron
+    vector<Vertex*> uniq_edge_points;
+    uniq_edge_points.reserve(6);
 
-    v1_copy->vors[time] = new Vector3d( verts[0]->vors[time] );
-    v2_copy->vors[time] = new Vector3d( verts[1]->vors[time] );
-    v3_copy->vors[time] = new Vector3d( verts[2]->vors[time] );
-    v4_copy->vors[time] = new Vector3d( verts[3]->vors[time] );
+    vector<Edge*> uniq_new_edges;
+    uniq_new_edges.reserve(12+12+1); // must be 25 new edges in total
 
-    v1_copy->mus[time] = verts[0]->mus[time];
-    v2_copy->mus[time] = verts[1]->mus[time];
-    v3_copy->mus[time] = verts[2]->mus[time];
-    v4_copy->mus[time] = verts[3]->mus[time];
+    vector<Edge*> octa_edges; octa_edges.reserve(12);
 
-    // make 4 new tets from this tet
-    Tet* tet1 = new Tet(v1_copy, v2_copy, v3_copy, new_vert);
-    Tet* tet2 = new Tet(v1_copy, v2_copy, v4_copy, new_vert);
-    Tet* tet3 = new Tet(v2_copy, v3_copy, v4_copy, new_vert);
-    Tet* tet4 = new Tet(v1_copy, v3_copy, v4_copy, new_vert);
-    qDebug() << this->volume();
-    qDebug() << tet1->volume();
-    qDebug() << tet2->volume();
-    qDebug() << tet3->volume();
-    qDebug() << tet4->volume() << "\n";
+    // for each edge of the tetrahedron, make unique edge middle vertices
+    for( Edge* e : this->edges ){
+        Vector3d cords = (e->verts[0]->cords + e->verts[1]->cords) / 2.;
+        Vertex* new_vert = this->get_vert_at(cords, time, ws, true, false);
+        uniq_edge_points.push_back(new_vert);
+        // create adjacency
+        Vertex* v1 = vert_copies[e->verts[0]]; // copied vertex
+        Vertex* v2 = vert_copies[e->verts[1]]; // copied vertex
+        // create two new edges
+        Edge* new_e1 = new Edge(v1, new_vert);
+        Edge* new_e2 = new Edge(v2, new_vert);
+        uniq_new_edges.push_back(new_e1); uniq_new_edges.push_back(new_e2);
+        v1->add_edge(new_e1); v2->add_edge(new_e2);
+        new_vert->add_edge(new_e1); new_vert->add_edge(new_e2);
+    }
 
-    vector<Tet*> new_tets = {tet1, tet2, tet3, tet4};
+    // now each copy of the original vertex has 3 new edges,
+    // the other end of each edge is the middle point which together consititutes a tetrahedron
+    vector<Tet*> outter_tets; outter_tets.reserve(4);
+    for(auto& p : vert_copies){
+        Vertex* orig_vert = p.second;
+        vector<Vertex*> verts_for_tet;
+        for(UI i = 0; i < 3; i++){
+            Edge* e = orig_vert->edges[i];
+            if(e->verts[0] == orig_vert) // verts[1] is the other end
+                verts_for_tet.push_back(e->verts[1]);
+            else // verts[0] is the other end
+                verts_for_tet.push_back(e->verts[0]);
+        }
+        // make new tetrahedron using vertices we found
+        Tet* new_tet = new Tet(orig_vert, verts_for_tet[0], verts_for_tet[1], verts_for_tet[2]);
+        outter_tets.push_back(new_tet);
+        orig_vert->add_tet(new_tet);
+        verts_for_tet[0]->add_tet(new_tet);
+        verts_for_tet[1]->add_tet(new_tet);
+        verts_for_tet[2]->add_tet(new_tet);
+        for(Edge* e : orig_vert->edges){ // add 3 known edges to the tetrahedron
+            new_tet->add_edge(e);
+        }
 
-    return new_tets;
+        // make the other 3 unknown edges which are the edges of octahedron as well
+        vector<Edge*> new_edges = Utility::make_edges(verts_for_tet, true);
+        for(Edge* e : new_edges){
+            uniq_new_edges.push_back(e);
+            octa_edges.push_back(e);
+            new_tet->add_edge(e);
+        }
+    }
+
+    /* finding the major diagonal edge
+     * steps:
+     * 1. randomly pick an edge of the octahedron and randomly pick a vertex on that edge to be one side of the diagonal edge
+     * 2. find the other side of the diagonal edge by using the other vertex on the randomly picked edge
+    */
+    vector<Tet*> inner_tets; inner_tets.reserve(4);
+    Edge* diag_e = NULL;
+    Edge* picked_edge = octa_edges[0]; // choose the first edge, doesn't matter which one you choose
+    Vertex* v1 = picked_edge->verts[0]; // first vertex of the diagonal edge
+    Vertex* v2 = picked_edge->verts[1]; // the other vertex
+    Vertex* v3 = NULL;
+    // look for the edge of v2 that doesn't have connection with v1
+    for(Edge* e : v2->edges){
+        Vertex* other_end = NULL;
+        if(e->verts[0] == v2) other_end = e->verts[1];
+        else other_end = e->verts[0];
+
+        for(Edge* eg : other_end->edges){
+            if(!eg->has_vert(v1)){
+                if(eg->verts[0] == other_end) v3 = eg->verts[1];
+                else v3 = eg->verts[0];
+            }
+        }
+    }
+    diag_e = new Edge(v1, v3);
+    v1->add_edge(diag_e);
+    v3->add_edge(diag_e);
+    uniq_new_edges.push_back(diag_e);
+    v1 = v2 = v3 = NULL;
+
+    /* subdivide the octahedron using diag_e
+     * steps:
+     * 1. find vertices of the octahedron and placed in an array which doesn't contains diagonal edge vertices
+     * 2. for any two vertices in the array, check if they are connected by an edge, if yes then we form a tetrahedron by
+     *      connecting these two and the the diagonal edge
+    */
+
+    // step 1
+    vector<Vertex*> not_including_diag;
+    for(Vertex* v : uniq_edge_points){
+        if(!diag_e->has_vert(v)){
+            not_including_diag.push_back(v);
+        }
+    }
+
+    if(not_including_diag.size() != 4) Utility::throwErrorMessage("Tet::subdivide: not_including_diag size is not correct");
+
+    // step 2
+    for(UI i = 0; i < 4; i++){
+        Vertex* vert1 = not_including_diag[i];
+        for(UI j = i+1; j < 4; j++){
+            Vertex* vert2 = not_including_diag[j];
+            if( !vert1->is_connected_to(vert2) ) continue;
+
+            Tet* new_tet = new Tet(diag_e->verts[0], diag_e->verts[1], vert1, vert2);
+            diag_e->verts[0]->add_tet(new_tet);
+            diag_e->verts[1]->add_tet(new_tet);
+            vert1->add_tet(new_tet);
+            vert2->add_tet(new_tet);
+            inner_tets.push_back(new_tet);
+
+            // add edges to this tetrahedron
+            new_tet->add_edge(diag_e);
+            diag_e->add_tet(new_tet);
+            for(Edge* e : octa_edges){
+                int count = 0;
+                if(e->has_vert(diag_e->verts[0])) count++;
+                if(e->has_vert(diag_e->verts[1])) count++;
+                if(e->has_vert(vert1)) count++;
+                if(e->has_vert(vert2)) count++;
+                if(count == 2){
+                    new_tet->add_edge(e);
+                    e->add_tet(new_tet);
+                }
+            }
+        }
+    }
+
+    // newly allocated objects need to be tracked
+    for(auto& v : vert_copies){
+        new_verts.push_back(v.second);
+    }
+    for(Vertex* v:uniq_edge_points){
+        new_verts.push_back(v);
+    }
+
+    for(Edge* e : uniq_new_edges){
+        new_edges.push_back(e);
+    }
+
+    for(Tet* tet : outter_tets){
+        new_tets.push_back(tet);
+    }
+
+    for(Tet* tet : inner_tets){
+        new_tets.push_back(tet);
+    }
 }

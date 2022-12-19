@@ -45,23 +45,35 @@ extern bool show_critical_pts;
 
 extern const double boundary_tri_alpha;
 
-// function prototypes
-inline void throwErrorMessage( const QString message );
-inline void ScreenToSecondWin(
-        const int px, const int py,
-        const int screen_leftx, const int screen_bottomy,
-        const int win_screen_sizex, const int win_screen_sizey,
-        const double world_leftx, const double world_bottomy,
-        const double win_world_sizex, const double win_world_sizey,
-        double &s, double &t
-);
-inline void Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4);
-inline void multmatrix(const Matrix m);
-inline void mat_ident(Matrix m);
-inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh);
+namespace Utility
+{
+    // function prototypes
+    inline void throwErrorMessage( const QString message );
+    inline void ScreenToSecondWin(
+            const int px, const int py,
+            const int screen_leftx, const int screen_bottomy,
+            const int win_screen_sizex, const int win_screen_sizey,
+            const double world_leftx, const double world_bottomy,
+            const double win_world_sizex, const double win_world_sizey,
+            double &s, double &t
+    );
+    inline void Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4);
+    inline void multmatrix(const Matrix m);
+    inline void mat_ident(Matrix m);
+    inline void mat_ident(float m[16]);
+    inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh);
+    inline bool is_in_set(set<Tet*> s, Tet* tet);
+    inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val );
+    inline float * Array3( float a, float b, float c );
+    inline float * MulArray3( float factor, float array0[3] );
+    inline void clear_mem(vector<Vertex*> verts);
+    inline void clear_mem(vector<Edge*> edges);
+    inline void clear_mem(vector<Tet*> tets);
+    inline vector<Edge*> make_edges(vector<Vertex*> verts, bool add_each_other);
+}
 
 
-inline void throwErrorMessage( const QString message )
+inline void Utility::throwErrorMessage( const QString message )
 {
     QMessageBox messageBox;
     messageBox.critical(0, "Error", message);
@@ -70,7 +82,7 @@ inline void throwErrorMessage( const QString message )
 }
 
 
-inline void ScreenToSecondWin(
+inline void Utility::ScreenToSecondWin(
         const int px, const int py,
         const int screen_leftx, const int screen_bottomy,
         const int win_screen_sizex, const int win_screen_sizey,
@@ -87,14 +99,14 @@ inline void ScreenToSecondWin(
 }
 
 
-inline bool is_in_set(set<Tet*> s, Tet* tet)
+inline bool Utility::is_in_set(set<Tet*> s, Tet* tet)
 {
     if(s.find(tet) == s.end()) return false;
     return true;
 }
 
 
-inline void Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4)
+inline void Utility::Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4)
 {
     QMatrix3x3 m3x3 = q.toRotationMatrix();
     const float* m3x3Data = m3x3.constData();
@@ -117,7 +129,7 @@ inline void Quanternion_to_Matrix4x4(const QQuaternion& q, Matrix& mat4x4)
 }
 
 
-inline void multmatrix(const Matrix m)
+inline void Utility::multmatrix(const Matrix m)
 {
     int i, j, index = 0;
 
@@ -131,7 +143,7 @@ inline void multmatrix(const Matrix m)
 }
 
 
-inline void mat_ident(Matrix m)
+inline void Utility::mat_ident(Matrix m)
 {
     int i;
 
@@ -144,7 +156,7 @@ inline void mat_ident(Matrix m)
     }
 }
 
-inline void mat_ident(float m[16])
+inline void Utility::mat_ident(float m[16])
 {
     unsigned int i;
 
@@ -155,7 +167,7 @@ inline void mat_ident(float m[16])
 
 
 // output is saved in min_idx and min_val
-inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val )
+inline void Utility::array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val )
 {
     if(size <= 0) {
         qDebug() << "min_val: pasing an array of incorrect size!";
@@ -173,7 +185,7 @@ inline void array_min(const double ds[], const unsigned int& size, unsigned int&
 
 
 // utility to create an array from 3 separate values:
-inline float * Array3( float a, float b, float c )
+inline float * Utility::Array3( float a, float b, float c )
 {
     static float array[4];
     array[0] = a;
@@ -185,7 +197,7 @@ inline float * Array3( float a, float b, float c )
 
 
 // utility to create an array from a multiplier and an array:
-inline float * MulArray3( float factor, float array0[3] )
+inline float * Utility::MulArray3( float factor, float array0[3] )
 {
     static float array[4];
     array[0] = factor * array0[0];
@@ -196,7 +208,7 @@ inline float * MulArray3( float factor, float array0[3] )
 }
 
 
-inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh)
+inline vector<UL> Utility::generate_unique_random_Tet_idx(Mesh* mesh)
 {
     srand((unsigned) time(NULL));
     set<UL> seeded_tets;
@@ -221,7 +233,7 @@ inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh)
 }
 
 
-inline void clear_memory(vector<Vertex*> verts){
+inline void Utility::clear_mem(vector<Vertex*> verts){
     for(UI i = 0; i < verts.size(); i++){
         if(verts[i] != NULL){
             delete verts[i];
@@ -231,7 +243,7 @@ inline void clear_memory(vector<Vertex*> verts){
 }
 
 
-inline void clear_memory(vector<Edge*> edges){
+inline void Utility::clear_mem(vector<Edge*> edges){
     for(UI i = 0; i < edges.size(); i++){
         if(edges[i] != NULL){
             delete edges[i];
@@ -239,4 +251,31 @@ inline void clear_memory(vector<Edge*> edges){
     }
     edges.clear();
 }
+
+inline void Utility::clear_mem(vector<Tet*> tets){
+    for(UI i = 0; i < tets.size(); i++){
+        if(tets[i] != NULL){
+            delete tets[i];
+        }
+    }
+    tets.clear();
+}
+
+inline vector<Edge*> Utility::make_edges(vector<Vertex*> verts, bool add_each_other){
+    vector<Edge*> edges;
+    for(UI i = 0; i < verts.size(); i++){
+        Vertex* v1 = verts[i];
+        for(UI j = i+1; j < verts.size(); j++){
+            Vertex* v2 = verts[j];
+            Edge* e = new Edge(v1, v2);
+            if(add_each_other){
+                v1->add_edge(e);
+                v2->add_edge(e);
+            }
+            edges.push_back(e);
+        }
+    }
+    return edges;
+}
+
 #endif // UTILITIES_H

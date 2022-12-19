@@ -32,7 +32,7 @@ public:
     unordered_map<double, double> mus; // <time, dynamic viscosity>
 
     vector<Edge*> edges;  // edges that has this vertex.
-    vector<Triangle*> faces;  // Faces that has this vertex.
+    vector<Triangle*> tris;  // triangles that has this vertex.
     vector<Tet*> tets;   // Tetrahedrons that has this vertex.
 
     // public member functions
@@ -67,6 +67,7 @@ public:
     inline bool has_vel_at_t(const double time) const;
     inline bool has_vor_at_t(const double time) const;
     inline bool has_mu_at_t(const double time) const;
+    bool is_connected_to(const Vertex* vert) const;
 
     Vector3d* linear_interpolate_vel(const double target_t);
     Vector3d* linear_interpolate_vor(const double target_t);
@@ -110,7 +111,7 @@ inline unsigned long Vertex::num_edges() const
 
 inline unsigned long Vertex::num_tris() const
 {
-    return this->faces.size();
+    return this->tris.size();
 }
 
 
@@ -144,7 +145,7 @@ inline void Vertex::add_edge(Edge* e){
 
 
 inline void Vertex::add_triangle(Triangle* f){
-    this->faces.push_back(f);
+    this->tris.push_back(f);
 }
 
 

@@ -74,9 +74,8 @@ public:
     void detect_fixed_pts();
     bool is_candidate_tet(Tet* tet, const double time) const;
     vector<Tet*> build_candidate_tets( const double time ) const;
-    void find_fixed_pt_location( Tet *tet, const double time, UI cur_depth,
-                                    vector<Vertex*> temp_verts, vector<Edge*> temp_edges,
-                                    vector<Vertex*> fixed_pts) const;
+    void find_fixed_pt_location(  Tet *tet, const double time, UI cur_depth,
+                                                        vector<Vertex*>& fixed_pts) const;
 };
 void capture_critical_pts(Mesh* mesh);
 void capture_critical_pts(vector<Mesh*> meshes);

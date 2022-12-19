@@ -1,6 +1,7 @@
 #include "Geometry/Mesh.h"
 #include "Others/Utilities.h"
 
+UI depth = 0;
 void capture_critical_pts(Mesh* mesh){
     if(mesh == NULL) return;
     mesh->detect_fixed_pts();
@@ -23,18 +24,22 @@ void Mesh::detect_fixed_pts()
         vector<Tet*> candidates = this->build_candidate_tets(cur_time);
         qDebug() << "time" << cur_time << "num of candidates" << candidates.size();
         for(UI i = 0; i < candidates.size(); i++){
+            qDebug() << i;
             Tet* tet = candidates[i];
-            vector<Vertex*> temp_verts; vector<Edge*> temp_edges;
             vector<Vertex*> fixed_pts;
-            find_fixed_pt_location(tet, cur_time, 0, temp_verts, temp_edges, fixed_pts);
+            depth = 0;
+
+            find_fixed_pt_location(tet, cur_time, 0, fixed_pts);
             if(fixed_pts.size() != 0 )
                 qDebug() << "num of fixed pts"  << fixed_pts.size();
-            // clear memory
-            clear_memory(temp_verts); clear_memory(temp_edges);
 
             // else: classify the type of the critical point by eigen decomposition
+            if(depth != max_num_recursion+1) qDebug() << depth;
 
+            Utility::clear_mem(tet->verts);
+            Utility::clear_mem(tet->edges);
             delete tet;
+
             for(auto& vert : fixed_pts){
                 delete vert;
             }
@@ -75,10 +80,15 @@ bool Mesh::is_candidate_tet(Tet* tet, const double time) const
 vector<Tet*> Mesh::build_candidate_tets( const double time ) const
 {
     vector<Tet*> candidates;
-
+    double ws[4];
     for(Tet* tet : this->tets){
         if( is_candidate_tet(tet, time) ){
-            Tet* new_tet = new Tet(tet->verts[0], tet->verts[1], tet->verts[2], tet->verts[3]);
+            Vertex* v1 = tet->get_vert_at(tet->verts[0]->cords, time, ws, true, true);
+            Vertex* v2 = tet->get_vert_at(tet->verts[1]->cords, time, ws, true, true);
+            Vertex* v3 = tet->get_vert_at(tet->verts[2]->cords, time, ws, true, true);
+            Vertex* v4 = tet->get_vert_at(tet->verts[3]->cords, time, ws, true, true);
+            Tet* new_tet = new Tet(v1, v2, v3, v4);
+            new_tet->make_edges();
             candidates.push_back(new_tet);
         }
     }
@@ -92,16 +102,16 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
 // the new node is the centroid.
 void Mesh::find_fixed_pt_location(
         Tet *tet, const double time, UI cur_depth,
-        vector<Vertex*> temp_verts, vector<Edge*> temp_edges,
-        vector<Vertex*> fixed_pts) const
+        vector<Vertex*>& fixed_pts) const
 {
+    if(cur_depth > depth) depth = cur_depth;
     // base case
     if(cur_depth > max_num_recursion) return;
 
-    // check if vertex is the critical point
+    // check if any of the vertex of the tetrahedron is the critical point
     for(unsigned int i = 0; i < 4; i++){
         Vertex* v = tet->verts[i];
-        if( length( v->vels.at(time) ) <= zero_threshold )
+        if( length( v->vels[time] ) <= zero_threshold )
         {
              // copy vertex to be returned
             Vertex* new_vert = new Vertex(v->cords);
@@ -111,31 +121,16 @@ void Mesh::find_fixed_pt_location(
         }
     }
 
-    // if 4 vertices don't match, we need to constuct new tets
-    vector<Tet*> new_tets = tet->make_4_tets(time);
+    // if 4 vertices don't match, we need to subdivide the current tetrahedron into smaller ones (8)
+    vector<Vertex*> temp_verts; vector<Edge*> temp_edges; vector<Tet*> temp_tets;
+    tet->subdivide(time, temp_verts, temp_edges, temp_tets);
+    for(Tet* tet : temp_tets){
+        if(!is_candidate_tet(tet, time)) continue;
 
-    for(Tet* new_tet : new_tets){
-        // insert edges and verts to temp vectors
-        for(Edge* e : new_tet->edges){
-            temp_edges.push_back(e);
-        }
-        for(Vertex* v : new_tet->verts){
-            temp_verts.push_back(v);
-        }
-
-        // check if this new tet is a candidate tet
-        if( is_candidate_tet(new_tet, time) ){
-            // if yes, recursively call find_fixed_pt_location
-            find_fixed_pt_location(new_tet, time, cur_depth+1, temp_verts, temp_edges, fixed_pts);
-            delete new_tet;
-        }
-        else
-        {
-            // if not, delete
-            delete new_tet;
-        }
+        find_fixed_pt_location(tet, time, cur_depth+1, fixed_pts);
     }
 
-    // if we reach here, this means this tet does not contain critical point.
-    return;
+    Utility::clear_mem(temp_verts);
+    Utility::clear_mem(temp_edges);
+    Utility::clear_mem(temp_tets);
 }

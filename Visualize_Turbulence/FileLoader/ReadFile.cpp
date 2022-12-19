@@ -110,7 +110,7 @@ void ReadFile::ReadMeshFile(const QString f){
     qDebug() << "Reading Mesh File" << f;
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        throwErrorMessage( QString("ReadFile::ReadMeshFile(QString f): couldn't open the file: ").append(f) );
+        Utility::throwErrorMessage( QString("ReadFile::ReadMeshFile(QString f): couldn't open the file: ").append(f) );
         return;
     }
 
@@ -145,7 +145,7 @@ void ReadFile::ReadMeshFile(const QString f){
 
     // checking if anything goes wrong
     if( flag == false ){
-        throwErrorMessage( "ReadFile::ReadMeshFile(QString f): something is wrong while reading mesh file" );
+        Utility::throwErrorMessage( "ReadFile::ReadMeshFile(QString f): something is wrong while reading mesh file" );
     }
 
     for( int i = 0; i < num_nodes; i++ ){
@@ -170,7 +170,7 @@ void ReadFile::ReadMeshFile(const QString f){
 
     // checking if we found the element part
     if( flag == false ){
-        throwErrorMessage( "ReadFile::ReadMeshFile(QString f): Couldn't find elements" );
+        Utility::throwErrorMessage( "ReadFile::ReadMeshFile(QString f): Couldn't find elements" );
     }
 
     for( int i = 0; i < num_tets; i++ ){
@@ -207,7 +207,7 @@ void ReadFile::ReadDataFile(QString f){
     qDebug() << "Reading Data File" << f;
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        throwErrorMessage( QString("ReadFile::ReadDataFile(QString f): couldn't open the file: ").append(f) ); return;
+        Utility::throwErrorMessage( QString("ReadFile::ReadDataFile(QString f): couldn't open the file: ").append(f) ); return;
     }
 
     QTextStream in(&file);
@@ -222,7 +222,7 @@ void ReadFile::ReadDataFile(QString f){
             QStringList strings = line.split(" ", Qt::SkipEmptyParts);
             unsigned long num_nodes = strings[ strings.size() - 1 ].toInt();
             if( num_nodes != this->mesh->num_verts() ){
-                throwErrorMessage( "ReadFile::ReadDataFile(QString f): the # of nodes for the data file and the mesh file are different!" ); return;
+                Utility::throwErrorMessage( "ReadFile::ReadDataFile(QString f): the # of nodes for the data file and the mesh file are different!" ); return;
             }
         }
 
@@ -237,7 +237,7 @@ void ReadFile::ReadDataFile(QString f){
         if( line.contains( "% Description:" ) ){
             QStringList strings = line.split(",", Qt::SkipEmptyParts);
             if(strings.size() != 13){
-                throwErrorMessage( "ReadFile::ReadDataFile(QString f): the size of description is not 13! This means the data has different format that we expect!" ); return;
+                Utility::throwErrorMessage( "ReadFile::ReadDataFile(QString f): the size of description is not 13! This means the data has different format that we expect!" ); return;
             }
         }
 
@@ -248,7 +248,7 @@ void ReadFile::ReadDataFile(QString f){
     const int expected_num_expressions = 7;
     const unsigned int reminder = num_expressions % expected_num_expressions;
     if(reminder != 0){
-        throwErrorMessage( "ReadFile::ReadDataFile(QString f): the num of expressions is not right!" ); return;
+        Utility::throwErrorMessage( "ReadFile::ReadDataFile(QString f): the num of expressions is not right!" ); return;
     }
     const unsigned int num_time_steps = num_expressions / expected_num_expressions;
     this->mesh->num_time_steps = num_time_steps;
@@ -260,7 +260,7 @@ void ReadFile::ReadDataFile(QString f){
         line = in.readLine();
         QStringList strings = line.split(" ", Qt::SkipEmptyParts);
         if( strings.size() != num_expressions+3 ){
-            throwErrorMessage( "ReadFile::ReadDataFile(QString f): vert does not have correct data format" ); return;
+            Utility::throwErrorMessage( "ReadFile::ReadDataFile(QString f): vert does not have correct data format" ); return;
         }
         Vertex* cur_vert = this->mesh->verts[vert_count];
 
@@ -283,5 +283,5 @@ void ReadFile::ReadDataFile(QString f){
     }
 
 
-    if( vert_count != this->mesh->num_verts() ) throwErrorMessage( "ReadFile::ReadDataFile(QString f): the num of verts is not right!" ); return;
+    if( vert_count != this->mesh->num_verts() ) Utility::throwErrorMessage( "ReadFile::ReadDataFile(QString f): the num of verts is not right!" ); return;
 }

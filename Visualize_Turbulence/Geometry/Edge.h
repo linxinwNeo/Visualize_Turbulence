@@ -33,7 +33,7 @@ public:
     inline void add_tet(Tet*);
 
     bool is_same(const Edge*) const;
-    inline bool has_vert(const Vertex* v) const;
+    bool has_vert(const Vertex* v) const;
     bool is_vel_change_sign_in_x( const double time ) const;
     bool is_vel_change_sign_in_y( const double time ) const;
     bool is_vel_change_sign_in_z( const double time ) const;
@@ -97,14 +97,5 @@ inline void Edge::add_triangle(Triangle* f){
 inline void Edge::add_tet(Tet* tet){
     this->tets.push_back(tet);
 }
-
-inline bool Edge::has_vert(const Vertex *v) const
-{
-    for(Vertex* vert : this->verts){
-        if(vert == v) return true;
-    }
-    return false;
-}
-
 
 #endif // EDGE_H

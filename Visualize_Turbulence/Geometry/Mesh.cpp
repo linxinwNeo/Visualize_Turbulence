@@ -237,8 +237,8 @@ void Mesh::build_tetNeighbors()
         }
         // for each unique tet in the set, add it to the current tet
         // additional checkings
-        if(uniq_tets.size() > 4) throwErrorMessage(QString("build_tetNeighbors: tet %1 tet has more than 4 neighbor tets!").arg(tet->idx));
-        if(uniq_tets.size() <= 0) throwErrorMessage(QString("build_tetNeighbors: tet %1 has less than 1 neighbor tets!").arg(tet->idx));
+        if(uniq_tets.size() > 4) Utility::throwErrorMessage(QString("build_tetNeighbors: tet %1 tet has more than 4 neighbor tets!").arg(tet->idx));
+        if(uniq_tets.size() <= 0) Utility::throwErrorMessage(QString("build_tetNeighbors: tet %1 has less than 1 neighbor tets!").arg(tet->idx));
         for(Tet* uniq_tet : uniq_tets){
             tet->add_tet(uniq_tet);
         }
@@ -406,7 +406,7 @@ Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) co
     // it only breaks if we found the target
     while(!prev_tet->is_pt_in2(target_pt, ds)){
         unsigned int min_idx; double min_val;
-        array_min(ds, 4, min_idx, min_val);
+        Utility::array_min(ds, 4, min_idx, min_val);
         if(min_val > 0){ // the pt is in prev_tet
             return prev_tet;
         }

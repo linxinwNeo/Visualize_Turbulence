@@ -23,9 +23,9 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     this->animation_time = this->model_time = 0.;
 
     // init matrices
-    mat_ident( this->rotmat );
+    Utility::mat_ident( this->rotmat );
 
-    mat_ident( this->ObjXmat );
+    Utility::mat_ident( this->ObjXmat );
     this->cur_mesh = meshes[0];
 
     // set up format
@@ -103,12 +103,12 @@ void openGLWindow::initializeGL()
 
     float White[ ] = { 1.,1.,1.,1. };
     float color[ ] = { 1.,0.,0. };
-    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, MulArray3( .3f, White )  ) ;
-    glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION, Array3( 0., 0., 0. ) );
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, Utility::MulArray3( .3f, White )  ) ;
+    glMaterialfv( GL_FRONT_AND_BACK, GL_EMISSION, Utility::Array3( 0., 0., 0. ) );
 
     glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, color );
     glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color );
-    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, Array3( 0.7, 0.7, 0.7 ) );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, Utility::Array3( 0.7, 0.7, 0.7 ) );
     glMaterialf ( GL_FRONT_AND_BACK, GL_SHININESS, 2.f );
 
 
@@ -116,9 +116,9 @@ void openGLWindow::initializeGL()
     float LightColor[] = {1, 1, 1};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, MulArray3( .2, White ) );
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, Utility::MulArray3( .2, White ) );
     glLightModeli ( GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE );
-    glLightfv( GL_LIGHT0, GL_AMBIENT, Array3( 0., 0., 0. ) );
+    glLightfv( GL_LIGHT0, GL_AMBIENT, Utility::Array3( 0., 0., 0. ) );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, LightColor );
     glLightfv( GL_LIGHT0, GL_SPECULAR, LightColor );
     glLightf ( GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1. );
@@ -147,7 +147,55 @@ void openGLWindow::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     this->cur_mesh = meshes[0];
-    main_routine(meshes[0]);
+    //main_routine(meshes[0]);
+
+    Tet* tet = meshes[0]->tets[0];
+    vector<Vertex*> temp_verts; vector<Edge*> temp_edges; vector<Tet*> temp_tets;
+
+    Vertex* v1 = tet->verts[0]; v1->cords = Vector3d(0.5, 0, 0);
+    Vertex* v2 = tet->verts[1]; v2->cords = Vector3d(0, 0.5, 0);
+    Vertex* v3 = tet->verts[2]; v3->cords = Vector3d(-0.5, 0, 0);
+    Vertex* v4 = tet->verts[3]; v4->cords = Vector3d(0, 0, 0.5);
+
+    glPushMatrix();
+    glTranslatef(0, 0.6, 0);
+    glColor3f(0, 0, 1);
+    glBegin(GL_LINES);
+        glVertex3d(v1->x(), v1->y(), v1->z());
+        glVertex3d(v2->x(), v2->y(), v2->z());
+
+        glVertex3d(v1->x(), v1->y(), v1->z());
+        glVertex3d(v3->x(), v3->y(), v3->z());
+
+        glVertex3d(v1->x(), v1->y(), v1->z());
+        glVertex3d(v4->x(), v4->y(), v4->z());
+
+        glVertex3d(v2->x(), v2->y(), v2->z());
+        glVertex3d(v3->x(), v3->y(), v3->z());
+
+        glVertex3d(v2->x(), v2->y(), v2->z());
+        glVertex3d(v4->x(), v4->y(), v4->z());
+
+        glVertex3d(v3->x(), v3->y(), v3->z());
+        glVertex3d(v4->x(), v4->y(), v4->z());
+    glEnd();
+    glPopMatrix();
+
+    tet->subdivide(0, temp_verts, temp_edges, temp_tets);
+    for(UI i = 5; i < 6; i++){
+        Tet* t = temp_tets[i];
+        for(Edge* e : t->edges){
+            Vertex* v1 = e->verts[0];
+            Vertex* v2 = e->verts[1];
+
+            glColor3f(0, 0, 1);
+            glBegin(GL_LINES);
+                glVertex3f(v1->x(), v1->y(), v1->z());
+                glVertex3f(v2->x(), v2->y(), v2->z());
+            glEnd();
+        }
+    }
+
 //    if(cur_mesh == meshes[1]){
 //        glPushMatrix();
 //        glTranslatef(-1.3, 0, 0);
@@ -224,7 +272,7 @@ void openGLWindow::set_scene() const
                  this->rot_center.entry[2]);
     //qDebug() << this->rot_center.entry[0] << " "<< this->rot_center.entry[1] << " " << this->rot_center.entry[2] ;
 
-    multmatrix( this->rotmat );
+    Utility::multmatrix( this->rotmat );
 
     glScalef(this->zoom_factor, this->zoom_factor, this->zoom_factor);
 
@@ -241,7 +289,7 @@ void openGLWindow::reset_scene()
     this->zoom_factor = 1.;
 
     // init matrices
-    mat_ident( this->rotmat );
+    Utility::mat_ident( this->rotmat );
 
     for(int i = 0; i < 16; i++)
         this->ObjXmat[i]=0.;
@@ -376,7 +424,7 @@ void openGLWindow::rightButtonDown(const QMouseEvent *event)
     int firstwin_leftbottom_y = WIN_HEIGHT;
     int firstwin_rightx = WIN_WIDTH;
     int firstwin_bottomy = WIN_HEIGHT;
-    ScreenToSecondWin(event->pos().x(), event->pos().y(), firstwin_leftbottom_x, firstwin_leftbottom_y,
+    Utility::ScreenToSecondWin(event->pos().x(), event->pos().y(), firstwin_leftbottom_x, firstwin_leftbottom_y,
                       firstwin_rightx, firstwin_bottomy, 0, 0, 1, 1, position[0], position[1]);
     s = position[0];
     t = position[1];
@@ -398,7 +446,7 @@ void openGLWindow::rightButtonMoved(const QMouseEvent *event)
 
     QPointF p = event->pos();
 
-    ScreenToSecondWin(p.x(), p.y(), firstwin_leftbottom_x, firstwin_leftbottom_y,
+    Utility::ScreenToSecondWin(p.x(), p.y(), firstwin_leftbottom_x, firstwin_leftbottom_y,
                     firstwin_rightx, firstwin_bottomy, 0, 0, 1, 1, position[0], position[1]);
     s = position[0];
     t = position[1];

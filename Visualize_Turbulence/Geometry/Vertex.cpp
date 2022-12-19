@@ -1,10 +1,12 @@
 #include "Geometry/Vertex.h"
+#include "Geometry/Edge.h"
+#include "Others/Utilities.h"
 
 // destructor
 Vertex::~Vertex()
 {
     this->edges.clear();
-    this->faces.clear();
+    this->tris.clear();
     this->edges.clear();
 
     for(const auto& v : this->vels){
@@ -82,6 +84,18 @@ void Vertex::set_mu(const double time, const double mu)
         return;
     }
     this->mus[time] = mu;
+}
+
+
+//  check if this vertex is connected to the input vertex
+bool Vertex::is_connected_to(const Vertex *vert) const
+{
+    if(vert == NULL) throwErrorMessage("Vertex::is_connected_to: vert is NULL!");
+
+    for(Edge* e : this->edges){
+        if( e->has_vert(vert) ) return true;
+    }
+    return false;
 }
 
 

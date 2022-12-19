@@ -70,7 +70,7 @@ void build_streamlines_from_seeds( Mesh* mesh )
                     }
                     // interpolate vertex's vel, vor, mu at time t
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ds); // interpolate new cords in the tet
-                    if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
+                    if(newVert == NULL) Utility::throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
                     sl->fw_verts.push_back(newVert); // new vert into the streamline
                     cords = newCords; // update cords for the next iteration
@@ -93,7 +93,7 @@ void build_streamlines_from_seeds( Mesh* mesh )
                     }
                     // interpolate vertex's vel, vor, mu at time t
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ws); // interpolate new cords in the tet
-                    if(newVert == NULL) throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
+                    if(newVert == NULL) Utility::throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
                     sl->bw_verts.push_back(newVert); // new vert into the streamline
                     vert = newVert;
@@ -117,7 +117,7 @@ inline void place_seeds(Mesh* mesh)
 {
     mesh->streamlines_for_all_t.reserve(mesh->num_time_steps * frames_per_sec);
     // make sure we are using same seeds every time step
-    vector<UL> seeds = generate_unique_random_Tet_idx(mesh);
+    vector<UL> seeds = Utility::generate_unique_random_Tet_idx(mesh);
 
     // for each time step, place streamline
     double time = 0.;

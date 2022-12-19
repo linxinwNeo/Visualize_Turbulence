@@ -1,5 +1,6 @@
 #include "Edge.h"
 #include "Geometry/Vertex.h"
+#include "Others/Utilities.h"
 #include "Others/Vector3d.h"
 
 bool Edge::is_same(const Edge* edge) const
@@ -60,6 +61,16 @@ bool Edge::is_vel_change_sign_in_z(const double time) const
         return true;
     }
 }
+
+
+bool Edge::has_vert(const Vertex *v) const
+{
+    if(v==NULL) throwErrorMessage("Edge::has_vert: v is NULL!");
+
+    if(verts[0] == v) return true;
+    else if(verts[1] == v) return true;
+    return false;
+};
 
 
 // interpolate between two verts of this edge at time t
