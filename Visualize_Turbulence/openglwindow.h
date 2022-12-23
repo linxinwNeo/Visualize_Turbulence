@@ -22,7 +22,7 @@ public:
     double last_y;
 
     QTimer* timer;
-    double animation_time;
+    double total_time;
     double model_time;
 
     CTraceBall traceball;

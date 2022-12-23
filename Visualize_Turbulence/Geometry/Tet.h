@@ -1,9 +1,10 @@
 #ifndef TET_H
 #define TET_H
 
-#include "Others/Vector3d.h"
 #include <unordered_map>
 #include <vector>
+#include "Others/Vector3d.h"
+#include "Eigen/Dense"
 
 // forward class declarations
 class Vertex;
@@ -22,6 +23,7 @@ public:
     vector<Triangle*> tris;    // exact 4 triangles that consists of this tetrahedron
     vector<Tet*> tets;      // neighbor tetrahedrons that shares faces with this, max of 4 tets
 
+    bool marked;
     Vector3d center;
 
     // member functions
@@ -43,6 +45,7 @@ public:
     bool has_verts(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_triangle(const Vertex*, const Vertex*, const Vertex*) const;
     bool has_edge(const Vertex*, const Vertex*) const;
+    bool has_boundary_tri() const;
 
     Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws = true, bool add_this_tet = true);
     double volume() const;
@@ -64,6 +67,7 @@ public:
     vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time );
     void make_edges();
     void subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets);
+    Eigen::Matrix3d calc_Jacobian(const Vertex* v, const double time);
 };
 
 bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);

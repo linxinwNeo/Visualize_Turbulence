@@ -42,6 +42,8 @@ extern bool show_boundary_wireframe;
 extern bool show_opage_boundary_tris;
 extern bool show_axis;
 extern bool show_critical_pts;
+extern bool tracing_streamlines_from_seed;
+extern bool tracing_streamlines_from_critical_pts;
 
 extern const double boundary_tri_alpha;
 
@@ -63,6 +65,7 @@ namespace Utility
     inline void mat_ident(float m[16]);
     inline vector<UL> generate_unique_random_Tet_idx(Mesh* mesh);
     inline bool is_in_set(set<Tet*> s, Tet* tet);
+    inline bool is_in_set(set<Edge*> s, Edge* e);
     inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val );
     inline float * Array3( float a, float b, float c );
     inline float * MulArray3( float factor, float array0[3] );
@@ -70,6 +73,8 @@ namespace Utility
     inline void clear_mem(vector<Edge*> edges);
     inline void clear_mem(vector<Tet*> tets);
     inline vector<Edge*> make_edges(vector<Vertex*> verts, bool add_each_other);
+    void swap(double& a, double& b);
+    void swap(long int& a, long int& b);
 }
 
 
@@ -102,6 +107,12 @@ inline void Utility::ScreenToSecondWin(
 inline bool Utility::is_in_set(set<Tet*> s, Tet* tet)
 {
     if(s.find(tet) == s.end()) return false;
+    return true;
+}
+
+inline bool Utility::is_in_set(set<Edge*> s, Edge* e)
+{
+    if(s.find(e) == s.end()) return false;
     return true;
 }
 
@@ -261,6 +272,7 @@ inline void Utility::clear_mem(vector<Tet*> tets){
     tets.clear();
 }
 
+
 inline vector<Edge*> Utility::make_edges(vector<Vertex*> verts, bool add_each_other){
     vector<Edge*> edges;
     for(UI i = 0; i < verts.size(); i++){
@@ -276,6 +288,21 @@ inline vector<Edge*> Utility::make_edges(vector<Vertex*> verts, bool add_each_ot
         }
     }
     return edges;
+}
+
+inline void Utility::swap(double& a, double& b)
+{
+    double temp = a;
+    a = b;
+    b = temp;
+}
+
+
+inline void Utility::swap(long int & a, long int& b)
+{
+    long int temp = a;
+    a = b;
+    b = temp;
 }
 
 #endif // UTILITIES_H

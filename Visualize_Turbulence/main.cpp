@@ -33,29 +33,34 @@ const QString dataFilePath1 = filePathPrefix + "no_boundary_slow_data.txt";
 const QString meshFilePath2 = filePathPrefix + "no_boundary_medium_mesh.txt";
 const QString dataFilePath2 = filePathPrefix + "no_boundary_medium_data.txt";
 
-const QString meshFilePath3 = "/Users/linxinw/Desktop/no_boundary_fast_mesh.txt";
-const QString dataFilePath3 = "/Users/linxinw/Desktop/no_boundary_fast_data.txt";
+const QString meshFilePath3 = filePathPrefix + "no_boundary_fast_mesh.txt";
+const QString dataFilePath3 = filePathPrefix + "no_boundary_fast_data.txt";
 
-const QString meshFilePath4 = "/Users/linxinw/Desktop/with_boundary_slow_mesh.txt";
-const QString dataFilePath4 = "/Users/linxinw/Desktop/with_boundary_slow_data.txt";
+const QString meshFilePath4 = filePathPrefix + "with_boundary_slow_mesh.txt";
+const QString dataFilePath4 = filePathPrefix + "with_boundary_slow_data.txt";
 
-const QString meshFilePath5 = "/Users/linxinw/Desktop/with_boundary_medium_mesh.txt";
-const QString dataFilePath5 = "/Users/linxinw/Desktop/with_boundary_medium_data.txt";
+const QString meshFilePath5 = filePathPrefix + "with_boundary_medium_mesh.txt";
+const QString dataFilePath5 = filePathPrefix + "with_boundary_medium_data.txt";
 
-const QString meshFilePath6 = "/Users/linxinw/Desktop/with_boundary_fast_mesh.txt";
-const QString dataFilePath6 = "/Users/linxinw/Desktop/with_boundary_fast_data.txt";
+const QString meshFilePath6 = filePathPrefix + "with_boundary_fast_mesh.txt";
+const QString dataFilePath6 = filePathPrefix + "with_boundary_fast_data.txt";
 
 
 // boolean variables used to enable orbit control
 bool LeftButtonDown = false;
 bool MiddleButtonDown = false;
 bool RightButtonDown = false;
-// boolean variables used to enable modes
+
+// streamlines
 bool show_streamlines = false;
+bool tracing_streamlines_from_seed = false;
+bool tracing_streamlines_from_critical_pts = true;
+
 bool show_pathlines = false;
 bool show_isosurfaces = false;
+
 bool show_boundary_wireframe = false;
-bool show_axis = false;
+bool show_axis = true;
 bool show_opage_boundary_tris = true;
 bool show_critical_pts = true;
 
@@ -65,8 +70,8 @@ const double dist_step_size = 0.003;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const unsigned int max_num_recursion = 7;
-const double zero_threshold = 1e-10;
+const unsigned int max_num_recursion = 80;
+const double zero_threshold = 1e-17;
 
 // surface_level is defined to be the voriticity
 const double surface_level_ratio = 0.02;
@@ -88,38 +93,39 @@ const double boundary_tri_alpha = 0.1;
 // main functions
 void read_files();
 
+void replace_velocity(){
+    Mesh* mesh = meshes[0];
+    double time = 0.;
+    while(time < mesh->num_time_steps - 1){
+        for(Vertex* v : mesh->verts){
+            if(time == 0) v->cords.entry[2] += 0.25;
+            Vector3d cords = v->cords;
+            v->vels[time]->set(cords.z() * cords.z(), cords.x()* cords.x(), cords.y()*cords.y());
+        }
+        time += time_step_size;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-//    Eigen::Matrix4d A; // left matrix
-//    Eigen::Vector4d C; // right column vector
-//    A << v1->x(), v2->x(), v3->x(), v4->x(),
-//            v1->y(), v2->y(), v3->y(), v4->y(),
-//            v1->z(), v2->z(), v3->z(), v4->z(),
-//            1., 1., 1., 1.;
-
-//    C << 0., 0., 0., 1.;
-
-//    if(A.determinant() == 0.) return NULL;
-//    //Eigen::Vector4d B = A.colPivHouseholderQr().solve(C);
-//    Eigen::Matrix4d A_inv = A.inverse();
-//    Eigen::Vector4d B = A_inv * C;
-
-//    exit(0);
-
     // read files and build mesh
     read_files();
 
-    // constucting the data for rendering
-    if(show_streamlines)
-        tracing_streamlines();
+    // replace velocity vectors with analytical equations
+    meshes[0]->num_time_steps = 2;
+    replace_velocity();
 
+    // constucting the data for rendering
     if(show_isosurfaces)
         construct_isosurfaces();
 
-//    if(show_critical_pts)
-//        capture_critical_pts(meshes);
+    if(show_critical_pts)
+        capture_critical_pts(meshes);
+
+    if(show_streamlines)
+        tracing_streamlines();
 
     MainWindow w;
     w.show();
@@ -129,7 +135,7 @@ int main(int argc, char *argv[])
 
 
 void read_files(){
-    file = new ReadFile( meshFilePath2, dataFilePath2 );
+    file = new ReadFile( meshFilePath3, dataFilePath3 );
     meshes.push_back( file->mesh );
     delete file;
 

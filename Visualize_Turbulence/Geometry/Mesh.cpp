@@ -71,7 +71,7 @@ Mesh::~Mesh()
 
     // clear singularities
     for(auto& pair : singularities_for_all_t){
-        vector<Vertex*> singularities = pair.second;
+        vector<Singularity*> singularities = pair.second;
         for(auto& sing : singularities){
             delete sing;
         }
@@ -403,8 +403,14 @@ void Mesh::interpolate_vertices()
 // ds contains barycentric coordinate of this pt in that tet if found
 Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const
 {
+    const UI max_iterations = 100;
+    UI cur_iteration = 0;
     // it only breaks if we found the target
     while(!prev_tet->is_pt_in2(target_pt, ds)){
+        if(cur_iteration > max_iterations){
+            return NULL;
+        }
+
         unsigned int min_idx; double min_val;
         Utility::array_min(ds, 4, min_idx, min_val);
         if(min_val > 0){ // the pt is in prev_tet
@@ -432,6 +438,7 @@ Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) co
                 break;
             }
         }
+        cur_iteration++;
     }
     return prev_tet;
 }

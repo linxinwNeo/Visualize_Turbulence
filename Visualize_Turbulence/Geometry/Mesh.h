@@ -13,6 +13,7 @@
 #include "Others/Predefined.h"
 #include "Others/Vector3d.h"
 #include "Surfaces/Isosurface.h"
+#include "Analysis/singularity.h"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ public:
     unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
     unordered_map< double, Isosurface*> isosurfaces_for_all_t;
 
-    unordered_map<double, vector<Vertex*>> singularities_for_all_t;
+    unordered_map<double, vector<Singularity*>> singularities_for_all_t;
 
     // member functions
     Mesh();
@@ -74,7 +75,7 @@ public:
     void detect_fixed_pts();
     bool is_candidate_tet(Tet* tet, const double time) const;
     vector<Tet*> build_candidate_tets( const double time ) const;
-    void find_fixed_pt_location(  Tet *tet, const double time, UI cur_depth,
+    UI find_fixed_pt_location(  Tet *tet, const double time, UI cur_depth,
                                                         vector<Vertex*>& fixed_pts) const;
 };
 void capture_critical_pts(Mesh* mesh);

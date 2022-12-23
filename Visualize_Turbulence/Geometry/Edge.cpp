@@ -65,7 +65,7 @@ bool Edge::is_vel_change_sign_in_z(const double time) const
 
 bool Edge::has_vert(const Vertex *v) const
 {
-    if(v==NULL) throwErrorMessage("Edge::has_vert: v is NULL!");
+    if(v==NULL) Utility::throwErrorMessage("Edge::has_vert: v is NULL!");
 
     if(verts[0] == v) return true;
     else if(verts[1] == v) return true;

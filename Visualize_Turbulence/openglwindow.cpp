@@ -9,6 +9,7 @@
 #include "Others/Utilities.h"
 #include "Others/Draw.h"
 #include "Geometry/Mesh.h"
+#include "Analysis/singularity.h"
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -20,7 +21,7 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     this->trans_x = 0.;
     this->trans_y = 0.;
     this->cur_mesh = NULL;
-    this->animation_time = this->model_time = 0.;
+    this->total_time = this->model_time = 0.;
 
     // init matrices
     Utility::mat_ident( this->rotmat );
@@ -58,11 +59,11 @@ openGLWindow::~openGLWindow()
 
 // time control
 void openGLWindow::increment_time( ){
-    this->animation_time += time_step_size;
+    this->total_time += time_step_size;
     this->model_time += time_step_size;
 
-    if(this->animation_time >= cur_mesh->num_time_steps - 1.){
-        this->animation_time = this->model_time = 0;
+    if(this->total_time >= cur_mesh->num_time_steps - 1.){
+        this->total_time = this->model_time = 0;
     }
 
     // loop from beginning
@@ -147,54 +148,59 @@ void openGLWindow::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     this->cur_mesh = meshes[0];
-    //main_routine(meshes[0]);
 
-    Tet* tet = meshes[0]->tets[0];
-    vector<Vertex*> temp_verts; vector<Edge*> temp_edges; vector<Tet*> temp_tets;
+    main_routine(meshes[0]);
+//    glColor3f(0, 0, 1);
+//    Tet* tet = meshes[0]->tets[0];
 
-    Vertex* v1 = tet->verts[0]; v1->cords = Vector3d(0.5, 0, 0);
-    Vertex* v2 = tet->verts[1]; v2->cords = Vector3d(0, 0.5, 0);
-    Vertex* v3 = tet->verts[2]; v3->cords = Vector3d(-0.5, 0, 0);
-    Vertex* v4 = tet->verts[3]; v4->cords = Vector3d(0, 0, 0.5);
+//    double ws[4];
+//    Vertex* v1 = tet->get_vert_at(tet->verts[0]->cords, 0, ws, true, true);
+//    Vertex* v2 = tet->get_vert_at(tet->verts[1]->cords, 0, ws, true, true);
+//    Vertex* v3 = tet->get_vert_at(tet->verts[2]->cords, 0, ws, true, true);
+//    Vertex* v4 = tet->get_vert_at(tet->verts[3]->cords, 0, ws, true, true);
+//    Tet* new_tet = new Tet(v1, v2, v3, v4);
+//    new_tet->make_edges();
+//    new_tet->verts[0]->cords = Vector3d(1,1,1);
+//    new_tet->verts[1]->cords = Vector3d(1,-1,-1);
+//    new_tet->verts[2]->cords = Vector3d(-1,1,-1);
+//    new_tet->verts[3]->cords = Vector3d(-1,-1,1);
 
-    glPushMatrix();
-    glTranslatef(0, 0.6, 0);
-    glColor3f(0, 0, 1);
-    glBegin(GL_LINES);
-        glVertex3d(v1->x(), v1->y(), v1->z());
-        glVertex3d(v2->x(), v2->y(), v2->z());
+//    new_tet->verts[0]->vels[0] = new Vector3d(-1,-1,-1);
+//    new_tet->verts[1]->vels[0] = new Vector3d(-1,1,1);
+//    new_tet->verts[2]->vels[0] = new Vector3d(1,-1,1);
+//    new_tet->verts[3]->vels[0] = new Vector3d(1,1,-1);
 
-        glVertex3d(v1->x(), v1->y(), v1->z());
-        glVertex3d(v3->x(), v3->y(), v3->z());
 
-        glVertex3d(v1->x(), v1->y(), v1->z());
-        glVertex3d(v4->x(), v4->y(), v4->z());
+//    vector<Vertex*> fixed_pts;
+//    UI depth = meshes[0]->find_fixed_pt_location(new_tet, 0, 0, fixed_pts);
+//    Singularity* sing = new Singularity();
+//    sing->Jacobian = new_tet->calc_Jacobian(fixed_pts[0], 0);
+//    sing->classify_this();
+//    qDebug() << sing->get_type();
 
-        glVertex3d(v2->x(), v2->y(), v2->z());
-        glVertex3d(v3->x(), v3->y(), v3->z());
+//    qDebug() << "fixed_pts size" << fixed_pts.size() << "depth is " << depth;
+//    glBegin(GL_LINES);
+//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
+//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
+//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
+//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
+//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
+//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
+//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
+//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
+//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
+//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
+//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
+//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
+//    glEnd();
 
-        glVertex3d(v2->x(), v2->y(), v2->z());
-        glVertex3d(v4->x(), v4->y(), v4->z());
+//    if(fixed_pts.size() != 0){
+//        glPointSize(5);
+//        glBegin(GL_POINTS);
+//            glVertex3f(fixed_pts[0]->x(), fixed_pts[0]->y(), fixed_pts[0]->z());
+//        glEnd();
+//    }
 
-        glVertex3d(v3->x(), v3->y(), v3->z());
-        glVertex3d(v4->x(), v4->y(), v4->z());
-    glEnd();
-    glPopMatrix();
-
-    tet->subdivide(0, temp_verts, temp_edges, temp_tets);
-    for(UI i = 5; i < 6; i++){
-        Tet* t = temp_tets[i];
-        for(Edge* e : t->edges){
-            Vertex* v1 = e->verts[0];
-            Vertex* v2 = e->verts[1];
-
-            glColor3f(0, 0, 1);
-            glBegin(GL_LINES);
-                glVertex3f(v1->x(), v1->y(), v1->z());
-                glVertex3f(v2->x(), v2->y(), v2->z());
-            glEnd();
-        }
-    }
 
 //    if(cur_mesh == meshes[1]){
 //        glPushMatrix();
@@ -242,6 +248,10 @@ void openGLWindow::main_routine(Mesh * mesh) const
         }
     }
 
+    if(show_axis){
+        draw_axis();
+    }
+
     if(show_isosurfaces){
         double max = DBL_MIN, min = DBL_MAX;
         const auto& isosurface = mesh->isosurfaces_for_all_t.at(model_time);
@@ -250,6 +260,32 @@ void openGLWindow::main_routine(Mesh * mesh) const
 
     //    if(show_pathlines){
     //    }
+
+    if(show_critical_pts){
+        draw_singularities(mesh->singularities_for_all_t.at(this->model_time));
+    }
+
+//    for(Tet* tet:mesh->tets){
+//        if(!tet->marked) continue;
+//        glColor3f(1, 0, 0);
+//        glBegin(GL_TRIANGLES);
+//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
+//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
+//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
+
+//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
+//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
+//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
+
+//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
+//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
+//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
+
+//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
+//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
+//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
+//        glEnd();
+//    }
 
     if(show_boundary_wireframe)
         draw_wireframe(mesh->boundary_tris);

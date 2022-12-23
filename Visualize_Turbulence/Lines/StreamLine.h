@@ -25,15 +25,16 @@ public:
     void add_fw_vert(Vertex* vert);
     void add_bw_vert(Vertex* vert);
 
-    inline UL num_verts();
-    inline UL num_fw_verts();
-    inline UL num_bw_verts();
+    inline UL num_verts() const;
+    inline UL num_fw_verts() const;
+    inline UL num_bw_verts() const;
 };
 
 void tracing_streamlines();
 void build_streamlines_from_seeds(Mesh* mesh);
 Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel);
 void place_seeds(Mesh* mesh);
+void place_critical_pts_as_seeds(Mesh* mesh);
 
 inline void StreamLine::set_seed(Vertex *seed_vert)
 {
@@ -53,19 +54,19 @@ inline void StreamLine::add_bw_vert(Vertex *vert)
 }
 
 
-inline UL StreamLine::num_verts()
+inline UL StreamLine::num_verts() const
 {
     return this->fw_verts.size() + this->bw_verts.size();
 }
 
 
-inline UL StreamLine::num_fw_verts()
+inline UL StreamLine::num_fw_verts() const
 {
     return this->fw_verts.size();
 }
 
 
-inline UL StreamLine::num_bw_verts()
+inline UL StreamLine::num_bw_verts() const
 {
     return this->bw_verts.size();
 }

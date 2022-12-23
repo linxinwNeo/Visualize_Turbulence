@@ -9,6 +9,7 @@
 Tet::Tet()
 {
     this->idx = -1; // use -1 to indicate the obj is new
+    marked = false;
 
     // reserve memories
     this->verts.reserve(4); // a tet can only have exact 4 vertices
@@ -20,6 +21,7 @@ Tet::Tet()
 
 Tet::Tet(Vertex *v1, Vertex *v2, Vertex *v3,Vertex *v4)
 {
+    this->marked = false;
     this->add_vert(v1);
     this->add_vert(v2);
     this->add_vert(v3);
@@ -30,6 +32,7 @@ Tet::Tet(Vertex *v1, Vertex *v2, Vertex *v3,Vertex *v4)
 
 Tet::Tet(Triangle* tri, Vertex *v4)
 {
+    this->marked = false;
     this->add_vert(tri->verts[0]);
     this->add_vert(tri->verts[1]);
     this->add_vert(tri->verts[2]);
@@ -86,6 +89,14 @@ bool Tet::has_edge(const Vertex *v1, const Vertex *v2) const
             has_v2 = true;
         }
         if(has_v1 && has_v2) return true;
+    }
+    return false;
+}
+
+bool Tet::has_boundary_tri() const
+{
+    for(Triangle* tri : this->tris){
+        if(tri->is_boundary) return true;
     }
     return false;
 }
@@ -482,16 +493,17 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     vector<Edge*> uniq_new_edges;
     uniq_new_edges.reserve(12+12+1); // must be 25 new edges in total
 
-    vector<Edge*> octa_edges; octa_edges.reserve(12);
+    set<Edge*> octa_edges;
 
     // for each edge of the tetrahedron, make unique edge middle vertices
     for( Edge* e : this->edges ){
-        Vector3d cords = (e->verts[0]->cords + e->verts[1]->cords) / 2.;
-        Vertex* new_vert = this->get_vert_at(cords, time, ws, true, false);
-        uniq_edge_points.push_back(new_vert);
-        // create adjacency
         Vertex* v1 = vert_copies[e->verts[0]]; // copied vertex
         Vertex* v2 = vert_copies[e->verts[1]]; // copied vertex
+
+        Vector3d cords = (v1->cords + v2->cords) / 2.;
+        Vertex* new_vert = this->get_vert_at(cords, time, ws, true, false);
+        uniq_edge_points.push_back(new_vert);
+
         // create two new edges
         Edge* new_e1 = new Edge(v1, new_vert);
         Edge* new_e2 = new Edge(v2, new_vert);
@@ -528,7 +540,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
         vector<Edge*> new_edges = Utility::make_edges(verts_for_tet, true);
         for(Edge* e : new_edges){
             uniq_new_edges.push_back(e);
-            octa_edges.push_back(e);
+            octa_edges.insert(e);
             new_tet->add_edge(e);
         }
     }
@@ -540,28 +552,19 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     */
     vector<Tet*> inner_tets; inner_tets.reserve(4);
     Edge* diag_e = NULL;
-    Edge* picked_edge = octa_edges[0]; // choose the first edge, doesn't matter which one you choose
-    Vertex* v1 = picked_edge->verts[0]; // first vertex of the diagonal edge
-    Vertex* v2 = picked_edge->verts[1]; // the other vertex
-    Vertex* v3 = NULL;
-    // look for the edge of v2 that doesn't have connection with v1
-    for(Edge* e : v2->edges){
-        Vertex* other_end = NULL;
-        if(e->verts[0] == v2) other_end = e->verts[1];
-        else other_end = e->verts[0];
+    Vertex* first_v = uniq_edge_points[0];
+    Vertex* second_v = NULL;
+    // look for the octahedron edge of v2 that doesn't have connection with v1
+    for(Vertex* v : uniq_edge_points){
+        if(v == first_v) continue;
+        if(v->is_connected_to(first_v)) continue;
 
-        for(Edge* eg : other_end->edges){
-            if(!eg->has_vert(v1)){
-                if(eg->verts[0] == other_end) v3 = eg->verts[1];
-                else v3 = eg->verts[0];
-            }
-        }
+        second_v = v;
     }
-    diag_e = new Edge(v1, v3);
-    v1->add_edge(diag_e);
-    v3->add_edge(diag_e);
+    diag_e = new Edge(first_v, second_v);
+    first_v->add_edge(diag_e);
+    second_v->add_edge(diag_e);
     uniq_new_edges.push_back(diag_e);
-    v1 = v2 = v3 = NULL;
 
     /* subdivide the octahedron using diag_e
      * steps:
@@ -630,4 +633,75 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     for(Tet* tet : inner_tets){
         new_tets.push_back(tet);
     }
+}
+
+
+Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
+{
+    if(v == NULL) Utility::throwErrorMessage("Tet::calc_Jacobian: v is NULL!");
+    Eigen::Matrix3d m;
+    double dx, dy, dz; dx = dy = dz = 1000;
+
+    Vector3d cords = v->cords;
+    Vector3d cords_dx, cords_dy, cords_dz;
+    cords_dx = Vector3d(cords.x() + dx, cords.y(), cords.z());
+    cords_dy = Vector3d(cords.x(), cords.y() + dy, cords.z());
+    cords_dz = Vector3d(cords.x(), cords.y(), cords.z() + dz);
+
+    Vertex* v_dx, *v_dy, *v_dz; v_dx = v_dy = v_dz = NULL;
+    double ws[4];
+    // interpolate
+    v_dx = this->get_vert_at(cords_dx, time, ws, true, false);
+    v_dy = this->get_vert_at(cords_dy, time, ws, true, false);
+    v_dz = this->get_vert_at(cords_dz, time, ws, true, false);
+
+    Vector3d* orig_vel = v->vels.at(time);
+    Vector3d* vel_dx = v_dx->vels.at(time);
+    Vector3d* vel_dy = v_dy->vels.at(time);
+    Vector3d* vel_dz = v_dz->vels.at(time);
+
+    // first row
+    const double dvx_dx = (vel_dx->x() - orig_vel->x()) / dx;
+    const double dvx_dy = (vel_dy->x() - orig_vel->x()) / dy;
+    const double dvx_dz = (vel_dz->x() - orig_vel->x()) / dz;
+
+    // second row
+    const double dvy_dx = (vel_dx->y() - orig_vel->y()) / dx;
+    const double dvy_dy = (vel_dy->y() - orig_vel->y()) / dy;
+    const double dvy_dz = (vel_dz->y() - orig_vel->y()) / dz;
+
+    // third row
+    const double dvz_dx = (vel_dx->z() - orig_vel->z()) / dx;
+    const double dvz_dy = (vel_dy->z() - orig_vel->z()) / dy;
+    const double dvz_dz = (vel_dz->z() - orig_vel->z()) / dz;
+
+    m << dvx_dx, dvx_dy, dvx_dz,
+            dvy_dx, dvy_dy, dvy_dz,
+            dvz_dx, dvz_dy, dvz_dz;
+
+    delete v_dx;
+    delete v_dy;
+    delete v_dz;
+
+//    double x0, x1, x2, x3,  y0, y1, y2, y3,  z0, z1, z2, z3;
+//    x0 = this->verts[0]->vels[time]->x();
+//    x1 = this->verts[1]->vels[time]->x();
+//    x2 = this->verts[2]->vels[time]->x();
+//    x3 = this->verts[3]->vels[time]->x();
+
+//    y0 = this->verts[0]->vels[time]->y();
+//    y1 = this->verts[1]->vels[time]->y();
+//    y2 = this->verts[2]->vels[time]->y();
+//    y3 = this->verts[3]->vels[time]->y();
+
+//    z0 = this->verts[0]->vels[time]->z();
+//    z1 = this->verts[1]->vels[time]->z();
+//    z2 = this->verts[2]->vels[time]->z();
+//    z3 = this->verts[3]->vels[time]->z();
+
+//    m << x1-x0, x2-x0, x3-x0,
+//            y1-y0, y2-y0, y3-y0,
+//            z1-z0, z2-z0, z3-z0;
+
+    return m;
 }

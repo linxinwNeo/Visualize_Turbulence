@@ -36,12 +36,19 @@ void tracing_streamlines()
         // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
         mesh->interpolate_vertices();
 
-        // place inital seeds
-        place_seeds(mesh);
-
         // trace seeds and form pathlines
         // mainwindow.cpp will clear the memory of pathlines and streamlines
-        build_streamlines_from_seeds(mesh);
+        if(tracing_streamlines_from_seed){
+            // place inital seeds
+            place_seeds(mesh);
+            build_streamlines_from_seeds(mesh);
+        }
+
+        if(tracing_streamlines_from_critical_pts){
+            place_critical_pts_as_seeds(mesh);
+            build_streamlines_from_seeds(mesh);
+        }
+
     }
 
 }
@@ -104,7 +111,6 @@ void build_streamlines_from_seeds( Mesh* mesh )
     }
 }
 
-
 inline Vector3d trace_one_dist_step(const Vector3d& start_cords, const Vector3d& vel)
 {
     Vector3d v = Vector3d(vel);
@@ -142,6 +148,42 @@ inline void place_seeds(Mesh* mesh)
             Vertex* center_vert = rdm_tet->get_vert_at(center_pt, (double)time, ws, true);
             SL->set_seed( center_vert );
             cur_num_seeds ++;
+            sls.push_back(SL);
+        }
+        mesh->streamlines_for_all_t[time] = sls;
+
+        time += time_step_size; // increment time
+    }
+}
+
+
+inline void place_critical_pts_as_seeds(Mesh* mesh)
+{
+    // for each time step, place streamline
+    double time = 0.;
+    while(time < mesh->num_time_steps - 1.)
+    {
+        if(mesh->singularities_for_all_t.find(time) == mesh->singularities_for_all_t.end()) continue;
+        const UI num_sing = mesh->singularities_for_all_t[time].size();
+        mesh->streamlines_for_all_t.reserve( num_sing * frames_per_sec);
+        vector<StreamLine*> sls; // create a vector of streamlines to store seeds
+        sls.reserve(num_sing); // we have num_seeds streamlines for each time step
+
+        unsigned int sing_idx = 0;
+        while(sing_idx < num_sing)
+        {
+            // set up the streamline
+            StreamLine* SL = new StreamLine();
+            SL->fw_verts.reserve(max_num_steps);
+            SL->bw_verts.reserve(max_num_steps);
+            SL->time = (double) time;
+
+            Singularity* sing = mesh->singularities_for_all_t[time][sing_idx];
+            Tet* tet = sing->in_which_tet;
+            double ws[4];
+            Vertex* vert = tet->get_vert_at(sing->cords, (double)time, ws, true);
+            SL->set_seed( vert );
+            sing_idx ++;
             sls.push_back(SL);
         }
         mesh->streamlines_for_all_t[time] = sls;

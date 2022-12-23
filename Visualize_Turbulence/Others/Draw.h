@@ -14,6 +14,7 @@
 #include "Geometry/Vertex.h"
 #include "Lines/PathLine.h"
 #include "Lines/StreamLine.h"
+#include "Analysis/singularity.h"
 
 // function prototypes
 inline void draw_cylinder(
@@ -191,7 +192,7 @@ inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double 
 }
 
 
-inline void draw_streamlines(StreamLine* sl, const double min, const double max)
+inline void draw_streamlines(const StreamLine* sl, const double min, const double max)
 {
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
@@ -236,8 +237,8 @@ inline void draw_streamlines(StreamLine* sl, const double min, const double max)
         glVertex3f(p.x(), p.y(), p.z());
     }
     glEnd();
-    glPopMatrix();
 
+    glPopMatrix();
 }
 
 inline void draw_arrows( PathLine* pl )
@@ -300,6 +301,48 @@ inline void draw_isosurfaces(const Isosurface* isosurface, const double min, con
 
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
+}
+
+
+inline void decide_color(unsigned short type){
+    switch(type){
+    case 1: // source node
+    case 5: // repelling focus source
+        glColor3f(1, 0, 0); // source-like red
+        break;
+    case 2: // sink node
+    case 6: // repelling saddle focus
+        glColor3f(0, 0, 1); // sink-like blue
+        break;
+    case 3:
+    case 4:
+    case 7:
+    case 8:
+        glColor3f(1, 1, 0); // saddle-like
+        break;
+    default:
+        glColor3f(0, 0, 0); // weird criticle points
+        break;
+    }
+}
+
+inline void draw_singularities(const vector<Singularity*> fixed_pts)
+{
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    glPointSize(7);
+    glBegin(GL_POINTS);
+    for(Singularity* pt : fixed_pts){
+        decide_color(pt->type);
+        glVertex3f(pt->x(), pt->y(), pt->z());
+    }
+    glEnd();
+
+    glPopMatrix();
 }
 
 #endif // DRAW_H
