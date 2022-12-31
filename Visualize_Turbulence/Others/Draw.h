@@ -334,7 +334,7 @@ inline void draw_singularities(const vector<Singularity*> fixed_pts)
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
-    glPointSize(7);
+    glPointSize(15);
     glBegin(GL_POINTS);
     for(Singularity* pt : fixed_pts){
         decide_color(pt->type);

@@ -502,6 +502,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
 
         Vector3d cords = (v1->cords + v2->cords) / 2.;
         Vertex* new_vert = this->get_vert_at(cords, time, ws, true, false);
+        //qDebug() << "subdivide ws" << ws[0] << ws[1] << ws[2] << ws[3];
         uniq_edge_points.push_back(new_vert);
 
         // create two new edges
@@ -640,68 +641,47 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
 {
     if(v == NULL) Utility::throwErrorMessage("Tet::calc_Jacobian: v is NULL!");
     Eigen::Matrix3d m;
-    double dx, dy, dz; dx = dy = dz = 1000;
+    const double h = 0.005; const double twoH = h+h;
+    const Vector3d cords = v->cords;
+    Vector3d px_cords = cords; px_cords.entry[0] += h;
+    Vector3d nx_cords = cords; nx_cords.entry[0] -= h;
+    Vector3d py_cords = cords; py_cords.entry[1] += h;
+    Vector3d ny_cords = cords; ny_cords.entry[1] -= h;
+    Vector3d pz_cords = cords; pz_cords.entry[2] += h;
+    Vector3d nz_cords = cords; nz_cords.entry[2] -= h;
 
-    Vector3d cords = v->cords;
-    Vector3d cords_dx, cords_dy, cords_dz;
-    cords_dx = Vector3d(cords.x() + dx, cords.y(), cords.z());
-    cords_dy = Vector3d(cords.x(), cords.y() + dy, cords.z());
-    cords_dz = Vector3d(cords.x(), cords.y(), cords.z() + dz);
-
-    Vertex* v_dx, *v_dy, *v_dz; v_dx = v_dy = v_dz = NULL;
     double ws[4];
+    Vertex* v_dpx, *v_dpy, * v_dpz, *v_dnx, *v_dny, *v_dnz;
     // interpolate
-    v_dx = this->get_vert_at(cords_dx, time, ws, true, false);
-    v_dy = this->get_vert_at(cords_dy, time, ws, true, false);
-    v_dz = this->get_vert_at(cords_dz, time, ws, true, false);
+    v_dpx = this->get_vert_at(px_cords, time, ws, true, false);
+    v_dnx = this->get_vert_at(nx_cords, time, ws, true, false);
 
-    Vector3d* orig_vel = v->vels.at(time);
-    Vector3d* vel_dx = v_dx->vels.at(time);
-    Vector3d* vel_dy = v_dy->vels.at(time);
-    Vector3d* vel_dz = v_dz->vels.at(time);
+    v_dpy = this->get_vert_at(py_cords, time, ws, true, false);
+    v_dpz = this->get_vert_at(ny_cords, time, ws, true, false);
 
-    // first row
-    const double dvx_dx = (vel_dx->x() - orig_vel->x()) / dx;
-    const double dvx_dy = (vel_dy->x() - orig_vel->x()) / dy;
-    const double dvx_dz = (vel_dz->x() - orig_vel->x()) / dz;
+    v_dny = this->get_vert_at(pz_cords, time, ws, true, false);
+    v_dnz = this->get_vert_at(nz_cords, time, ws, true, false);
 
-    // second row
-    const double dvy_dx = (vel_dx->y() - orig_vel->y()) / dx;
-    const double dvy_dy = (vel_dy->y() - orig_vel->y()) / dy;
-    const double dvy_dz = (vel_dz->y() - orig_vel->y()) / dz;
+    Vector3d dvx = (*v_dpx->vels[time]) - (*v_dnx->vels[time]);
+    Vector3d dvy = (*v_dpy->vels[time]) - (*v_dny->vels[time]);
+    Vector3d dvz = (*v_dpz->vels[time]) - (*v_dnz->vels[time]);
 
-    // third row
-    const double dvz_dx = (vel_dx->z() - orig_vel->z()) / dx;
-    const double dvz_dy = (vel_dy->z() - orig_vel->z()) / dy;
-    const double dvz_dz = (vel_dz->z() - orig_vel->z()) / dz;
+    dvx = dvx / twoH;
 
-    m << dvx_dx, dvx_dy, dvx_dz,
-            dvy_dx, dvy_dy, dvy_dz,
-            dvz_dx, dvz_dy, dvz_dz;
+    dvy = dvy / twoH;
 
-    delete v_dx;
-    delete v_dy;
-    delete v_dz;
+    dvz = dvz / twoH;
 
-//    double x0, x1, x2, x3,  y0, y1, y2, y3,  z0, z1, z2, z3;
-//    x0 = this->verts[0]->vels[time]->x();
-//    x1 = this->verts[1]->vels[time]->x();
-//    x2 = this->verts[2]->vels[time]->x();
-//    x3 = this->verts[3]->vels[time]->x();
+    m << dvx.x(), dvx.y(), dvx.z(),
+            dvy.x(), dvy.y(), dvy.z(),
+            dvz.x(), dvz.y(), dvz.z();
 
-//    y0 = this->verts[0]->vels[time]->y();
-//    y1 = this->verts[1]->vels[time]->y();
-//    y2 = this->verts[2]->vels[time]->y();
-//    y3 = this->verts[3]->vels[time]->y();
-
-//    z0 = this->verts[0]->vels[time]->z();
-//    z1 = this->verts[1]->vels[time]->z();
-//    z2 = this->verts[2]->vels[time]->z();
-//    z3 = this->verts[3]->vels[time]->z();
-
-//    m << x1-x0, x2-x0, x3-x0,
-//            y1-y0, y2-y0, y3-y0,
-//            z1-z0, z2-z0, z3-z0;
+    delete v_dpx;
+    delete v_dpy;
+    delete v_dpz;
+    delete v_dnx;
+    delete v_dny;
+    delete v_dnz;
 
     return m;
 }

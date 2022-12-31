@@ -3,9 +3,9 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <iostream>
+#include <queue>
 #include "Analysis/singularity.h"
 
-inline bool is_in(const vector<Vertex*>& fixed_pts, const Vector3d& cords);
 
 void capture_critical_pts(Mesh* mesh){
     if(mesh == NULL) return;
@@ -35,7 +35,7 @@ void Mesh::detect_fixed_pts()
             Tet* tet = candidates[i];
             vector<Vertex*> fixed_pts;
 
-            find_fixed_pt_location(tet, cur_time, 0, fixed_pts);
+            UI d = find_fixed_pt_location(tet, cur_time, fixed_pts);
 
             for(Vertex* fixed_pt : fixed_pts){
                 // calculate the jacobian matrix
@@ -44,7 +44,6 @@ void Mesh::detect_fixed_pts()
                 sing->classify_this();
                 sing->cords = fixed_pt->cords;
                 sing->in_which_tet = tets[tet->idx];
-
                 qDebug() << sing->get_type();
                 this->singularities_for_all_t[cur_time].push_back( sing );
             }
@@ -71,13 +70,13 @@ bool Mesh::is_candidate_tet(Tet* tet, const double time) const
     for(const Vertex* vert : tet->verts){
         Vector3d* vel = vert->vels.at(time);
         if(vel->x() >= 0) pos_x = true;
-        if(vel->x() <=0) neg_x = true;
+        if(vel->x() <= 0) neg_x = true;
 
         if(vel->y() >= 0) pos_y = true;
-        if(vel->y() <=0) neg_y = true;
+        if(vel->y() <= 0) neg_y = true;
 
         if(vel->z() >= 0) pos_z = true;
-        if(vel->z() <=0) neg_z = true;
+        if(vel->z() <= 0) neg_z = true;
     }
 
     return pos_x && neg_x && pos_y && neg_y && pos_z && neg_z;
@@ -110,67 +109,53 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
 }
 
 
-// check if vertex to see if anyone has velocity of 0
+// check if vertex to see if anyone has a velocity of 0
 // if not, we recursively subdivide each tet into 8 new tetrahedrons
 // stop once we found a fixed point
-// return the depth for finding that point
 UI Mesh::find_fixed_pt_location(
-        Tet *tet, const double time, UI cur_depth,
+        Tet *tet, const double time,
         vector<Vertex*>& fixed_pts) const
 {
-    // base case
-    if(cur_depth > max_num_recursion) return 0;
+    UI max_times = pow(8, max_num_recursion);
+    UI cur_times = 0;
+    std::queue<Tet*> candidates;
+    candidates.push(tet);
+    vector<Vertex*> temp_verts; vector<Edge*> temp_edges;
 
-    // check if any of the vertex of the tetrahedron is the critical point
-    for(unsigned int i = 0; i < 4; i++){
-        Vertex* v = tet->verts[i];
-        if( !(abs(v->vels[time]->x()) <= zero_threshold &&
-            abs(v->vels[time]->y()) <= zero_threshold &&
-            abs(v->vels[time]->z()) <= zero_threshold)) continue;
+    while(candidates.size() != 0){
+        if(cur_times >= max_times) break;
 
-        if( is_in(fixed_pts, v->cords) ) continue;
-         // copy vertex to be returned
-        Vertex* new_vert = new Vertex(v->cords);
-        new_vert->vels[time] = new Vector3d( v->vels[time] );
-        fixed_pts.push_back(new_vert);
-        return cur_depth;
-    }
-
-    // if 4 vertices don't match, we need to subdivide the current tetrahedron into smaller ones (8)
-    vector<Vertex*> temp_verts; vector<Edge*> temp_edges; vector<Tet*> temp_tets;
-    tet->subdivide(time, temp_verts, temp_edges, temp_tets);
-
-    UI max = cur_depth;
-    for(Tet* tet : temp_tets){
+        Tet* tet = candidates.front();
+        candidates.pop();
         if(!is_candidate_tet(tet, time)) continue;
+        cur_times ++;
 
-        UI size = fixed_pts.size();
-        UI dep = find_fixed_pt_location(tet, time, cur_depth+1, fixed_pts);
-        if(dep > max) max = dep;
+        // check if any of the vertex of the tetrahedron is the critical point
+        for(unsigned int i = 0; i < 4; i++){
+            Vertex* v = tet->verts[i];
+            if( length(v->vels[time]) > zero_threshold ) continue;
+             // copy vertex to be returned
+            Vertex* new_vert = new Vertex(v->cords);
+            new_vert->vels[time] = new Vector3d( v->vels[time] );
+            fixed_pts.push_back(new_vert);
 
-        if(fixed_pts.size() != size) return max; // stop tracing when find fixed_pt
+            Utility::clear_mem(temp_verts);
+            Utility::clear_mem(temp_edges);
+            return cur_times;
+        }
+
+        // if 4 vertices don't match, we need to subdivide the current tetrahedron into smaller ones (8)
+        vector<Tet*> temp_tets;
+        tet->subdivide(time, temp_verts, temp_edges, temp_tets);
+        for(Tet* tet2 : temp_tets){
+            if(!is_candidate_tet(tet2, time)) continue;
+            candidates.push(tet2);
+        }
     }
 
-
+    // ran out of recusion depth
     Utility::clear_mem(temp_verts);
     Utility::clear_mem(temp_edges);
-    Utility::clear_mem(temp_tets);
-
-    return 0;
+    return cur_times;
 }
 
-inline bool is_in(const vector<Vertex*>& fixed_pts, const Vector3d& cords)
-{
-    const double threshold = 1e-10;
-    for(Vertex* v : fixed_pts){
-
-        Vector3d v_cords_min = v->cords - threshold;
-        Vector3d v_cords_max = v->cords + threshold;
-        if(cords == v->cords) return true;
-        if(cords.x() >= v_cords_min.x() && cords.x() <= v_cords_max.x() &&
-            cords.y() >= v_cords_min.y() && cords.y() <= v_cords_max.y() &&
-            cords.z() >= v_cords_min.z() && cords.z() <= v_cords_max.z() )
-            return true;
-    }
-    return false;
-}

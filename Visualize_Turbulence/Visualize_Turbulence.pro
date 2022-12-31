@@ -9,6 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Analysis/ECG.cpp \
     Analysis/singularity.cpp \
     FileLoader/ReadFile.cpp \
     Geometry/Edge.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
     openglwindow.cpp
 
 HEADERS += \
+    Analysis/ECG.h \
     Analysis/singularity.h \
     Eigen/Cholesky \
     Eigen/CholmodSupport \

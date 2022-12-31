@@ -165,10 +165,10 @@ void openGLWindow::paintGL()
 //    new_tet->verts[2]->cords = Vector3d(-1,1,-1);
 //    new_tet->verts[3]->cords = Vector3d(-1,-1,1);
 
-//    new_tet->verts[0]->vels[0] = new Vector3d(-1,-1,-1);
-//    new_tet->verts[1]->vels[0] = new Vector3d(-1,1,1);
-//    new_tet->verts[2]->vels[0] = new Vector3d(1,-1,1);
-//    new_tet->verts[3]->vels[0] = new Vector3d(1,1,-1);
+//    new_tet->verts[0]->vels[0] = new Vector3d(-new_tet->verts[0]->cords.y(), -new_tet->verts[0]->cords.z(), new_tet->verts[0]->cords.x());
+//    new_tet->verts[1]->vels[0] = new Vector3d(-new_tet->verts[1]->cords.y(), -new_tet->verts[1]->cords.z(), new_tet->verts[1]->cords.x());
+//    new_tet->verts[2]->vels[0] = new Vector3d(-new_tet->verts[2]->cords.y(), -new_tet->verts[2]->cords.z(), new_tet->verts[2]->cords.x());
+//    new_tet->verts[3]->vels[0] = new Vector3d(-new_tet->verts[3]->cords.y(), -new_tet->verts[3]->cords.z(), new_tet->verts[3]->cords.x());
 
 
 //    vector<Vertex*> fixed_pts;
@@ -258,34 +258,10 @@ void openGLWindow::main_routine(Mesh * mesh) const
         draw_isosurfaces(isosurface, min, max);
     }
 
-    //    if(show_pathlines){
-    //    }
 
     if(show_critical_pts){
         draw_singularities(mesh->singularities_for_all_t.at(this->model_time));
     }
-
-//    for(Tet* tet:mesh->tets){
-//        if(!tet->marked) continue;
-//        glColor3f(1, 0, 0);
-//        glBegin(GL_TRIANGLES);
-//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
-//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
-//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
-
-//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
-//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
-//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
-
-//            glVertex3f(tet->verts[0]->x(), tet->verts[0]->y(), tet->verts[0]->z());
-//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
-//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
-
-//            glVertex3f(tet->verts[1]->x(), tet->verts[1]->y(), tet->verts[1]->z());
-//            glVertex3f(tet->verts[2]->x(), tet->verts[2]->y(), tet->verts[2]->z());
-//            glVertex3f(tet->verts[3]->x(), tet->verts[3]->y(), tet->verts[3]->z());
-//        glEnd();
-//    }
 
     if(show_boundary_wireframe)
         draw_wireframe(mesh->boundary_tris);
