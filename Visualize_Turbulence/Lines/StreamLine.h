@@ -18,7 +18,8 @@ public:
     vector<Vertex*> bw_verts; // first vertex is connected to the seed
 
     StreamLine();
-    StreamLine(vector<Vertex*> vs, const double& t);
+    StreamLine(Vertex* seed);
+    StreamLine(Vertex *seed, double time);
     ~StreamLine();
 
     inline void set_seed(Vertex* seed);

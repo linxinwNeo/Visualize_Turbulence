@@ -401,6 +401,7 @@ void Mesh::interpolate_vertices()
 // prev_tet is the tet that contains the previous vertex. we should find the tet of target by using the neighbors
 // of the start_tet.
 // ds contains barycentric coordinate of this pt in that tet if found
+// may return a NULL
 Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const
 {
     const UI max_iterations = 100;

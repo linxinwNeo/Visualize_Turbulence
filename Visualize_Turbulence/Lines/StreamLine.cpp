@@ -4,6 +4,21 @@
 StreamLine::StreamLine()
 {
     this->time = 0.;
+    this->seed = NULL;
+}
+
+// set the seed
+StreamLine::StreamLine(Vertex *seed)
+{
+    this->time = 0.;
+    this->set_seed(seed);
+}
+
+// set the seed and time
+StreamLine::StreamLine(Vertex *seed, double time)
+{
+    this->time = time;
+    this->set_seed(seed);
 }
 
 

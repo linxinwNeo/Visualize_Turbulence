@@ -104,7 +104,7 @@ bool Tet::has_boundary_tri() const
 
 // assume v is inside this tet
 // Using barycentric interpolation scheme, calculate the new Vertex at pt's position
-// weights are calculated already
+// if cal_ws is true, then we calculate the weights
 Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws, bool add_this_tet)
 {
     // only calculate ws if cal_ws is set to true
