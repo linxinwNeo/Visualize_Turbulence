@@ -4,19 +4,6 @@
 #include <QMainWindow>
 #include <QKeyEvent>
 
-#include "Geometry/Mesh.h"
-#include "Lines/PathLine.h"
-#include "Lines/StreamLine.h"
-
-extern vector<Mesh*> meshes;
-extern vector<PathLine*> pathlines;
-extern unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
-extern const QString meshFilePath, dataFilePath;
-extern const unsigned int NUM_SEEDS;
-extern const unsigned int max_num_steps;
-extern const double time_step_size;
-extern const double dist_scale;
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -28,6 +15,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    QTimer* timer;
+    double total_time;
+    double model_time;
 
     void keyPressEvent(QKeyEvent *event) override;
 

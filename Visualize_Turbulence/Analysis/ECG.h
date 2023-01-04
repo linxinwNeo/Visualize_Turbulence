@@ -65,9 +65,9 @@ public:
 
 
 class ECG
-{
-public:
-    double t;
+{  
+    // we dont allow direct access to nodes, edges and sings
+private:
     // ECG nodes and singulairties are having 1-1 correspondance (nodes[0] is corresponding to sings[0])
     // using both set and vector
     set<ECG_NODE*> nodes_set;
@@ -77,6 +77,8 @@ public:
     vector<ECG_EDGE*> edges;
     vector<Singularity*> sings;
 
+public:
+    double t;
     vector<StreamLine*> sls;
 
     ECG(const double t);
@@ -86,6 +88,8 @@ public:
     UL num_edges() const ;
     UL num_sings() const;
     UL num_sls() const;
+
+    vector<Singularity*> get_sings();
 
     void add_sing(Singularity* );
     void add_node(ECG_NODE* );
@@ -99,6 +103,7 @@ public:
 
     ECG_NODE* is_close_to_node(const Vector3d& cords) const;
 };
+void build_ECGs(vector<Mesh*> meshes);
 
 inline UL ECG::num_nodes() const
 {
@@ -118,6 +123,11 @@ inline UL ECG::num_edges() const
 inline unsigned long ECG::num_sls() const
 {
     return this->sls.size();
+}
+
+inline vector<Singularity *> ECG::get_sings()
+{
+    return this->sings;
 }
 
 inline UL ECG_NODE::num_edges() const

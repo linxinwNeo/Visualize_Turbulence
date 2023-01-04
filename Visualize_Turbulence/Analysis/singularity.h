@@ -114,7 +114,7 @@ inline void Singularity::classify_this()
 {
     Eigen::EigenSolver<Eigen::Matrix3d> ces(this->Jacobian);
     if (ces.info() != Eigen::Success) {
-        qDebug() << "fail";
+        qDebug() << "Singularity::classify_this: eigensolve fails";
     }
 
     const Eigen::Matrix<complex<double>, 3, 1> eigenvalues = ces.eigenvalues();
@@ -122,11 +122,11 @@ inline void Singularity::classify_this()
     const complex<double> eigenvalue1 = eigenvalues(0, 0);
     const complex<double> eigenvalue2 = eigenvalues(1, 0);
     const complex<double> eigenvalue3 = eigenvalues(2, 0);
-    cout<< this->Jacobian <<endl;
+//    cout<< this->Jacobian <<endl;
     vector<double> realEigenValues = {eigenvalue1.real(), eigenvalue2.real(), eigenvalue3.real()};
     vector<double> imagEigenValues = {eigenvalue1.imag(), eigenvalue2.imag(), eigenvalue3.imag()};
     sort_asecding(realEigenValues, imagEigenValues);
-    cout << eigenvalues <<endl;
+//    cout << eigenvalues <<endl;
 
     unsigned short value = is_Node(imagEigenValues);
     // check if it is a source, repelling saddle, attracting saddle or sink

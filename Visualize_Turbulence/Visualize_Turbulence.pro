@@ -22,6 +22,7 @@ SOURCES += \
     Others/ColorTable.cpp \
     Others/TraceBall.cpp \
     Surfaces/Isosurface.cpp \
+    ecgwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     openglwindow.cpp
@@ -384,6 +385,7 @@ HEADERS += \
     Others/Vector2d.h \
     Others/Vector3d.h \
     Surfaces/Isosurface.h \
+    ecgwindow.h \
     mainwindow.h \
     openglwindow.h
 

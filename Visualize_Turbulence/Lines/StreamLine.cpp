@@ -47,9 +47,9 @@ void tracing_streamlines()
 {
     for(unsigned int i = 0; i < meshes.size(); i++){
         auto& mesh = meshes[i];
-        qDebug()<< "Tracing streamlines for mesh"<< i+1;
+        qDebug()<< "Tracing streamlines for mesh"<< i;
         // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
-        mesh->interpolate_vertices();
+        mesh->interpolate_vertices_for_all_t();
 
         // trace seeds and form pathlines
         // mainwindow.cpp will clear the memory of pathlines and streamlines
@@ -60,10 +60,10 @@ void tracing_streamlines()
         }
 
         if(tracing_streamlines_from_critical_pts){
-            place_critical_pts_as_seeds(mesh);
+            place_sings_as_seeds(mesh);
             build_streamlines_from_seeds(mesh);
         }
-
+        qDebug()<< "Tracing streamlines for mesh"<< i << "done";
     }
 
 }
@@ -172,14 +172,16 @@ inline void place_seeds(Mesh* mesh)
 }
 
 
-inline void place_critical_pts_as_seeds(Mesh* mesh)
+inline void place_sings_as_seeds(Mesh* mesh)
 {
     // for each time step, place streamline
     double time = 0.;
     while(time < mesh->num_time_steps - 1.)
     {
-        if(mesh->singularities_for_all_t.find(time) == mesh->singularities_for_all_t.end()) continue;
-        const UI num_sing = mesh->singularities_for_all_t[time].size();
+        if(mesh->ECG_for_all_t.find(time) == mesh->ECG_for_all_t.end()) continue;
+
+        vector<Singularity*> sings = mesh->ECG_for_all_t.at(time)->get_sings();
+        const UI num_sing = sings.size();
         mesh->streamlines_for_all_t.reserve( num_sing * frames_per_sec);
         vector<StreamLine*> sls; // create a vector of streamlines to store seeds
         sls.reserve(num_sing); // we have num_seeds streamlines for each time step
@@ -193,7 +195,7 @@ inline void place_critical_pts_as_seeds(Mesh* mesh)
             SL->bw_verts.reserve(max_num_steps);
             SL->time = (double) time;
 
-            Singularity* sing = mesh->singularities_for_all_t[time][sing_idx];
+            Singularity* sing = sings[sing_idx];
             Tet* tet = sing->in_which_tet;
             double ws[4];
             Vertex* vert = tet->get_vert_at(sing->cords, (double)time, ws, true);

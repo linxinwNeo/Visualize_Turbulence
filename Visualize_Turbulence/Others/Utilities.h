@@ -41,7 +41,7 @@ extern bool show_isosurfaces;
 extern bool show_boundary_wireframe;
 extern bool show_opage_boundary_tris;
 extern bool show_axis;
-extern bool show_critical_pts;
+extern bool build_ECG;
 extern bool tracing_streamlines_from_seed;
 extern bool tracing_streamlines_from_critical_pts;
 

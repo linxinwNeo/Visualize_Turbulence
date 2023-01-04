@@ -14,7 +14,6 @@
 #include "Others/Predefined.h"
 #include "Others/Vector3d.h"
 #include "Surfaces/Isosurface.h"
-#include "Analysis/singularity.h"
 
 using namespace std;
 
@@ -70,18 +69,16 @@ public:
     void build_ECG_for_all_t();
 
     // numerical procedures
-    void interpolate_vertices();
+    void interpolate_vertices_for_all_t();
     Tet* inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const;
 
     // singularity detection
-    void detect_fixed_pts();
+    unordered_map< double, vector<Singularity*> > detect_sings();
     bool is_candidate_tet(Tet* tet, const double time) const;
     vector<Tet*> build_candidate_tets( const double time ) const;
     UI find_fixed_pt_location(  Tet *tet, const double time,
                                                         vector<Vertex*>& fixed_pts) const;
 };
-void capture_critical_pts(Mesh* mesh);
-void capture_critical_pts(vector<Mesh*> meshes);
 
 inline unsigned long Mesh::num_verts() const
 {

@@ -30,7 +30,7 @@ void construct_isosurfaces()
         qDebug()<< "Constructing isosurface for mesh"<< i+1;
 
         // interpolate vertices at all t=n*0.1 and 0<t<num_time_steps
-        mesh->interpolate_vertices();
+        mesh->interpolate_vertices_for_all_t();
 
         // calculate actual surface level using surface_level_ratio
         calc_actual_surface_levels_for_all_t(mesh);

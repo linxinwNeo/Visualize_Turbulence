@@ -86,7 +86,7 @@ ECG::~ECG()
 void ECG::add_sing(Singularity * sing)
 {
     // check if singularity exists in sings already
-    if(this->sings_set.find(sing) == this->sings_set.end()) return;
+    if(this->sings_set.find(sing) != this->sings_set.end()) return;
     this->sings_set.insert(sing);
     this->sings.push_back(sing);
 }
@@ -94,7 +94,7 @@ void ECG::add_sing(Singularity * sing)
 void ECG::add_node(ECG_NODE * node)
 {
     // check if node exists in nodes already
-    if(this->nodes_set.find(node) == this->nodes_set.end()) return;
+    if(this->nodes_set.find(node) != this->nodes_set.end()) return;
     this->nodes_set.insert(node);
     this->nodes.push_back(node);
 }
@@ -102,7 +102,7 @@ void ECG::add_node(ECG_NODE * node)
 void ECG::add_edge(ECG_EDGE * ecg_e)
 {
     // check if edge exists in edges already
-    if(this->edges_set.find(ecg_e) == this->edges_set.end()) return;
+    if(this->edges_set.find(ecg_e) != this->edges_set.end()) return;
     this->edges_set.insert(ecg_e);
     this->edges.push_back(ecg_e);
 }
@@ -187,7 +187,7 @@ void ECG::build_ECG_NODES()
 
 // call this after ECG_NODES are built
 // given the streamline seeds, we trace them,
-// at any time, if we see a streamline is really close to another singulairty while tracing
+// at any time, if we see a streamline is really close to another singulairty while tracing,
 // we constrcuct an directed edge between two ECG nodes and stop tracing
 void ECG::build_ECG_EDGES(Mesh *mesh, vector< vector<StreamLine *> > sls_for_all_sings)
 {
@@ -288,4 +288,14 @@ ECG_NODE *ECG::is_close_to_node(const Vector3d &cords) const
         }
     }
     return nullptr;
+}
+
+void build_ECGs(vector<Mesh *> meshes)
+{
+    for(UI i = 0; i < meshes.size(); i++){
+        Mesh* mesh = meshes[i];
+        qDebug() << "Building ECG for mesh" << i;
+        mesh->build_ECG_for_all_t();
+        qDebug() << "Building ECG for mesh" << i << "done";
+    }
 }

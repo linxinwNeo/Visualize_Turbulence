@@ -65,15 +65,15 @@ bool show_isosurfaces = false;
 bool show_boundary_wireframe = false;
 bool show_axis = true;
 bool show_opage_boundary_tris = true;
-bool show_critical_pts = true;
+bool build_ECG = true;
 
-const unsigned int NUM_SEEDS = 100;
-const unsigned int max_num_steps = 400;
+const UI NUM_SEEDS = 100;
+const UI max_num_steps = 400;
 const double dist_step_size = 0.003;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const unsigned int max_num_recursion = 4;
+const UI max_num_recursion = 4;
 const double zero_threshold = 1e-17;
 
 // surface_level is defined to be the voriticity
@@ -120,17 +120,15 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-    meshes[0]->num_time_steps =10;
+    meshes[0]->num_time_steps = 5;
     //replace_velocity();
 
     // constucting the data for rendering
     if(show_isosurfaces)
         construct_isosurfaces();
 
-    if(show_critical_pts)
-        capture_critical_pts(meshes);
-
-
+    if(build_ECG)
+        build_ECGs(meshes);
 
     if(show_streamlines)
         tracing_streamlines();

@@ -9,7 +9,6 @@
 #include "Others/Utilities.h"
 #include "Others/Draw.h"
 #include "Geometry/Mesh.h"
-#include "Analysis/singularity.h"
 
 openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -229,7 +228,7 @@ void openGLWindow::paintGL()
 //        glPopMatrix();
 //    }
 
-
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix(); // pop 1st modelView matrix
 
     glMatrixMode(GL_PROJECTION);
@@ -259,8 +258,8 @@ void openGLWindow::main_routine(Mesh * mesh) const
     }
 
 
-    if(show_critical_pts){
-        draw_singularities(mesh->singularities_for_all_t.at(this->model_time));
+    if(build_ECG){
+        draw_singularities(mesh->ECG_for_all_t.at(this->model_time)->get_sings());
     }
 
     if(show_boundary_wireframe)

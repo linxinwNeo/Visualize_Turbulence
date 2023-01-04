@@ -15,6 +15,9 @@ class openGLWindow : public QOpenGLWidget, public QOpenGLFunctions
     Q_OBJECT
 
 public:
+    openGLWindow(QWidget *parent);
+    ~openGLWindow();
+
     // variables
     double s_old;
     double t_old;
@@ -36,10 +39,6 @@ public:
     Vector3d rot_center;
     Mesh* cur_mesh;
 
-
-    // functions
-    openGLWindow(QWidget *parent);
-    ~openGLWindow();
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -47,6 +46,7 @@ protected:
     //void	resizeGL(int w, int h) override;
 
 public:
+    void update_scene();
     void set_scene() const;
     void reset_scene();
     void switch_cur_mesh(Mesh* mesh);
@@ -73,6 +73,11 @@ private:
 private slots:
     void increment_time();
 };
+
+inline void openGLWindow::update_scene()
+{
+    this->update();
+}
 
 
 #endif // OPENGLWINDOW_H

@@ -377,31 +377,46 @@ void Mesh::calc_center_for_all_tet()
 // filling mesh->ECG_for_all_t
 void Mesh::build_ECG_for_all_t()
 {
-    double i = 0.;
-    while( i < this->num_time_steps - 1. )
-    {
-        ECG* ecg = new ECG();
+    // calculate singularities for all times
+    this->interpolate_vertices_for_all_t();
+    unordered_map< double, vector<Singularity*> > map = this->detect_sings();
 
-        i += time_step_size;
+    double t = 0.;
+    while( t < this->num_time_steps - 1. )
+    {
+        ECG* ecg = new ECG(t);
+        // insert singularities for ecg at time t
+        vector<Singularity*> sings = map[t];
+       qDebug() <<  sings.size() << "singularity size";
+        for(Singularity* sing : sings){
+            ecg->add_sing(sing); // add singularity one by one
+        }
+
+        ecg->build_ECG_NODES();
+        auto seeds = ecg->placing_random_seeds(this, NUM_SEEDS);
+        ecg->build_ECG_EDGES(this, seeds);
+        this->ECG_for_all_t[t] = ecg;
+
+        t += time_step_size;
     }
 }
 
 
-void Mesh::interpolate_vertices()
+void Mesh::interpolate_vertices_for_all_t()
 {
-    double i = 0.;
-    while( i < this->num_time_steps - 1. )
+    double t = 0.;
+    while( t < this->num_time_steps - 1. )
     {
         for(Vertex* vert : this->verts){
 
-            vert->linear_interpolate_vel(i);
+            vert->linear_interpolate_vel(t);
 
-            vert->linear_interpolate_vor(i);
+            vert->linear_interpolate_vor(t);
 
-            vert->linear_interpolate_mu(i);
+            vert->linear_interpolate_mu(t);
         }
 
-        i += time_step_size;
+        t += time_step_size;
     }
 }
 

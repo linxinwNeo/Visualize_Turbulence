@@ -47,6 +47,7 @@ public:
     bool has_edge(const Vertex*, const Vertex*) const;
     bool has_boundary_tri() const;
 
+
     Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws = true, bool add_this_tet = true);
     double volume() const;
     Vector3d centroid() const;

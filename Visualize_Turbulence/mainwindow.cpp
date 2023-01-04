@@ -27,7 +27,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             this->close(); break;
         case Qt::Key_R:
             // reset the scene
-            this->ui->openGLWidget->reset_scene();
+            this->ui->modelWindow->reset_scene();
         default:
             return;
      }

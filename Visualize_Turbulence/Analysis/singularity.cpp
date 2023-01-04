@@ -1,41 +1,27 @@
 #include "Geometry/Mesh.h"
 #include "Others/Utilities.h"
+#include "Analysis/singularity.h"
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <iostream>
 #include <queue>
-#include "Analysis/singularity.h"
 
 
-void capture_critical_pts(Mesh* mesh){
-    if(mesh == NULL) return;
-    mesh->detect_fixed_pts();
-}
-
-
-void capture_critical_pts(vector<Mesh*> meshes){
-    for(UI i = 0; i < meshes.size(); i++){
-        Mesh* mesh = meshes[i];
-        qDebug() << "Capturing critical pts for mesh" << i+1;
-        mesh->interpolate_vertices();
-        capture_critical_pts(mesh);
-    }
-}
-
-
-void Mesh::detect_fixed_pts()
+unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
 {
+    unordered_map< double, vector<Singularity*> > sings_for_all_t;
+
     double cur_time = 0;
     while( cur_time < this->num_time_steps - 1. ){
         vector<Tet*> candidates = this->build_candidate_tets(cur_time);
         vector<Singularity*>temp;
-        this->singularities_for_all_t[cur_time] = temp;
-        qDebug() << "time" << cur_time << "num of candidates" << candidates.size();
+        sings_for_all_t[cur_time] = temp;
+//        qDebug() << "time" << cur_time << "num of candidates" << candidates.size();
         for(UI i = 0; i < candidates.size(); i++){
             Tet* tet = candidates[i];
             vector<Vertex*> fixed_pts;
 
-            UI d = find_fixed_pt_location(tet, cur_time, fixed_pts);
+            find_fixed_pt_location(tet, cur_time, fixed_pts);
 
             for(Vertex* fixed_pt : fixed_pts){
                 // calculate the jacobian matrix
@@ -44,8 +30,8 @@ void Mesh::detect_fixed_pts()
                 sing->classify_this();
                 sing->cords = fixed_pt->cords;
                 sing->in_which_tet = tets[tet->idx];
-                qDebug() << sing->get_type();
-                this->singularities_for_all_t[cur_time].push_back( sing );
+//                qDebug() << sing->get_type();
+                sings_for_all_t[cur_time].push_back( sing );
             }
 
             Utility::clear_mem(tet->verts);
@@ -54,10 +40,11 @@ void Mesh::detect_fixed_pts()
             delete tet;
         }
 
-        if(this->singularities_for_all_t[cur_time].size() != 0)
-            qDebug() << "num of fixed pts for time" << cur_time << "is" << this->singularities_for_all_t[cur_time].size();
+//        if(sings_for_all_t[cur_time].size() != 0) qDebug() << "num of singularity for time" << cur_time << "is" << sings_for_all_t[cur_time].size();
         cur_time += time_step_size;
     }
+
+    return sings_for_all_t;
 }
 
 
@@ -109,7 +96,7 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
 }
 
 
-// check if vertex to see if anyone has a velocity of 0
+// check the vertex to see if anyone has a velocity of 0
 // if not, we recursively subdivide each tet into 8 new tetrahedrons
 // stop once we found a fixed point
 UI Mesh::find_fixed_pt_location(
