@@ -1,5 +1,6 @@
 #include "Geometry/Mesh.h"
 #include "Others/Utilities.h"
+#include "Analysis/singularity.h"
 #include <set>
 #include <float.h>
 
@@ -15,8 +16,9 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
-    // free memories of each vector
-    unsigned long i, j;
+    UL i, j;
+
+    // clear vertices
     for( i=0; i<this->num_verts(); i++ ){
         if( this->verts[i] != NULL ){
             delete this->verts[i];
@@ -25,6 +27,7 @@ Mesh::~Mesh()
     }
 
 
+    // clear edges
     for( i=0; i<this->num_edges(); i++ ){
         if( this->edges[i] != NULL ){
             delete this->edges[i];
@@ -32,7 +35,7 @@ Mesh::~Mesh()
         }
     }
 
-
+    // clear tris
     for( i=0; i<this->num_tris(); i++ ){
         if( this->tris[i] != NULL ){
             delete this->tris[i];
@@ -41,6 +44,7 @@ Mesh::~Mesh()
     }
 
 
+    // clear tets
     for( i=0; i<this->num_tets(); i++ ){
         if( this->tets[i] != NULL ){
             delete this->tets[i];
@@ -48,19 +52,11 @@ Mesh::~Mesh()
         }
     }
 
-    // clear memoery for streamlines
-    for( auto& slsPair : streamlines_for_all_t ){
-        auto& sls = slsPair.second;
-        for( j = 0; j < sls.size(); j++ ){
-            StreamLine* sl = sls[j];
-            if(sl != NULL){
-                delete sl;
-            }
-            sls[j] = NULL;
-        }
-        sls.clear();
+    // clear memoery used by ECGs
+    for(auto& pair: this->ECG_for_all_t){
+        ECG* ecg = pair.second;
+        delete ecg;
     }
-    streamlines_for_all_t.clear();
 
 
     // clear isosurfaces
@@ -69,15 +65,13 @@ Mesh::~Mesh()
         delete isosurf;
     }
 
-    // clear singularities
-    for(auto& pair : singularities_for_all_t){
-        vector<Singularity*> singularities = pair.second;
-        for(auto& sing : singularities){
-            delete sing;
+    // clear streamlines
+    for(auto& pair : streamlines_for_all_t){
+        vector<StreamLine*> sls = pair.second;
+        for(StreamLine* sl : sls){
+            delete sl;
         }
-        singularities.clear();
     }
-    singularities_for_all_t.clear();
 
     this->verts.clear();
     this->edges.clear();
@@ -85,6 +79,8 @@ Mesh::~Mesh()
     this->tets.clear();
     this->boundary_tris.clear();
     this->min_max_at_verts_for_all_t.clear();
+    this->ECG_for_all_t.clear();
+    this->streamlines_for_all_t.clear();
 }
 
 
@@ -374,6 +370,19 @@ void Mesh::calc_center_for_all_tet()
 {
     for(Tet* tet:tets){
         tet->center = tet->centroid();
+    }
+}
+
+
+// filling mesh->ECG_for_all_t
+void Mesh::build_ECG_for_all_t()
+{
+    double i = 0.;
+    while( i < this->num_time_steps - 1. )
+    {
+        ECG* ecg = new ECG();
+
+        i += time_step_size;
     }
 }
 

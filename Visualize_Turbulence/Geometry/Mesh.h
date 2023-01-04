@@ -5,6 +5,7 @@
 #include <QString>
 #include <QDebug>
 
+#include "Analysis/ECG.h"
 #include "Geometry/Vertex.h"
 #include "Geometry/Edge.h"
 #include "Geometry/Triangle.h"
@@ -31,13 +32,13 @@ public:
     //double radius;
     unsigned int num_time_steps;
 
+    unordered_map<double, ECG*> ECG_for_all_t;
+
     unordered_map<double, pair<double,double>> min_max_at_verts_for_all_t;
 
     // we calculate streamlines for each original time steps, so [0] means the strealines for the first time step
     unordered_map< double, vector<StreamLine*> > streamlines_for_all_t;
     unordered_map< double, Isosurface*> isosurfaces_for_all_t;
-
-    unordered_map<double, vector<Singularity*>> singularities_for_all_t;
 
     // member functions
     Mesh();
@@ -66,6 +67,7 @@ public:
     void calc_normal_for_all_tris();
     void calc_vor_min_max_at_verts_for_all_t();
     void calc_center_for_all_tet();
+    void build_ECG_for_all_t();
 
     // numerical procedures
     void interpolate_vertices();

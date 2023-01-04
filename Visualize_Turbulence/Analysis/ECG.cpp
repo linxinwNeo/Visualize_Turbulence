@@ -1,12 +1,23 @@
 #include "ECG.h"
 #include "Geometry/Mesh.h"
 #include "Geometry/Tet.h"
+#include "Others/Utilities.h"
 #include <set>
 
 ECG_EDGE::ECG_EDGE()
 {
-    this->nodes[0] = this->nodes[1] = NULL;
-    this->sl = NULL;
+    this->nodes[0] = this->nodes[1] = nullptr;
+    this->sl = nullptr;
+}
+
+ECG_EDGE::ECG_EDGE(ECG_NODE *first, ECG_NODE *sec)
+{
+    this->set(first, sec);
+}
+
+ECG_EDGE::ECG_EDGE(ECG_NODE *first, ECG_NODE *sec, StreamLine *sl)
+{
+    this->set(first, sec, sl);
 }
 
 
@@ -14,18 +25,25 @@ ECG_EDGE::ECG_EDGE()
 // ECG will take care of deletion
 ECG_EDGE::~ECG_EDGE()
 {
-    this->nodes[0] = this->nodes[1] = NULL;
-    this->sl = NULL;
+    this->nodes[0] = this->nodes[1] = nullptr;
+    this->sl = nullptr;
 }
 
 void ECG_EDGE::set(ECG_NODE* first, ECG_NODE* sec)
 {
+    if(first == sec || first == nullptr || sec == nullptr){
+        Utility::throwErrorMessage("ECG_EDGE::set: something wrong!");
+    }
     this->nodes[0] = first;
     this->nodes[1] = sec;
 }
 
 void ECG_EDGE::set(ECG_NODE *first, ECG_NODE *sec, StreamLine *sl)
 {
+    if(first == sec || first == nullptr || sec == nullptr || sl == nullptr){
+        Utility::throwErrorMessage("ECG_EDGE::set: something wrong!");
+    }
+
     this->nodes[0] = first;
     this->nodes[1] = sec;
     this->sl = sl;
@@ -40,26 +58,26 @@ ECG::ECG(const double t)
 ECG::~ECG()
 {
     for(Singularity* sing : this->sings){
-        if(sing!=NULL) delete sing;
+        if(sing!=nullptr) delete sing;
     }
     this->sings.clear();
 
 
     for(ECG_NODE* node : this->nodes){
-        if(node != NULL) delete node;
+        if(node != nullptr) delete node;
     }
     this->nodes.clear();
 
 
     for(ECG_EDGE* e : this->edges){
-        if(e!=NULL) delete e;
+        if(e!=nullptr) delete e;
     }
 
     this->edges.clear();
 
 
     for(StreamLine* sl : this->sls){
-        if(sl != NULL) delete sl;
+        if(sl != nullptr) delete sl;
     }
 
     this->sls.clear();
@@ -67,16 +85,25 @@ ECG::~ECG()
 
 void ECG::add_sing(Singularity * sing)
 {
+    // check if singularity exists in sings already
+    if(this->sings_set.find(sing) == this->sings_set.end()) return;
+    this->sings_set.insert(sing);
     this->sings.push_back(sing);
 }
 
 void ECG::add_node(ECG_NODE * node)
 {
+    // check if node exists in nodes already
+    if(this->nodes_set.find(node) == this->nodes_set.end()) return;
+    this->nodes_set.insert(node);
     this->nodes.push_back(node);
 }
 
 void ECG::add_edge(ECG_EDGE * ecg_e)
 {
+    // check if edge exists in edges already
+    if(this->edges_set.find(ecg_e) == this->edges_set.end()) return;
+    this->edges_set.insert(ecg_e);
     this->edges.push_back(ecg_e);
 }
 
@@ -106,10 +133,11 @@ vector<vector<StreamLine*>> ECG::placing_random_seeds(Mesh* mesh, UL num_of_seed
 
     const double dist = 1e-5; // all randomly points are within dist to the singularity
     const double divider = 1./dist;
-    srand((unsigned)time(NULL));
+    srand((unsigned)time(nullptr));
 
     // for each singularity
-    for(Singularity* sing : this->sings){
+    for(ECG_NODE* node : this->nodes){
+        Singularity* sing = node->sing;
         vector<StreamLine*> sls;
         // randomly placing unique num_of_seeds seeds around it
         set<TRIPLE> used; // fake triple in c++
@@ -128,7 +156,7 @@ vector<vector<StreamLine*>> ECG::placing_random_seeds(Mesh* mesh, UL num_of_seed
                 Tet* sing_tet = sing->in_which_tet;
                 double ds[4];
                 Tet* new_cords_tet = mesh->inWhichTet(new_cords, sing_tet, ds); // find the corresponding tet
-                if(new_cords_tet == NULL) continue;
+                if(new_cords_tet == nullptr) continue;
                 // interpolate this coordinate and obtain a vertex
                 Vertex* new_vert = new_cords_tet->get_vert_at(new_cords, t, ds, false, true);
                 // build the new streamline
@@ -150,33 +178,114 @@ vector<vector<StreamLine*>> ECG::placing_random_seeds(Mesh* mesh, UL num_of_seed
 // one singularity is one ECG_NODE
 void ECG::build_ECG_NODES()
 {
-
+    for(Singularity* sing : this->sings){
+        ECG_NODE* node = new ECG_NODE(sing);
+        this->add_node(node);
+    }
 }
 
 
+// call this after ECG_NODES are built
 // given the streamline seeds, we trace them,
-// at any time, if we see a streamline is really close to another singulairty while tracing, we stop stracing and
-// constrcuct an directed edge between two ECG nodes.
-void ECG::build_ECG_EDGES(Mesh *mesh, vector<vector<StreamLine *> > sls_for_all_sings)
+// at any time, if we see a streamline is really close to another singulairty while tracing
+// we constrcuct an directed edge between two ECG nodes and stop tracing
+void ECG::build_ECG_EDGES(Mesh *mesh, vector< vector<StreamLine *> > sls_for_all_sings)
 {
+    for(UL i = 0; i < sls_for_all_sings.size(); i ++){
+        // get the reference to the node and streamlines near it
+        ECG_NODE* node = this->nodes[i];
+        vector<StreamLine*> sls = sls_for_all_sings[i];
 
+        // tracing each streamline for this node
+        for(StreamLine* sl : sls){
+            // while tracing sl, we need to check if the new vertex of the streamline is close to another singularity
+            // forward tracing
+            {
+                const Vertex* vert = sl->seed;
+                Tet* tet = vert->tets[0];
+                for(UI i = 0; i < max_num_steps; i++){
+                    Vector3d cords = vert->cords;
+                    Vector3d newCords = trace_one_dist_step(cords, vert->vels.at(t)); // trace 1 time step
+                    double ds[4]; // saving barycentric coordinates
+                    Tet* newTet = mesh->inWhichTet(newCords, tet, ds); // find the corresponding tet
+                    if(newTet == nullptr) {
+                        break; // newTet is nullptr means we couldn't proceed
+                    }
+                    // interpolate at newCords at time t
+                    Vertex* newVert = newTet->get_vert_at(newCords, t, ds); // interpolate new cords in the tet
+                    if(newVert == nullptr) Utility::throwErrorMessage("ECG::build_ECG_EDGES: newVert is nullptr!");
+
+                    newVert->add_tet(newTet);
+                    sl->fw_verts.push_back(newVert); // new vert into the streamline
+                    vert = newVert; // update vert for the next iteration
+
+                    // check if new Vertex is close to any of the singularity
+                    ECG_NODE* close_to_node = this->is_close_to_node(newVert->cords);
+                    // check if close_to_node exists and check if this node exists in out_nodes
+                    if(close_to_node != nullptr  && node->has_outNode(close_to_node) ){
+                        // the streamline connects node and close_to_node
+                        // we should build an directed edge from node to close_to_node
+                        ECG_EDGE* edge = new ECG_EDGE(node, close_to_node, sl);
+                        node->add_outNode(close_to_node);
+                        node->add_outEdge(edge);
+                        close_to_node->add_outNode(node);
+                        close_to_node->add_inEdge(edge);
+                        break; // stop tracing
+                    }
+                }
+            }
+
+            // backward tracing
+            {
+                Vertex* vert = sl->seed;
+                Tet* tet = vert->tets[0];
+                for(UI i = 0; i < max_num_steps; i++){
+                    Vector3d vel = Vector3d( vert->vels.at(t) ) * (- 1.); // -1 means backward
+                    Vector3d cords = vert->cords;
+                    Vector3d newCords = trace_one_dist_step(cords, vel); // trace 1 time step
+                    double ws[4]; // saving barycentric coordinates
+                    Tet* newTet = mesh->inWhichTet(newCords, tet, ws); // find the corresponding tet
+                    if(newTet == nullptr) {
+                        break; // newTet is nullptr means we couldn't proceed
+                    }
+                    // interpolate at newCords at time t
+                    Vertex* newVert = newTet->get_vert_at(newCords, t, ws); // interpolate new cords in the tet
+                    if(newVert == nullptr) Utility::throwErrorMessage("ECG::build_ECG_EDGES: newVert is nullptr!");
+
+                    newVert->add_tet(newTet);
+                    sl->bw_verts.push_back(newVert); // new vert into the streamline
+                    cords = newCords; // update cords for the next iteration
+                    vert = newVert;
+
+                    // check if new Vertex is close to any of the singularity
+                    ECG_NODE* close_to_node = this->is_close_to_node(newVert->cords);
+                    // check if close_to_node exists and check if this node exists in out_nodes
+                    if(close_to_node != nullptr  && node->has_outNode(close_to_node) ){
+                        // the streamline connects node and close_to_node
+                        // we should build an directed edge from node to close_to_node
+                        ECG_EDGE* edge = new ECG_EDGE(node, close_to_node, sl);
+                        node->add_outNode(close_to_node);
+                        node->add_outEdge(edge);
+                        close_to_node->add_outNode(node);
+                        close_to_node->add_inEdge(edge);
+                        break; // stop tracing
+                    }
+                }
+            }
+        }
+    }
 }
 
 
-
-ECG_NODE::ECG_NODE(Singularity *sing)
+// return the first node if the incoming cords is close to it
+// return nullptr if none of the node in ECG is close to this cord
+ECG_NODE *ECG::is_close_to_node(const Vector3d &cords) const
 {
-    this->node = sing;
-}
-
-
-void ECG_NODE::add_nodes(ECG_NODE *n)
-{
-    this->nodes.push_back(n);
-}
-
-
-void ECG_NODE::add_edges(ECG_EDGE* e)
-{
-    this->edges.push_back(e);
+    for(ECG_NODE* node : this->nodes){
+        const Vector3d& node_cords = node->sing->cords;
+        if(length(cords, node_cords) <= zero_threshold){
+            return node;
+        }
+    }
+    return nullptr;
 }

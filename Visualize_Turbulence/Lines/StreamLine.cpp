@@ -80,23 +80,23 @@ void build_streamlines_from_seeds( Mesh* mesh )
         for( StreamLine* sl : sls ){
             // forward tracing
             {
-                Vertex* seed_vert = sl->seed;
-                Vector3d cords = seed_vert->cords;
-                Tet* tet = seed_vert->tets[0];
+                Vertex* vert = sl->seed;
+                Tet* tet = vert->tets[0];
                 for(UI i = 0; i < max_num_steps; i++){
-                    Vector3d newCords = trace_one_dist_step(cords, seed_vert->vels.at(cur_time)); // trace 1 time step
+                    Vector3d cords = vert->cords;
+                    Vector3d newCords = trace_one_dist_step(cords, vert->vels.at(cur_time)); // trace 1 time step
                     double ds[4]; // saving barycentric coordinates
                     Tet* newTet = mesh->inWhichTet(newCords, tet, ds); // find the corresponding tet
                     if(newTet == NULL) {
                         break; // newTet is null means we couldn't proceed
                     }
-                    // interpolate vertex's vel, vor, mu at time t
+                    // interpolate at newCords at time t
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ds); // interpolate new cords in the tet
                     if(newVert == NULL) Utility::throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
                     sl->fw_verts.push_back(newVert); // new vert into the streamline
                     cords = newCords; // update cords for the next iteration
-                    seed_vert = newVert;
+                    vert = newVert;
                 }
             }
 
@@ -113,7 +113,7 @@ void build_streamlines_from_seeds( Mesh* mesh )
                     if(newTet == NULL) {
                         break; // newTet is null means we couldn't proceed
                     }
-                    // interpolate vertex's vel, vor, mu at time t
+                    // interpolate at newCords at time t
                     Vertex* newVert = newTet->get_vert_at(newCords, cur_time, ws); // interpolate new cords in the tet
                     if(newVert == NULL) Utility::throwErrorMessage("build_pathlines_from_seeds: newVert is NULL!");
                     newVert->add_tet(newTet);
