@@ -18,7 +18,7 @@ public:
 protected:
     void initializeGL() override;
     void paintGL() override;
-    void main_routine() const;
+    void main_routine();
 
 public:
     double s_old;
@@ -27,8 +27,13 @@ public:
     double last_y;
 
     ECG* ecg;
-    void update_scene();
-
+    void redraw();
+    void set_ecg(ECG*);
 };
+
+inline void ECGWindow::set_ecg(ECG * ecg)
+{
+    this->ecg = ecg;
+}
 
 #endif // ECGWINDOW_H

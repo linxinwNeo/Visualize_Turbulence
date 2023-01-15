@@ -379,6 +379,7 @@ void Mesh::build_ECG_for_all_t()
 {
     // calculate singularities for all times
     this->interpolate_vertices_for_all_t();
+
     unordered_map< double, vector<Singularity*> > map = this->detect_sings();
 
     double t = 0.;
@@ -387,13 +388,15 @@ void Mesh::build_ECG_for_all_t()
         ECG* ecg = new ECG(t);
         // insert singularities for ecg at time t
         vector<Singularity*> sings = map[t];
-       qDebug() <<  sings.size() << "singularity size";
+        qDebug() << "singularity size for time " << t <<  ": " <<  sings.size();
         for(Singularity* sing : sings){
             ecg->add_sing(sing); // add singularity one by one
         }
 
+        qDebug() << "Build ECG nodes";
         ecg->build_ECG_NODES();
         auto seeds = ecg->placing_random_seeds(this, NUM_SEEDS);
+        qDebug() << "Build ECG edges";
         ecg->build_ECG_EDGES(this, seeds);
         this->ECG_for_all_t[t] = ecg;
 
@@ -405,6 +408,7 @@ void Mesh::build_ECG_for_all_t()
 void Mesh::interpolate_vertices_for_all_t()
 {
     double t = 0.;
+    qDebug() << "Begin interpolate vertices";
     while( t < this->num_time_steps - 1. )
     {
         for(Vertex* vert : this->verts){
@@ -418,6 +422,7 @@ void Mesh::interpolate_vertices_for_all_t()
 
         t += time_step_size;
     }
+    qDebug() << "Done interpolating vertices";
 }
 
 
@@ -428,42 +433,43 @@ void Mesh::interpolate_vertices_for_all_t()
 // may return a NULL
 Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const
 {
-    const UI max_iterations = 100;
-    UI cur_iteration = 0;
+    set<Tet*> used;
+    Tet* cur_tet = prev_tet;
     // it only breaks if we found the target
-    while(!prev_tet->is_pt_in2(target_pt, ds)){
-        if(cur_iteration > max_iterations){
-            return NULL;
+    while(!cur_tet->is_pt_in2(target_pt, ds)){
+        if(used.find(cur_tet) != used.end()){
+            return nullptr;
         }
+        used.insert(cur_tet);
 
         unsigned int min_idx; double min_val;
         Utility::array_min(ds, 4, min_idx, min_val);
         if(min_val > 0){ // the pt is in prev_tet
-            return prev_tet;
+            return cur_tet;
         }
         // the pt is not in prev_tet
         // we should move to the neighbor whose barycentric coordinate is smallest.
-        Vertex* min_vert = prev_tet->verts[min_idx];
+        Vertex* min_vert = cur_tet->verts[min_idx];
         Triangle* exit_tri = NULL;
-        for(unsigned int i = 0; i<prev_tet->num_tris(); i++ ){
+        for(unsigned int i = 0; i<cur_tet->num_tris(); i++ ){
             // find the triangle that does not have this min_vert
-            if(!prev_tet->tris[i]->has_vert(min_vert)){
-                exit_tri = prev_tet->tris[i];
+            if(!cur_tet->tris[i]->has_vert(min_vert)){
+                exit_tri = cur_tet->tris[i];
             }
         }
         // if we couldn't find exit_tri or the exit_tri is a dead end, we couldn't proceed
         if(exit_tri == NULL || exit_tri->is_boundary){
-            if(exit_tri == NULL) qDebug() << "exit_tri is null!";
+            if(exit_tri == NULL) qDebug() << "Mesh::inWhichTet: exit_tri is null!";
             return NULL;
         }
         // then we set up the next iteration
         for(int i = 0; i < 2; i++){
-            if(exit_tri->tets[i] != prev_tet){
-                prev_tet = exit_tri->tets[i];
+            if(exit_tri->tets[i] != cur_tet){
+                cur_tet = exit_tri->tets[i];
                 break;
             }
         }
-        cur_iteration++;
+
     }
-    return prev_tet;
+    return cur_tet;
 }

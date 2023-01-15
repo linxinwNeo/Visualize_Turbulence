@@ -24,9 +24,7 @@ public:
     double last_x;
     double last_y;
 
-    QTimer* timer;
-    double total_time;
-    double model_time;
+    double time;
 
     CTraceBall traceball;
     Quaternion rvec;
@@ -46,10 +44,10 @@ protected:
     //void	resizeGL(int w, int h) override;
 
 public:
-    void update_scene();
+    void redraw();
     void set_scene() const;
+    void set_mesh(Mesh*);
     void reset_scene();
-    void switch_cur_mesh(Mesh* mesh);
 
 private:
     // mouse events
@@ -70,13 +68,16 @@ private:
     void rightButtonMoved(const QMouseEvent * event);
     void rightButtonUp(const QMouseEvent * event);
 
-private slots:
-    void increment_time();
 };
 
-inline void openGLWindow::update_scene()
+inline void openGLWindow::redraw()
 {
     this->update();
+}
+
+inline void openGLWindow::set_mesh(Mesh * mesh)
+{
+    this->cur_mesh = mesh;
 }
 
 

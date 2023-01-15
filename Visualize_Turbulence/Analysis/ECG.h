@@ -13,6 +13,7 @@ class ECG_NODE
 public:
     // note, a node can connect to this node in both in_edge and out_edge
     Singularity* sing; // the correspodning singularity of this node
+    Vector3d cords;
     set<ECG_NODE*> in_nodes; // connected in nodes of this node
     set<ECG_NODE*> out_nodes; // connected out nodes of this node
     set<ECG_EDGE*> in_edges; // edges that into this node
@@ -90,6 +91,8 @@ public:
     UL num_sls() const;
 
     vector<Singularity*> get_sings();
+    vector<ECG_NODE*> get_nodes();
+    vector<ECG_EDGE*> get_edges();
 
     void add_sing(Singularity* );
     void add_node(ECG_NODE* );
@@ -100,6 +103,9 @@ public:
     vector<vector<StreamLine*>> placing_random_seeds(Mesh* mesh, UL num_of_seeds) const ;
     void build_ECG_NODES();
     void build_ECG_EDGES(Mesh* mesh, vector<vector<StreamLine*>> sls_for_all_sings);
+    const vector<ECG_NODE*> get_Zero_InDegree_Nodes() const;
+    const vector<ECG_NODE*> get_Zero_OutDegree_Nodes() const;
+    const vector<ECG_NODE*> get_isolated_Nodes() const;
 
     ECG_NODE* is_close_to_node(const Vector3d& cords) const;
 };
@@ -128,6 +134,16 @@ inline unsigned long ECG::num_sls() const
 inline vector<Singularity *> ECG::get_sings()
 {
     return this->sings;
+}
+
+inline vector<ECG_NODE *> ECG::get_nodes()
+{
+    return this->nodes;
+}
+
+inline vector<ECG_EDGE *> ECG::get_edges()
+{
+    return this->edges;
 }
 
 inline UL ECG_NODE::num_edges() const

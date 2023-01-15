@@ -42,6 +42,24 @@ StreamLine::~StreamLine()
     this->bw_verts.clear();
 }
 
+// clear all vertices in fw verts
+void StreamLine::clear_fw_verts()
+{
+    for(UL w = 0; w < this->num_fw_verts(); w++){
+        if(this->fw_verts[w] != NULL) delete this->fw_verts[w];
+    }
+    this->fw_verts.clear();
+}
+
+// clear all vertices in bw verts
+void StreamLine::clear_bw_verts()
+{
+    for(UL w = 0; w < this->num_bw_verts(); w++){
+        if(this->bw_verts[w] != NULL) delete this->bw_verts[w];
+    }
+    this->bw_verts.clear();
+}
+
 
 void tracing_streamlines()
 {
@@ -65,7 +83,6 @@ void tracing_streamlines()
         }
         qDebug()<< "Tracing streamlines for mesh"<< i << "done";
     }
-
 }
 
 
@@ -75,6 +92,7 @@ void build_streamlines_from_seeds( Mesh* mesh )
     // for each time step
     double cur_time = 0;
     while( cur_time < mesh->num_time_steps - 1. ){
+        qDebug() << "Tracing streamline for time " << cur_time;
         vector<StreamLine*> sls = mesh->streamlines_for_all_t.at(cur_time);
         // for each (the beginning of) trajectory
         for( StreamLine* sl : sls ){

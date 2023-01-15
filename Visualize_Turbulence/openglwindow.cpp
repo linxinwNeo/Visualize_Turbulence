@@ -20,7 +20,6 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
     this->trans_x = 0.;
     this->trans_y = 0.;
     this->cur_mesh = NULL;
-    this->total_time = this->model_time = 0.;
 
     // init matrices
     Utility::mat_ident( this->rotmat );
@@ -40,11 +39,6 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 
 openGLWindow::~openGLWindow()
 {
-    if(this->timer){
-        delete this->timer;
-    }
-    this->timer = NULL;
-
     for(Mesh* mesh : meshes){
         if(mesh != NULL)
             delete mesh;
@@ -57,31 +51,6 @@ openGLWindow::~openGLWindow()
 
 
 // time control
-void openGLWindow::increment_time( ){
-    this->total_time += time_step_size;
-    this->model_time += time_step_size;
-
-    if(this->total_time >= cur_mesh->num_time_steps - 1.){
-        this->total_time = this->model_time = 0;
-    }
-
-    // loop from beginning
-//    if(this->animation_time >= 60){
-//        this->animation_time = this->model_time = 0;
-//    }
-
-//    // iteration through each model, last 10 secs for each
-//    if( animation_time < 30 && this->cur_mesh != meshes[1]){
-//        this->model_time = 0.;
-//        switch_cur_mesh(meshes[1]);
-//    }
-//    else if(animation_time >= 30 && animation_time < 60 && this->cur_mesh != meshes[4]){
-//        this->model_time = 0.;
-//        switch_cur_mesh(meshes[4]);
-//    }
-
-    this->update();
-}
 
 
 void openGLWindow::initializeGL()
@@ -93,11 +62,6 @@ void openGLWindow::initializeGL()
 
     glEnable(GL_MULTISAMPLE_ARB);
     glEnable(GL_DEPTH_TEST);
-
-    // set timer
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(increment_time()));
-    timer->start(time_step_size * MSECS_PER_SEC);
 
     glShadeModel (GL_SMOOTH);
 
@@ -146,60 +110,7 @@ void openGLWindow::paintGL()
     glClearColor (0.7, 0.7, 0.7, 1.0);  // grey background for rendering color coding and lighting
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    this->cur_mesh = meshes[0];
-
-    main_routine(meshes[0]);
-//    glColor3f(0, 0, 1);
-//    Tet* tet = meshes[0]->tets[0];
-
-//    double ws[4];
-//    Vertex* v1 = tet->get_vert_at(tet->verts[0]->cords, 0, ws, true, true);
-//    Vertex* v2 = tet->get_vert_at(tet->verts[1]->cords, 0, ws, true, true);
-//    Vertex* v3 = tet->get_vert_at(tet->verts[2]->cords, 0, ws, true, true);
-//    Vertex* v4 = tet->get_vert_at(tet->verts[3]->cords, 0, ws, true, true);
-//    Tet* new_tet = new Tet(v1, v2, v3, v4);
-//    new_tet->make_edges();
-//    new_tet->verts[0]->cords = Vector3d(1,1,1);
-//    new_tet->verts[1]->cords = Vector3d(1,-1,-1);
-//    new_tet->verts[2]->cords = Vector3d(-1,1,-1);
-//    new_tet->verts[3]->cords = Vector3d(-1,-1,1);
-
-//    new_tet->verts[0]->vels[0] = new Vector3d(-new_tet->verts[0]->cords.y(), -new_tet->verts[0]->cords.z(), new_tet->verts[0]->cords.x());
-//    new_tet->verts[1]->vels[0] = new Vector3d(-new_tet->verts[1]->cords.y(), -new_tet->verts[1]->cords.z(), new_tet->verts[1]->cords.x());
-//    new_tet->verts[2]->vels[0] = new Vector3d(-new_tet->verts[2]->cords.y(), -new_tet->verts[2]->cords.z(), new_tet->verts[2]->cords.x());
-//    new_tet->verts[3]->vels[0] = new Vector3d(-new_tet->verts[3]->cords.y(), -new_tet->verts[3]->cords.z(), new_tet->verts[3]->cords.x());
-
-
-//    vector<Vertex*> fixed_pts;
-//    UI depth = meshes[0]->find_fixed_pt_location(new_tet, 0, 0, fixed_pts);
-//    Singularity* sing = new Singularity();
-//    sing->Jacobian = new_tet->calc_Jacobian(fixed_pts[0], 0);
-//    sing->classify_this();
-//    qDebug() << sing->get_type();
-
-//    qDebug() << "fixed_pts size" << fixed_pts.size() << "depth is " << depth;
-//    glBegin(GL_LINES);
-//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
-//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
-//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
-//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
-//        glVertex3f(new_tet->verts[0]->x(), new_tet->verts[0]->y(), new_tet->verts[0]->z());
-//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
-//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
-//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
-//        glVertex3f(new_tet->verts[1]->x(), new_tet->verts[1]->y(), new_tet->verts[1]->z());
-//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
-//        glVertex3f(new_tet->verts[2]->x(), new_tet->verts[2]->y(), new_tet->verts[2]->z());
-//        glVertex3f(new_tet->verts[3]->x(), new_tet->verts[3]->y(), new_tet->verts[3]->z());
-//    glEnd();
-
-//    if(fixed_pts.size() != 0){
-//        glPointSize(5);
-//        glBegin(GL_POINTS);
-//            glVertex3f(fixed_pts[0]->x(), fixed_pts[0]->y(), fixed_pts[0]->z());
-//        glEnd();
-//    }
-
+    main_routine(this->cur_mesh);
 
 //    if(cur_mesh == meshes[1]){
 //        glPushMatrix();
@@ -240,10 +151,12 @@ void openGLWindow::main_routine(Mesh * mesh) const
 {
     if(show_streamlines){
         double max = DBL_MIN, min = DBL_MAX;
-        mesh->max_vel_mag(model_time, min, max);
-        const auto& sls = mesh->streamlines_for_all_t.at(model_time);
-        for(StreamLine* sl:sls){
-            draw_streamlines(sl, min, max);
+        mesh->max_vel_mag(time, min, max);
+        if(mesh->streamlines_for_all_t.find(time) != mesh->streamlines_for_all_t.end() ){
+            const auto& sls = mesh->streamlines_for_all_t.at(time);
+            for(StreamLine* sl:sls){
+                draw_streamline(sl, min, max);
+            }
         }
     }
 
@@ -253,13 +166,23 @@ void openGLWindow::main_routine(Mesh * mesh) const
 
     if(show_isosurfaces){
         double max = DBL_MIN, min = DBL_MAX;
-        const auto& isosurface = mesh->isosurfaces_for_all_t.at(model_time);
+        const auto& isosurface = mesh->isosurfaces_for_all_t.at(time);
         draw_isosurfaces(isosurface, min, max);
     }
 
 
     if(build_ECG){
-        draw_singularities(mesh->ECG_for_all_t.at(this->model_time)->get_sings());
+        draw_singularities(mesh->ECG_for_all_t.at(this->time)->get_sings());
+        vector<StreamLine*> sls = mesh->ECG_for_all_t.at(this->time)->sls;
+//        qDebug() << mesh->ECG_for_all_t.at(this->time)->num_sls() <<  mesh->ECG_for_all_t.at(this->time)->num_nodes();
+        for(StreamLine* sl : sls){
+//            qDebug() << sl->num_verts();
+            draw_streamline(sl, 1000, 1000);
+        }
+    }
+
+    if(show_ECG_connections){
+//        draw_ECG_connections(mesh->ECG_for_all_t.at(this->time));
     }
 
     if(show_boundary_wireframe)
@@ -308,14 +231,6 @@ void openGLWindow::reset_scene()
 
     this->rot_center = cur_mesh->rot_center;
     this->update();
-}
-
-
-void openGLWindow::switch_cur_mesh(Mesh *mesh)
-{
-    this->cur_mesh = mesh;
-    reset_scene();
-    return;
 }
 
 
@@ -485,20 +400,17 @@ void openGLWindow::rightButtonUp(const QMouseEvent *event)
 void openGLWindow::middleButtonDown(const QMouseEvent *event)
 {
     MiddleButtonDown = true;
-    return;
 }
 
 
 void openGLWindow::middleButtonMoved(const QMouseEvent *event)
 {
-    return;
 }
 
 
 void openGLWindow::middleButtonUp(const QMouseEvent *event)
 {
     MiddleButtonDown = false;
-    return;
 }
 
 

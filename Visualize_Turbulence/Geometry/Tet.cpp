@@ -641,7 +641,7 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
 {
     if(v == NULL) Utility::throwErrorMessage("Tet::calc_Jacobian: v is NULL!");
     Eigen::Matrix3d m;
-    const double h = 0.005; const double twoH = h+h;
+    const double h = 0.001; const double twoH = h+h;
     const Vector3d cords = v->cords;
     Vector3d px_cords = cords; px_cords.entry[0] += h;
     Vector3d nx_cords = cords; nx_cords.entry[0] -= h;

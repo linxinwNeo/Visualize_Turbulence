@@ -143,7 +143,7 @@ vector<vector<StreamLine*>> ECG::placing_random_seeds(Mesh* mesh, UL num_of_seed
         set<TRIPLE> used; // fake triple in c++
         UL cur_num_of_seeds = 0;
         while(cur_num_of_seeds < num_of_seeds){
-            // generate a randomly numebr between -dist and dist
+            // generate a random numebrs between -dist and dist
             const double dx=((double)rand() / (double)RAND_MAX) / divider * 2 - dist;
             const double dy=((double)rand() / (double)RAND_MAX) / divider * 2 - dist;
             const double dz=((double)rand() / (double)RAND_MAX) / divider * 2 - dist;
@@ -198,12 +198,13 @@ void ECG::build_ECG_EDGES(Mesh *mesh, vector< vector<StreamLine *> > sls_for_all
 
         // tracing each streamline for this node
         for(StreamLine* sl : sls){
+            bool found = false;
             // while tracing sl, we need to check if the new vertex of the streamline is close to another singularity
             // forward tracing
             {
                 const Vertex* vert = sl->seed;
-                Tet* tet = vert->tets[0];
-                for(UI i = 0; i < max_num_steps; i++){
+                for(UI j = 0; j < max_num_steps; j++){
+                    Tet* tet = vert->tets[0];
                     Vector3d cords = vert->cords;
                     Vector3d newCords = trace_one_dist_step(cords, vert->vels.at(t)); // trace 1 time step
                     double ds[4]; // saving barycentric coordinates
@@ -222,24 +223,32 @@ void ECG::build_ECG_EDGES(Mesh *mesh, vector< vector<StreamLine *> > sls_for_all
                     // check if new Vertex is close to any of the singularity
                     ECG_NODE* close_to_node = this->is_close_to_node(newVert->cords);
                     // check if close_to_node exists and check if this node exists in out_nodes
-                    if(close_to_node != nullptr  && node->has_outNode(close_to_node) ){
+                    if(close_to_node != nullptr  && node != close_to_node && !node->has_outNode(close_to_node)){
                         // the streamline connects node and close_to_node
                         // we should build an directed edge from node to close_to_node
                         ECG_EDGE* edge = new ECG_EDGE(node, close_to_node, sl);
                         node->add_outNode(close_to_node);
                         node->add_outEdge(edge);
-                        close_to_node->add_outNode(node);
+                        close_to_node->add_inNode(node);
                         close_to_node->add_inEdge(edge);
+                        this->add_edge(edge);
+                        this->add_sl(sl);
+                        found = true;
                         break; // stop tracing
                     }
                 }
             }
 
+            if(found == false && show_ECG_connections){
+                // clear all vertices in sl
+                sl->clear_fw_verts();
+            }
+
             // backward tracing
             {
                 Vertex* vert = sl->seed;
-                Tet* tet = vert->tets[0];
-                for(UI i = 0; i < max_num_steps; i++){
+                for(UI j = 0; j < max_num_steps; j++){
+                    Tet* tet = vert->tets[0];
                     Vector3d vel = Vector3d( vert->vels.at(t) ) * (- 1.); // -1 means backward
                     Vector3d cords = vert->cords;
                     Vector3d newCords = trace_one_dist_step(cords, vel); // trace 1 time step
@@ -260,20 +269,74 @@ void ECG::build_ECG_EDGES(Mesh *mesh, vector< vector<StreamLine *> > sls_for_all
                     // check if new Vertex is close to any of the singularity
                     ECG_NODE* close_to_node = this->is_close_to_node(newVert->cords);
                     // check if close_to_node exists and check if this node exists in out_nodes
-                    if(close_to_node != nullptr  && node->has_outNode(close_to_node) ){
+                    if(close_to_node != nullptr  && node != close_to_node  && !node->has_inNode(close_to_node) ){
                         // the streamline connects node and close_to_node
                         // we should build an directed edge from node to close_to_node
-                        ECG_EDGE* edge = new ECG_EDGE(node, close_to_node, sl);
-                        node->add_outNode(close_to_node);
-                        node->add_outEdge(edge);
+                        ECG_EDGE* edge = new ECG_EDGE(close_to_node, node, sl);
+                        node->add_inNode(close_to_node);
+                        node->add_inEdge(edge);
                         close_to_node->add_outNode(node);
-                        close_to_node->add_inEdge(edge);
+                        close_to_node->add_outEdge(edge);
+                        this->add_edge(edge);
+                        if(found == false){
+                            this->add_sl(sl);
+                        }
+                        found = true;
                         break; // stop tracing
                     }
                 }
             }
+
+            // if found
+            if(found == false && show_ECG_connections){
+                delete sl;
+            }
+            else if(found == false && !show_ECG_connections){
+                this->add_sl(sl);
+            }
         }
     }
+}
+
+
+// returning a vector of nodes that have zero incoming edges
+// excluding isolated nodes
+const vector<ECG_NODE *> ECG::get_Zero_InDegree_Nodes() const
+{
+    vector<ECG_NODE*> nodes;
+    for(ECG_NODE* node : this->nodes){
+        if(node->num_inNodes() == 0 && node->num_outNodes() != 0){
+            nodes.push_back(node);
+        }
+    }
+    return nodes;
+}
+
+
+// returning a vector of nodes that have zero outgoing edges
+// excluding isolated nodes
+const vector<ECG_NODE *> ECG::get_Zero_OutDegree_Nodes() const
+{
+    vector<ECG_NODE*> nodes;
+    for(ECG_NODE* node : this->nodes){
+        if(node->num_outNodes() == 0 && node->num_inNodes() != 0){
+            nodes.push_back(node);
+        }
+    }
+    return nodes;
+}
+
+
+// returning a vector of nodes that have zero outgoing edges
+const vector<ECG_NODE *> ECG::get_isolated_Nodes() const
+{
+    vector<ECG_NODE*> nodes;
+    for(ECG_NODE* node : this->nodes){
+        if(node->num_outNodes() == 0 && node->num_inNodes() == 0){
+            nodes.push_back(node);
+        }
+    }
+    return nodes;
 }
 
 
@@ -283,7 +346,7 @@ ECG_NODE *ECG::is_close_to_node(const Vector3d &cords) const
 {
     for(ECG_NODE* node : this->nodes){
         const Vector3d& node_cords = node->sing->cords;
-        if(length(cords, node_cords) <= zero_threshold){
+        if(length(cords, node_cords) <= dist_step_size * 2){
             return node;
         }
     }

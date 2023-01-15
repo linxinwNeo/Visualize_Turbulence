@@ -55,26 +55,28 @@ bool MiddleButtonDown = false;
 bool RightButtonDown = false;
 
 // streamlines
-bool show_streamlines = true;
+bool show_streamlines = false;
 bool tracing_streamlines_from_seed = false;
-bool tracing_streamlines_from_critical_pts =true;
+bool tracing_streamlines_from_critical_pts = false;
 
 bool show_pathlines = false;
-bool show_isosurfaces = false;
+bool show_isosurfaces = true;
 
 bool show_boundary_wireframe = false;
 bool show_axis = true;
 bool show_opage_boundary_tris = true;
 bool build_ECG = true;
+bool show_ECG_connections = false;
 
-const UI NUM_SEEDS = 100;
-const UI max_num_steps = 400;
-const double dist_step_size = 0.003;
-const UI frames_per_sec = 1; // frames per sec
+const UI NUM_SEEDS = 10;
+const UI max_num_steps = 500;
+const double dist_step_size = 1e-2;
+const UI frames_per_sec = 5; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const UI max_num_recursion = 4;
+const UI max_num_recursion = 3;
 const double zero_threshold = 1e-17;
+
 
 // surface_level is defined to be the voriticity
 const double surface_level_ratio = 0.02;
@@ -85,7 +87,7 @@ const double cone_base_radius=0.01;
 const double cone_height=cone_base_radius*2;
 const double cylinder_height = cone_height*2;
 const double cylinder_radius = cone_base_radius/2;
-const int slices = 5;
+const int slices = 3;
 const double arrow_color[] = {1, 0, 0};
 
 ColorTable CT;
@@ -101,11 +103,11 @@ void replace_velocity(){
     double time = 0.;
     while(time < mesh->num_time_steps - 1){
         for(Vertex* v : mesh->verts){
-            if(time == 0) v->cords.entry[2] += 0.25;
-            Vector3d cords = v->cords;
-            int scale = 2;
-            v->vels[time]->set(scale*cords.x(), scale*cords.y(), scale*cords.z());
-//            normalize(*v->vels[time]);
+//            if(time == 0) v->cords.entry[2] += 0.25;
+//            Vector3d cords = v->cords;
+//            int scale = 2;
+//            v->vels[time]->set(scale*cords.x(), scale*cords.y(), scale*cords.z());
+            normalize(*v->vels[time]);
         }
         time += time_step_size;
     }
@@ -120,8 +122,8 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-    meshes[0]->num_time_steps = 5;
-    //replace_velocity();
+    meshes[0]->num_time_steps = 30;
+//    replace_velocity();
 
     // constucting the data for rendering
     if(show_isosurfaces)
@@ -142,7 +144,7 @@ int main(int argc, char *argv[])
 
 
 void read_files(){
-    file = new ReadFile( meshFilePath7, dataFilePath7 );
+    file = new ReadFile( meshFilePath6, dataFilePath6 );
     meshes.push_back( file->mesh );
     delete file;
 

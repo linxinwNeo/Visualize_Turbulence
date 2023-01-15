@@ -29,6 +29,9 @@ public:
     inline UL num_verts() const;
     inline UL num_fw_verts() const;
     inline UL num_bw_verts() const;
+
+    void clear_fw_verts();
+    void clear_bw_verts();
 };
 
 void tracing_streamlines();
@@ -57,7 +60,7 @@ inline void StreamLine::add_bw_vert(Vertex *vert)
 
 inline UL StreamLine::num_verts() const
 {
-    return this->fw_verts.size() + this->bw_verts.size();
+    return this->fw_verts.size() + this->bw_verts.size() + 1;
 }
 
 

@@ -44,6 +44,7 @@ extern bool show_axis;
 extern bool build_ECG;
 extern bool tracing_streamlines_from_seed;
 extern bool tracing_streamlines_from_critical_pts;
+extern bool show_ECG_connections;
 
 extern const double boundary_tri_alpha;
 

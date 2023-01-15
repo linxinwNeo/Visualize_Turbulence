@@ -192,7 +192,7 @@ inline void draw_pathlines(PathLine* pl, const double min_vel_mag, const double 
 }
 
 
-inline void draw_streamlines(const StreamLine* sl, const double min, const double max)
+inline void draw_streamline(const StreamLine* sl, const double min, const double max)
 {
     glDisable(GL_LIGHTING);
     glDisable(GL_LIGHT0);
@@ -213,6 +213,7 @@ inline void draw_streamlines(const StreamLine* sl, const double min, const doubl
         const double vel_mag = length(vel);
         const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
+//        glColor3f(0, 0, 1);
         glVertex3f(p.x(), p.y(), p.z());
     }
 
@@ -223,6 +224,7 @@ inline void draw_streamlines(const StreamLine* sl, const double min, const doubl
         const double vel_mag = length(seed->vels.begin()->second);
         const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
+//         glColor3f(0, 0, 1);
         glVertex3f(seed_cord.x(), seed_cord.y(), seed_cord.z());
     }
 
@@ -234,6 +236,7 @@ inline void draw_streamlines(const StreamLine* sl, const double min, const doubl
         const double vel_mag = length(vel);
         const Vector3d color = CT.lookUp((vel_mag - min) / dmag);
         glColor3f(color.x(), color.y(), color.z());
+//        glColor3f(0, 0, 1);
         glVertex3f(p.x(), p.y(), p.z());
     }
     glEnd();
@@ -343,6 +346,21 @@ inline void draw_singularities(const vector<Singularity*> fixed_pts)
     glEnd();
 
     glPopMatrix();
+}
+
+
+inline void draw_ECG_connections( ECG* ecg ){
+    for(ECG_NODE* node : ecg->get_nodes()){
+        set<ECG_EDGE*> inEdges = node->in_edges;
+        set<ECG_EDGE*> outEdges = node->out_edges;
+
+        for(ECG_EDGE* edge : inEdges){
+            draw_streamline(edge->sl, 0, 0);
+        }
+        for(ECG_EDGE* edge : outEdges){
+            draw_streamline(edge->sl, 0, 0);
+        }
+    }
 }
 
 #endif // DRAW_H
