@@ -171,8 +171,11 @@ void openGLWindow::main_routine(Mesh * mesh) const
     }
 
 
-    if(build_ECG){
+    if(build_ECG && show_critical_pts){
         draw_singularities(mesh->ECG_for_all_t.at(this->time)->get_sings());
+    }
+
+    if(build_ECG && show_ECG_edge_constructions){
         vector<StreamLine*> sls = mesh->ECG_for_all_t.at(this->time)->sls;
 //        qDebug() << mesh->ECG_for_all_t.at(this->time)->num_sls() <<  mesh->ECG_for_all_t.at(this->time)->num_nodes();
         for(StreamLine* sl : sls){
@@ -181,8 +184,8 @@ void openGLWindow::main_routine(Mesh * mesh) const
         }
     }
 
-    if(show_ECG_connections){
-//        draw_ECG_connections(mesh->ECG_for_all_t.at(this->time));
+    if(build_ECG && show_ECG_connections){
+        draw_ECG_connections(mesh->ECG_for_all_t.at(this->time));
     }
 
     if(show_boundary_wireframe)
@@ -196,7 +199,6 @@ void openGLWindow::main_routine(Mesh * mesh) const
 
 void openGLWindow::set_scene() const
 {
-
     // translate the scene
     glTranslatef(trans_x, trans_y, 0);
 

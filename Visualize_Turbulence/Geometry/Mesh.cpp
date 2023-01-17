@@ -380,6 +380,7 @@ void Mesh::build_ECG_for_all_t()
     // calculate singularities for all times
     this->interpolate_vertices_for_all_t();
 
+
     unordered_map< double, vector<Singularity*> > map = this->detect_sings();
 
     double t = 0.;
@@ -429,38 +430,36 @@ void Mesh::interpolate_vertices_for_all_t()
 // target is the vertex and we are interested in which tet it is in
 // prev_tet is the tet that contains the previous vertex. we should find the tet of target by using the neighbors
 // of the start_tet.
-// ds contains barycentric coordinate of this pt in that tet if found
+// ws contains barycentric coordinate of this pt in that tet if found
 // may return a NULL
-Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ds[4]) const
+Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ws[4]) const
 {
     set<Tet*> used;
     Tet* cur_tet = prev_tet;
     // it only breaks if we found the target
-    while(!cur_tet->is_pt_in2(target_pt, ds)){
-        if(used.find(cur_tet) != used.end()){
+    while(!cur_tet->is_pt_in2(target_pt, ws)){ // calculate ds
+        if(used.find(cur_tet) != used.end()){ // we find this tet has been used, then we return to avoid infinite loops
             return nullptr;
         }
         used.insert(cur_tet);
 
         unsigned int min_idx; double min_val;
-        Utility::array_min(ds, 4, min_idx, min_val);
-        if(min_val > 0){ // the pt is in prev_tet
-            return cur_tet;
-        }
-        // the pt is not in prev_tet
-        // we should move to the neighbor whose barycentric coordinate is smallest.
+        Utility::array_min(ws, 4, min_idx, min_val);
+        // the pt is not in cur_tet
+        // we should move to the neighbor tet whose barycentric coordinate is smallest.
         Vertex* min_vert = cur_tet->verts[min_idx];
         Triangle* exit_tri = NULL;
         for(unsigned int i = 0; i<cur_tet->num_tris(); i++ ){
             // find the triangle that does not have this min_vert
             if(!cur_tet->tris[i]->has_vert(min_vert)){
                 exit_tri = cur_tet->tris[i];
+                break;
             }
         }
         // if we couldn't find exit_tri or the exit_tri is a dead end, we couldn't proceed
         if(exit_tri == NULL || exit_tri->is_boundary){
             if(exit_tri == NULL) qDebug() << "Mesh::inWhichTet: exit_tri is null!";
-            return NULL;
+            return nullptr;
         }
         // then we set up the next iteration
         for(int i = 0; i < 2; i++){

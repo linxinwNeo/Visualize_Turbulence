@@ -110,54 +110,27 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], boo
     // only calculate ws if cal_ws is set to true
     if(cal_ws) this->bary_tet(v, ws);
 
+//    double sum = ws[0] + ws[1] + ws[2] + ws[3];
+//    if(sum < 0.999 || sum > 1.001) qDebug() << "sum is" << sum;
+
     Vertex* pt_vert = new Vertex(v);
     if(add_this_tet) pt_vert->add_tet(this);
 
-    Vector3d vel ,  vor;
+    Vector3d vel,  vor;
     double mu = 0.;
-    for( unsigned short i = 0; i < this->verts.size(); i++ ){
+    for( unsigned short i = 0; i < 4; i ++ ){
         Vertex* vert = this->verts[i];
+        double weight = ws[i];
+
         if(vert == NULL) Utility::throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
 
-        Vector3d* temp_vel = NULL, *temp_vor = NULL;
-        double temp_mu = 0.;
-        // interpolate velocity
-        if(vert->has_vel_at_t(time)) // the velcity is defined at time t for this vertex
-        {
-            temp_vel = vert->vels.at(time);
-        }
-        else
-        {
-            // velocity not defined at time t
-            // we need to use linear interpolation to find the value for this vertex between two times
-            temp_vel = vert->linear_interpolate_vel(time); // this vel vector has been auto added to v
-        }
+        Vector3d temp_vel = vert->vels[time];
+        Vector3d temp_vor = vert->vors[time];
+        double temp_mu = vert->mus[time];
 
-        // interpolate vorticity
-        if(vert->has_vor_at_t(time)) // the vorticity is defined at time t for this vertex
-        {
-            temp_vor = vert->vors.at(time);
-        }
-        else
-        {
-            // the vorticity is not defined at time t fo v
-            temp_vor = vert->linear_interpolate_vor(time);
-        }
-
-        // interpolate mu
-        if(vert->has_mu_at_t(time)) // the vorticity is defined at time t for this vertex
-        {
-            temp_mu = vert->mus.at(time);
-        }
-        else
-        {
-            // the vorticity is not defined at time t fo v
-            temp_mu = vert->linear_interpolate_mu(time);
-        }
-
-        vel =  vel + (*temp_vel) * ws[i];
-        vor =  vor + (*temp_vor) * ws[i];
-        mu = mu + temp_mu * ws[i];
+        vel =  vel + temp_vel * weight;
+        vor = vor + temp_vor * weight;
+        mu = mu + temp_mu * weight;
     }
 
     pt_vert->set_vel(time, new Vector3d(vel) ); // adding new vel in order to avoid double deletion
@@ -228,9 +201,10 @@ bool Tet::is_pt_in(const Vector3d& v) const
 bool Tet::is_pt_in2(const Vector3d& p, double ds[4]) const
 {
     this->bary_tet(p, ds);
-    for(int i = 0; i<4; i++ ){
+    for(int i = 0; i < 4; i ++ ){
         if(ds[i] < 0) return false;
     }
+
     return true;
 }
 
@@ -641,7 +615,7 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
 {
     if(v == NULL) Utility::throwErrorMessage("Tet::calc_Jacobian: v is NULL!");
     Eigen::Matrix3d m;
-    const double h = 0.001; const double twoH = h+h;
+    const double twoH = h * 2;
     const Vector3d cords = v->cords;
     Vector3d px_cords = cords; px_cords.entry[0] += h;
     Vector3d nx_cords = cords; nx_cords.entry[0] -= h;

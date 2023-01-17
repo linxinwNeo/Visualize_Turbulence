@@ -24,7 +24,6 @@ vector<Mesh*> meshes;
 
 
 // the file path, should be entered before starting the program
-// TODO dynamiclly import files
 const QString filePathPrefix = "/Users/linxinw/Desktop/simulation data/";
 
 const QString meshFilePath1 = filePathPrefix + "no_boundary_slow_mesh.txt";
@@ -55,27 +54,30 @@ bool MiddleButtonDown = false;
 bool RightButtonDown = false;
 
 // streamlines
-bool show_streamlines = false;
-bool tracing_streamlines_from_seed = false;
-bool tracing_streamlines_from_critical_pts = false;
+bool show_streamlines = true;
+bool tracing_streamlines_from_seed = true;
 
 bool show_pathlines = false;
-bool show_isosurfaces = true;
+bool show_isosurfaces = false;
 
 bool show_boundary_wireframe = false;
 bool show_axis = true;
 bool show_opage_boundary_tris = true;
 bool build_ECG = true;
 bool show_ECG_connections = false;
+bool show_ECG_edge_constructions = false;
+bool show_seeds = true;
+bool show_critical_pts = true;
 
-const UI NUM_SEEDS = 10;
-const UI max_num_steps = 500;
-const double dist_step_size = 1e-2;
-const UI frames_per_sec = 5; // frames per sec
+const double h = 1e-10;
+const UI NUM_SEEDS = 100;
+const UI max_num_steps = 1000;
+const double dist_step_size = 1e-3;
+const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const UI max_num_recursion = 3;
-const double zero_threshold = 1e-17;
+const UI max_num_recursion = 4;
+const double zero_threshold = 1e-15;
 
 
 // surface_level is defined to be the voriticity
@@ -83,8 +85,8 @@ const double surface_level_ratio = 0.02;
 unordered_map<double, double> surface_level_vals;
 
 // arrow parameters
-const double cone_base_radius=0.01;
-const double cone_height=cone_base_radius*2;
+const double cone_base_radius = 0.01;
+const double cone_height= cone_base_radius*2;
 const double cylinder_height = cone_height*2;
 const double cylinder_radius = cone_base_radius/2;
 const int slices = 3;
@@ -103,12 +105,26 @@ void replace_velocity(){
     double time = 0.;
     while(time < mesh->num_time_steps - 1){
         for(Vertex* v : mesh->verts){
-//            if(time == 0) v->cords.entry[2] += 0.25;
-//            Vector3d cords = v->cords;
-//            int scale = 2;
-//            v->vels[time]->set(scale*cords.x(), scale*cords.y(), scale*cords.z());
-            normalize(*v->vels[time]);
+            if(time == 0) {
+                v->cords.entry[2] += 0.25;
+            }
+
+            Vector3d cords = v->cords;
+            int scale = 10;
+            double x = cords.x();
+            double y = cords.y();
+            double z = cords.z();
+            v->vels[time]->set(scale*y, -scale*x, 0);
+//            normalize(*v->vels[time]);
         }
+
+        // update centroid
+        if(time == 0){
+            for(Tet* tet : mesh->tets){
+                tet->center = tet->centroid();
+            }
+        }
+
         time += time_step_size;
     }
 }
@@ -122,8 +138,9 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-    meshes[0]->num_time_steps = 30;
-//    replace_velocity();
+    meshes[0]->num_time_steps = 2;
+    replace_velocity();
+
 
     // constucting the data for rendering
     if(show_isosurfaces)
@@ -144,7 +161,7 @@ int main(int argc, char *argv[])
 
 
 void read_files(){
-    file = new ReadFile( meshFilePath6, dataFilePath6 );
+    file = new ReadFile( meshFilePath3, dataFilePath3 );
     meshes.push_back( file->mesh );
     delete file;
 

@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include <queue>
 #define GL_SILENCE_DEPRECATION
 
 #include <QString>
@@ -34,6 +35,7 @@ extern unordered_map<double, double> surface_level_vals;
 extern const double dist_step_size;
 extern const unsigned int max_num_recursion;
 extern const double zero_threshold;
+extern const double h;
 
 extern bool show_streamlines;
 extern bool show_pathlines;
@@ -45,6 +47,9 @@ extern bool build_ECG;
 extern bool tracing_streamlines_from_seed;
 extern bool tracing_streamlines_from_critical_pts;
 extern bool show_ECG_connections;
+extern bool show_ECG_edge_constructions;
+extern bool show_critical_pts;
+extern bool show_seeds;
 
 extern const double boundary_tri_alpha;
 
@@ -68,11 +73,13 @@ namespace Utility
     inline bool is_in_set(set<Tet*> s, Tet* tet);
     inline bool is_in_set(set<Edge*> s, Edge* e);
     inline void array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val );
+    inline void array_max(const double ds[], const unsigned int& size, unsigned int& max_idx, double& max_val );
     inline float * Array3( float a, float b, float c );
     inline float * MulArray3( float factor, float array0[3] );
     inline void clear_mem(vector<Vertex*> verts);
     inline void clear_mem(vector<Edge*> edges);
     inline void clear_mem(vector<Tet*> tets);
+    inline void clear_mem(queue<Tet*> tets);
     inline vector<Edge*> make_edges(vector<Vertex*> verts, bool add_each_other);
     void swap(double& a, double& b);
     void swap(long int& a, long int& b);
@@ -179,18 +186,36 @@ inline void Utility::mat_ident(float m[16])
 
 
 // output is saved in min_idx and min_val
-inline void Utility::array_min(const double ds[], const unsigned int& size, unsigned int& min_idx, double& min_val )
+inline void Utility::array_min(const double arr[], const unsigned int& size, unsigned int& min_idx, double& min_val )
 {
     if(size <= 0) {
         qDebug() << "min_val: pasing an array of incorrect size!";
         return;
     }
     min_idx = 0;
-    min_val = ds[0];
-    for(unsigned int i = 1; i < size; i++ ){
-        if(ds[i] < min_val){
+    min_val = arr[0];
+    for( unsigned int i = 1; i < size; i++ ){
+        if(arr[i] < min_val){
             min_idx = i;
-            min_val = ds[i];
+            min_val = arr[i];
+        }
+    }
+}
+
+
+// output is saved in min_idx and min_val
+inline void Utility::array_max(const double ds[], const unsigned int& size, unsigned int& max_idx, double& max_val )
+{
+    if(size <= 0) {
+        qDebug() << "min_val: pasing an array of incorrect size!";
+        return;
+    }
+    max_idx = 0;
+    max_val = ds[0];
+    for(unsigned int i = 1; i < size; i++ ){
+        if(ds[i] > max_val){
+            max_idx = i;
+            max_val = ds[i];
         }
     }
 }
@@ -273,6 +298,14 @@ inline void Utility::clear_mem(vector<Tet*> tets){
     tets.clear();
 }
 
+
+inline void Utility::clear_mem(queue<Tet*> tets){
+    while(!tets.empty()){
+        Tet* tet = tets.front();
+        tets.pop();
+        delete tet;
+    }
+}
 
 inline vector<Edge*> Utility::make_edges(vector<Vertex*> verts, bool add_each_other){
     vector<Edge*> edges;

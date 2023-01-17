@@ -35,7 +35,7 @@ Triangle::~Triangle()
 bool Triangle::has_vert(const Vertex * v) const
 {
     for( Vertex* vert : this->verts ){
-        if(vert->idx == v->idx) return true;
+        if(vert == v) return true;
     }
     return false;
 }

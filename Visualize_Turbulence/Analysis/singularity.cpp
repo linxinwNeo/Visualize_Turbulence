@@ -9,6 +9,7 @@
 
 unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
 {
+    qDebug() << "start detecting singularities";
     unordered_map< double, vector<Singularity*> > sings_for_all_t;
 
     double cur_time = 0;
@@ -27,10 +28,11 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
                 // calculate the jacobian matrix
                 Singularity* sing = new Singularity();
                 sing->Jacobian = tet->calc_Jacobian(fixed_pt, cur_time);
+                cout<< sing->Jacobian<<endl;
                 sing->classify_this();
                 sing->cords = fixed_pt->cords;
                 sing->in_which_tet = tets[tet->idx];
-//                qDebug() << sing->get_type();
+                qDebug() << sing->get_type();
                 sings_for_all_t[cur_time].push_back( sing );
             }
 
@@ -44,6 +46,7 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
         cur_time += time_step_size;
     }
 
+    qDebug() << "finish detecting singularities";
     return sings_for_all_t;
 }
 
@@ -91,7 +94,7 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
             candidates.push_back(new_tet);
         }
     }
-
+    qDebug() << "num of candidates" << candidates.size();
     return candidates;
 }
 
@@ -111,15 +114,19 @@ UI Mesh::find_fixed_pt_location(
 
     while(candidates.size() != 0){
         if(cur_times >= max_times) break;
+        if( candidates.size() > (max_times - cur_times + 1) ) break;
 
-        Tet* tet = candidates.front();
+        Tet* t = candidates.front();
         candidates.pop();
-        if(!is_candidate_tet(tet, time)) continue;
+        if(!is_candidate_tet(t, time)) {
+            if(t != tet) delete t;
+            continue;
+        }
         cur_times ++;
 
         // check if any of the vertex of the tetrahedron is the critical point
         for(unsigned int i = 0; i < 4; i++){
-            Vertex* v = tet->verts[i];
+            Vertex* v = t->verts[i];
             if( length(v->vels[time]) > zero_threshold ) continue;
              // copy vertex to be returned
             Vertex* new_vert = new Vertex(v->cords);
@@ -128,21 +135,25 @@ UI Mesh::find_fixed_pt_location(
 
             Utility::clear_mem(temp_verts);
             Utility::clear_mem(temp_edges);
+            if(t != tet) delete t;
+            Utility::clear_mem(candidates);
             return cur_times;
         }
-
         // if 4 vertices don't match, we need to subdivide the current tetrahedron into smaller ones (8)
         vector<Tet*> temp_tets;
-        tet->subdivide(time, temp_verts, temp_edges, temp_tets);
+        t->subdivide(time, temp_verts, temp_edges, temp_tets);
         for(Tet* tet2 : temp_tets){
             if(!is_candidate_tet(tet2, time)) continue;
             candidates.push(tet2);
         }
+
+        if(t != tet) delete t;
     }
 
     // ran out of recusion depth
     Utility::clear_mem(temp_verts);
     Utility::clear_mem(temp_edges);
+    Utility::clear_mem(candidates);
     return cur_times;
 }
 

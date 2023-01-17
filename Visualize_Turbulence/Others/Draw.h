@@ -241,6 +241,16 @@ inline void draw_streamline(const StreamLine* sl, const double min, const double
     }
     glEnd();
 
+    if(show_seeds){
+        glPointSize(15);
+        glBegin(GL_POINTS);
+        glColor3f(1, 1, 1);
+        const Vertex* seed = sl->seed;
+        const Vector3d seed_cord = seed->cords;
+        glVertex3f(seed->x(), seed->y(), seed->z());
+        glEnd();
+    }
+
     glPopMatrix();
 }
 
