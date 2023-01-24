@@ -110,27 +110,32 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], boo
     // only calculate ws if cal_ws is set to true
     if(cal_ws) this->bary_tet(v, ws);
 
-//    double sum = ws[0] + ws[1] + ws[2] + ws[3];
-//    if(sum < 0.999 || sum > 1.001) qDebug() << "sum is" << sum;
-
     Vertex* pt_vert = new Vertex(v);
     if(add_this_tet) pt_vert->add_tet(this);
 
     Vector3d vel,  vor;
     double mu = 0.;
+
     for( unsigned short i = 0; i < 4; i ++ ){
         Vertex* vert = this->verts[i];
         double weight = ws[i];
 
         if(vert == NULL) Utility::throwErrorMessage( QString("Tet::interpolate: a null pointer inside vs! Current tet is %1").arg(this->idx) );
 
-        Vector3d temp_vel = vert->vels[time];
-        Vector3d temp_vor = vert->vors[time];
-        double temp_mu = vert->mus[time];
+        if(vert->has_vel_at_t(time)){
+            Vector3d temp_vel = vert->vels[time];
+            vel =  vel + temp_vel * weight;
+        }
 
-        vel =  vel + temp_vel * weight;
-        vor = vor + temp_vor * weight;
-        mu = mu + temp_mu * weight;
+        if(vert->has_vor_at_t(time)){
+            Vector3d temp_vor = vert->vors[time];
+            vor = vor + temp_vor * weight;
+        }
+
+        if(vert->has_mu_at_t(time)){
+            double temp_mu = vert->mus[time];
+            mu = mu + temp_mu * weight;
+        }
     }
 
     pt_vert->set_vel(time, new Vector3d(vel) ); // adding new vel in order to avoid double deletion
@@ -169,6 +174,17 @@ Vector3d Tet::centroid() const
     return center_cords;
 }
 
+// deep_copy the current tet's vertex and edges
+Tet *Tet::clone(const double time) const
+{
+    Vertex* newV1 = this->verts[0]->clone(time, true);
+    Vertex* newV2 = this->verts[1]->clone(time, true);
+    Vertex* newV3 = this->verts[2]->clone(time, true);
+    Vertex* newV4 = this->verts[3]->clone(time, true);
+    Tet* newTet = new Tet(newV1, newV2, newV3, newV4);
+    return newTet;
+}
+
 
 // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
 // check if the pt is on the same side of other vertices
@@ -198,11 +214,12 @@ bool Tet::is_pt_in(const Vector3d& v) const
 
 // https://www.researchgate.net/publication/226339789_Virtual_Reality-Based_Interactive_Scientific_Visualization_Environments
 // using barycentric cords
-bool Tet::is_pt_in2(const Vector3d& p, double ds[4]) const
+// always calcuate ws
+bool Tet::is_pt_in2(const Vector3d& p, double ws[4]) const
 {
-    this->bary_tet(p, ds);
+    this->bary_tet(p, ws);
     for(int i = 0; i < 4; i ++ ){
-        if(ds[i] < 0) return false;
+        if(ws[i] < 0) return false;
     }
 
     return true;
@@ -430,6 +447,7 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
 }
 
 
+// create 6 unique edges for this tetrahedron
 void Tet::make_edges()
 {
     UI i, j;
@@ -438,6 +456,7 @@ void Tet::make_edges()
         for(j = i+1; j < 4; j++){
             Vertex* v2 = verts[j];
             Edge* e = new Edge(v1, v2);
+            e->add_tet(this);
             v1->add_edge(e);
             v2->add_edge(e);
             this->add_edge(e);
@@ -446,19 +465,34 @@ void Tet::make_edges()
 }
 
 
-// we subdivide the tetrahedron into 4 + 4 = 8 tetrahedrons
-// three big steps:
-// 1. calculate edges for the octahedron and their ajacency (also separate 4 tetrahedrons from the octahedron)
-// 2. identify the major diagonal edge (there are two possible diagonal edges, we just need one)
-// 3. separate the octahedron into 4 tetrahedrons by using the diagonal edge.
+/* we subdivide the tetrahedron into 4 + 4 = 8 tetrahedrons
+ * steps:
+ * 1. calculate middle points on 6 edges
+ * 2. create 4 smaller tetrahedrons using original 4 vertices
+ * 3. identify the edges for octahedron (new edges created by step 2.)
+ * 4. identify the major diagonal edge (there are three possible diagonal edges, we just need one)
+ * 5. separate the octahedron into 4 tetrahedrons by using the diagonal edge.
+ * for newly created vertices, edges and tets, we append them to the parameter vectors.
+*/
 void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets)
 {
+    // check if this tet has vertices
+    if(this->num_verts() != 4) return;
+
+    /* check if this tet has edges
+     * if not, create new edges and add these edges into new_edges
+    */
+    if(this->num_edges() == 0) {
+        this->make_edges();
+        for(Edge* e:this->edges) new_edges.push_back(e);
+    }
+
     // copy vertices
     double ws[4];
     unordered_map<Vertex*, Vertex*> vert_copies; vert_copies.reserve(4);
-    for(UI i = 0; i < 4; i++) vert_copies[verts[i]] = get_vert_at(verts[i]->cords, time, ws, true, false);
+    for(short i = 0; i < 4; i++) vert_copies[ verts[i] ] = get_vert_at(verts[i]->cords, time, ws, true, false);
 
-    // find edge points
+    // find edge middle points
     // keep track of newly created vertices
     // these are actually the vertices of octahedron
     vector<Vertex*> uniq_edge_points;
@@ -474,17 +508,22 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
         Vertex* v1 = vert_copies[e->verts[0]]; // copied vertex
         Vertex* v2 = vert_copies[e->verts[1]]; // copied vertex
 
-        Vector3d cords = (v1->cords + v2->cords) / 2.;
-        Vertex* new_vert = this->get_vert_at(cords, time, ws, true, false);
-        //qDebug() << "subdivide ws" << ws[0] << ws[1] << ws[2] << ws[3];
+        Vector3d middle_cords = e->middle_pt();
+        Vertex* new_vert = this->get_vert_at(middle_cords, time, ws, true, false);
         uniq_edge_points.push_back(new_vert);
 
         // create two new edges
         Edge* new_e1 = new Edge(v1, new_vert);
         Edge* new_e2 = new Edge(v2, new_vert);
-        uniq_new_edges.push_back(new_e1); uniq_new_edges.push_back(new_e2);
-        v1->add_edge(new_e1); v2->add_edge(new_e2);
-        new_vert->add_edge(new_e1); new_vert->add_edge(new_e2);
+
+        uniq_new_edges.push_back(new_e1);
+        uniq_new_edges.push_back(new_e2);
+
+        v1->add_edge(new_e1);
+        v2->add_edge(new_e2);
+
+        new_vert->add_edge(new_e1);
+        new_vert->add_edge(new_e2);
     }
 
     // now each copy of the original vertex has 3 new edges,
@@ -493,7 +532,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     for(auto& p : vert_copies){
         Vertex* orig_vert = p.second;
         vector<Vertex*> verts_for_tet;
-        for(UI i = 0; i < 3; i++){
+        for(short i = 0; i < 3; i++){
             Edge* e = orig_vert->edges[i];
             if(e->verts[0] == orig_vert) // verts[1] is the other end
                 verts_for_tet.push_back(e->verts[1]);
@@ -535,6 +574,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
         if(v->is_connected_to(first_v)) continue;
 
         second_v = v;
+        break;
     }
     diag_e = new Edge(first_v, second_v);
     first_v->add_edge(diag_e);
@@ -543,11 +583,10 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
 
     /* subdivide the octahedron using diag_e
      * steps:
-     * 1. find vertices of the octahedron and placed in an array which doesn't contains diagonal edge vertices
+     * 1. find vertices of the octahedron and placed in an array which doesn't contain diagonal edge vertices
      * 2. for any two vertices in the array, check if they are connected by an edge, if yes then we form a tetrahedron by
      *      connecting these two and the the diagonal edge
     */
-
     // step 1
     vector<Vertex*> not_including_diag;
     for(Vertex* v : uniq_edge_points){
@@ -611,12 +650,15 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
 }
 
 
-Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
+Eigen::Matrix3d Tet::calc_Jacobian(const Vector3d cords, const double time)
 {
-    if(v == NULL) Utility::throwErrorMessage("Tet::calc_Jacobian: v is NULL!");
+    double ws[4];
+    if(!this->is_pt_in2(cords, ws)){
+        qDebug() << ws[0] << ws[1] << ws[2] << ws[3];
+        Utility::throwErrorMessage("Tet::calc_Jacobian: Error! incoming pt is outside this tet");
+    }
     Eigen::Matrix3d m;
     const double twoH = h * 2;
-    const Vector3d cords = v->cords;
     Vector3d px_cords = cords; px_cords.entry[0] += h;
     Vector3d nx_cords = cords; nx_cords.entry[0] -= h;
     Vector3d py_cords = cords; py_cords.entry[1] += h;
@@ -624,7 +666,6 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vertex *v, const double time)
     Vector3d pz_cords = cords; pz_cords.entry[2] += h;
     Vector3d nz_cords = cords; nz_cords.entry[2] -= h;
 
-    double ws[4];
     Vertex* v_dpx, *v_dpy, * v_dpz, *v_dnx, *v_dny, *v_dnz;
     // interpolate
     v_dpx = this->get_vert_at(px_cords, time, ws, true, false);

@@ -3,6 +3,12 @@
 #include "Others/Utilities.h"
 #include "Others/Vector3d.h"
 
+Edge::Edge(Vertex* v1, Vertex* v2){
+    if(v1 == nullptr || v2 == nullptr) Utility::throwErrorMessage(" Edge::Edge: v1 or v2 is null!");
+    this->add_vert(v1);
+    this->add_vert(v2);
+}
+
 bool Edge::is_same(const Edge* edge) const
 {
     if(this->verts[0] == edge->verts[0] && this->verts[1] == edge->verts[1]){
@@ -15,51 +21,18 @@ bool Edge::is_same(const Edge* edge) const
 }
 
 
-bool Edge::is_vel_change_sign_in_x(const double time) const
+// return the middle pt on this edge
+Vector3d Edge::middle_pt() const
 {
-    Vector3d* vel1 = this->verts[0]->vels.at(time);
-    Vector3d* vel2 = this->verts[1]->vels.at(time);
-    if(vel1->x() >= 0 && vel2->x() >= 0){ // if have same sign
-        return false;
-    }
-    else if(vel1->x() <= 0 && vel2->x() <= 0){ // if have same sign
-        return false;
-    }
-    else{
-        return true;
-    }
+    return (this->verts[0]->cords + this->verts[1]->cords) / 2.;
 }
 
 
-bool Edge::is_vel_change_sign_in_y(const double time) const
+// return the a point at exactly the ratio pt of the edge
+Vector3d Edge::near_middle_pt(const double ratio) const
 {
-    Vector3d* vel1 = this->verts[0]->vels.at(time);
-    Vector3d* vel2 = this->verts[1]->vels.at(time);
-    if(vel1->y() >= 0 && vel2->y() >= 0){ // if have same sign
-        return false;
-    }
-    else if(vel1->y() <= 0 && vel2->y() <= 0){ // if have same sign
-        return false;
-    }
-    else{
-        return true;
-    }
-}
-
-
-bool Edge::is_vel_change_sign_in_z(const double time) const
-{
-    Vector3d* vel1 = this->verts[0]->vels.at(time);
-    Vector3d* vel2 = this->verts[1]->vels.at(time);
-    if(vel1->z() >= 0 && vel2->z() >= 0){ // if have same sign
-        return false;
-    }
-    else if(vel1->z() <= 0 && vel2->z() <= 0){ // if have same sign
-        return false;
-    }
-    else{
-        return true;
-    }
+    if(ratio >= 0.5) Utility::throwErrorMessage("Edge::random_pt_near_middle_pt: Error! ratio is too big!");
+    return (this->verts[0]->cords * ratio + this->verts[1]->cords * (1.-ratio)) / 2.;
 }
 
 

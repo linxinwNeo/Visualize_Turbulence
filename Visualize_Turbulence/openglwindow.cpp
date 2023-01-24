@@ -23,9 +23,7 @@ openGLWindow::openGLWindow(QWidget *parent) : QOpenGLWidget(parent)
 
     // init matrices
     Utility::mat_ident( this->rotmat );
-
     Utility::mat_ident( this->ObjXmat );
-    this->cur_mesh = meshes[0];
 
     // set up format
     QSurfaceFormat fmt;
@@ -50,14 +48,12 @@ openGLWindow::~openGLWindow()
 }
 
 
-// time control
-
-
 void openGLWindow::initializeGL()
 {
     this->initializeOpenGLFunctions();
     if( meshes.size() == 0 ) return;
 
+    this->cur_mesh = meshes[0];
     this->rot_center = cur_mesh->rot_center; //set the rotation center!
 
     glEnable(GL_MULTISAMPLE_ARB);
@@ -94,6 +90,7 @@ void openGLWindow::initializeGL()
 void openGLWindow::paintGL()
 {
     if( meshes.size() == 0 ) return;
+    if( !cur_mesh ) return;
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix(); // push 1st projection matrix

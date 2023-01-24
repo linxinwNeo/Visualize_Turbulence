@@ -69,7 +69,7 @@ bool show_ECG_edge_constructions = false;
 bool show_seeds = true;
 bool show_critical_pts = true;
 
-const double h = 1e-10;
+const double h = 1e-3;
 const UI NUM_SEEDS = 100;
 const UI max_num_steps = 1000;
 const double dist_step_size = 1e-3;

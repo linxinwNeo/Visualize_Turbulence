@@ -35,6 +35,7 @@ public:
     vector<Triangle*> tris;  // triangles that has this vertex.
     vector<Tet*> tets;   // Tetrahedrons that has this vertex.
 
+
     // public member functions
     inline Vertex();
     inline Vertex(Vector3d* v);
@@ -67,6 +68,8 @@ public:
     inline bool has_vel_at_t(const double time) const;
     inline bool has_vor_at_t(const double time) const;
     inline bool has_mu_at_t(const double time) const;
+
+    Vertex* clone(const double time, const bool copy_vel) const;
     bool is_connected_to(const Vertex* vert) const;
 
     Vector3d* linear_interpolate_vel(const double target_t);

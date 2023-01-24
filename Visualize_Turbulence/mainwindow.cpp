@@ -13,7 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     this->total_time = this->model_time = 0.;
 
     // set timer
-    this->cur_mesh = meshes[0];
+    if(meshes.size() != 0){
+        this->cur_mesh = meshes[0];
+    }
+
     this->timer = new QTimer(this);
     connect(this->timer, SIGNAL(timeout()), this, SLOT(increment_time()));
     this->timer->start(time_step_size * MSECS_PER_SEC);

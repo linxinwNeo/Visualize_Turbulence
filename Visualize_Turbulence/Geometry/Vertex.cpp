@@ -87,6 +87,16 @@ void Vertex::set_mu(const double time, const double mu)
 }
 
 
+// deep-copy this vertex
+Vertex *Vertex::clone(const double time, const bool copy_vel = true) const
+{
+    Vertex* new_v = new Vertex(this->x(), this->y(), this->z());
+    if(copy_vel) new_v->vels[time] = new Vector3d( this->vels.at(time) );
+
+    return new_v;
+}
+
+
 //  check if this vertex is connected to the input vertex
 bool Vertex::is_connected_to(const Vertex *vert) const
 {

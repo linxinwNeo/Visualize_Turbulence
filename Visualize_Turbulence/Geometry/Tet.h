@@ -52,6 +52,8 @@ public:
     double volume() const;
     Vector3d centroid() const;
 
+    Tet* clone(const double time) const;
+
     // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
     bool is_pt_in(const Vector3d&) const;
     bool is_pt_in2(const Vector3d&, double ds[4]) const;
@@ -68,7 +70,7 @@ public:
     vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time );
     void make_edges();
     void subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets);
-    Eigen::Matrix3d calc_Jacobian(const Vertex* v, const double time);
+    Eigen::Matrix3d calc_Jacobian(const Vector3d cords, const double time);
 };
 
 bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);

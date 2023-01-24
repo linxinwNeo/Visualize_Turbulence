@@ -21,7 +21,7 @@ public:
 
     // member functions
     inline Edge();
-    inline Edge(Vertex*, Vertex*);
+    Edge(Vertex*, Vertex*);
     inline ~Edge();
 
     inline unsigned long num_verts() const;
@@ -34,9 +34,10 @@ public:
 
     bool is_same(const Edge*) const;
     bool has_vert(const Vertex* v) const;
-    bool is_vel_change_sign_in_x( const double time ) const;
-    bool is_vel_change_sign_in_y( const double time ) const;
-    bool is_vel_change_sign_in_z( const double time ) const;
+
+    Vector3d middle_pt() const;
+
+    Vector3d near_middle_pt(const double ratio) const;
 
     Vertex* linear_interpolate_basedOn_vorMag( const double& time, const double& target_val );
 };
@@ -48,12 +49,6 @@ inline Edge::Edge()
     this->idx = 0;
     // reserve memories
     this->verts.reserve(2); // an edge should only have 2 verts
-}
-
-
-inline Edge::Edge(Vertex* v1, Vertex* v2){
-    this->add_vert(v1);
-    this->add_vert(v2);
 }
 
 
