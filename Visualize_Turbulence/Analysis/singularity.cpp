@@ -25,7 +25,7 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
         for(UI i = 0; i < candidates.size(); i++){
             Tet* tet = candidates[i];
             Vector3d* fixed_pt_cords  = nullptr;
-            // try to find critical point
+            // try to find the critical point
             find_fixed_pt_location(tet, cur_time, &fixed_pt_cords);
 
             if(fixed_pt_cords != nullptr){
@@ -41,8 +41,9 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
                 delete fixed_pt_cords;
             }
 
-            Utility::clear_mem(tet->verts); // clear the memory used by verts of the current candidate tet
-            Utility::clear_mem(tet->edges); // clear the memory used by edges of the currernt candidate tet
+            Utility::clear_mem(tet->verts);
+            Utility::clear_mem(tet->edges);
+            Utility::clear_mem(tet->tris);
             delete tet;
         }
 
@@ -95,6 +96,7 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
             Tet* new_tet = new Tet(v1, v2, v3, v4);
             new_tet->idx = tet->idx;
             new_tet->make_edges();
+            new_tet->make_triangles();
             candidates.push_back(new_tet);
         }
     }
@@ -134,7 +136,7 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
     candidates.push(tet_cp); // push the original tet into the queue to start the following while loop
 
     // verts and edges created when we subdivide, both need to be cleared before return
-    vector<Vertex*> temp_verts; vector<Edge*> temp_edges;
+    vector<Vertex*> temp_verts; vector<Edge*> temp_edges; vector<Triangle*> temp_tris;
 
     Tet* tet = nullptr;
     // main loop
@@ -159,9 +161,11 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
             const Vertex* v = tet->verts[i];
             // if we found, copy the vertex, save it and return
             if( length( *(v->vels.at(time)) ) <= zero_threshold ){
+                qDebug() << "sing mag is" << length( *(v->vels.at(time)) );
                 *fixed_pt = new Vector3d(v->cords);
                 Utility::clear_mem(temp_verts);
                 Utility::clear_mem(temp_edges);
+                Utility::clear_mem(temp_tris);
                 Utility::clear_mem(candidates);
                 delete tet;
                 return count;
@@ -171,7 +175,7 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
         // if we didn't find a fixed pt on vertices, we subdivide
         vector<Tet*> new_candidates;
         // subdivision will create 8 smaller tetrahedrons and those tetrahedrons also create vertices and edges
-        tet->subdivide(time, temp_verts, temp_edges, new_candidates);
+        tet->subdivide(time, temp_verts, temp_edges, temp_tris, new_candidates);
         if(new_candidates.size() != 8) Utility::throwErrorMessage( "Mesh::find_fixed_pt_location: Error! The size of new_candidates is not 8!");
         for(Tet* new_tet : new_candidates){
             candidates.push(new_tet);
@@ -184,6 +188,7 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
 
     Utility::clear_mem(temp_verts);
     Utility::clear_mem(temp_edges);
+    Utility::clear_mem(temp_tris);
     Utility::clear_mem(candidates);
     if(tet != nullptr) delete tet;
     return count;

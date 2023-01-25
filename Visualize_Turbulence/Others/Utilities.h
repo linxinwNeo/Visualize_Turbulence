@@ -78,11 +78,13 @@ namespace Utility
     inline float * MulArray3( float factor, float array0[3] );
     inline void clear_mem(vector<Vertex*> verts);
     inline void clear_mem(vector<Edge*> edges);
+    inline void clear_mem(vector<Triangle*> tris);
     inline void clear_mem(vector<Tet*> tets);
     inline void clear_mem(queue<Tet*> tets);
     inline vector<Edge*> make_edges(vector<Vertex*> verts, bool add_each_other);
     void swap(double& a, double& b);
     void swap(long int& a, long int& b);
+    double SingedDistance(const Vector3d P, const Vector3d a, const Vector3d b, const Vector3d c);
 }
 
 
@@ -289,6 +291,15 @@ inline void Utility::clear_mem(vector<Edge*> edges){
     edges.clear();
 }
 
+inline void Utility::clear_mem(vector<Triangle*> tris){
+    for(UI i = 0; i < tris.size(); i++){
+        if(tris[i] != NULL){
+            delete tris[i];
+        }
+    }
+    tris.clear();
+}
+
 inline void Utility::clear_mem(vector<Tet*> tets){
     for(UI i = 0; i < tets.size(); i++){
         if(tets[i] != NULL){
@@ -337,6 +348,28 @@ inline void Utility::swap(long int & a, long int& b)
     long int temp = a;
     a = b;
     b = temp;
+}
+
+
+// https://people.sc.fsu.edu/~jburkardt/presentations/cg_lab_barycentric_tetrahedrons.pdf
+// if val > 0, the pt is on the normal side of the plane
+// if val == 0, the pt is on the plane
+// if val < 0, the pt is on the other side of the plane
+inline double Utility::SingedDistance(const Vector3d P, const Vector3d a, const Vector3d b, const Vector3d c)
+{
+    Vertex* v1 = new Vertex(a);
+    Vertex* v2 = new Vertex(b);
+    Vertex* v3 = new Vertex(c);
+    Triangle tri = Triangle(v1, v2, v3);
+
+    // compute the normal of the triangle
+    Vector3d n = tri.cal_normal();
+    const Vector3d& Q = a;
+
+    delete v1;
+    delete v2;
+    delete v3;
+    return dot( (P-Q), n );
 }
 
 #endif // UTILITIES_H

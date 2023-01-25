@@ -32,7 +32,7 @@ Vector3d Edge::middle_pt() const
 Vector3d Edge::near_middle_pt(const double ratio) const
 {
     if(ratio >= 0.5) Utility::throwErrorMessage("Edge::random_pt_near_middle_pt: Error! ratio is too big!");
-    return (this->verts[0]->cords * ratio + this->verts[1]->cords * (1.-ratio)) / 2.;
+    return this->verts[1]->cords * (1.-ratio) - this->verts[0]->cords * (ratio) + this->verts[0]->cords;
 }
 
 

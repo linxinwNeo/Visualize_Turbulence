@@ -122,11 +122,12 @@ inline void Singularity::classify_this()
     const complex<double> eigenvalue1 = eigenvalues(0, 0);
     const complex<double> eigenvalue2 = eigenvalues(1, 0);
     const complex<double> eigenvalue3 = eigenvalues(2, 0);
-//    cout<< this->Jacobian <<endl;
+
     vector<double> realEigenValues = {eigenvalue1.real(), eigenvalue2.real(), eigenvalue3.real()};
     vector<double> imagEigenValues = {eigenvalue1.imag(), eigenvalue2.imag(), eigenvalue3.imag()};
     sort_asecding(realEigenValues, imagEigenValues);
-//    cout << eigenvalues <<endl;
+    cout<< "Jacobian matrix" << endl <<this->Jacobian << endl << endl;
+    cout << eigenvalues <<endl;
 
     unsigned short value = is_Node(imagEigenValues);
     // check if it is a source, repelling saddle, attracting saddle or sink

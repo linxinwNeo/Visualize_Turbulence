@@ -437,7 +437,7 @@ Tet* Mesh::inWhichTet(const Vector3d& target_pt, Tet* prev_tet, double ws[4]) co
     set<Tet*> used;
     Tet* cur_tet = prev_tet;
     // it only breaks if we found the target
-    while(!cur_tet->is_pt_in2(target_pt, ws)){ // calculate ds
+    while(!cur_tet->is_pt_inside(target_pt, true, ws)){ // calculate ds
         if(used.find(cur_tet) != used.end()){ // we find this tet has been used, then we return to avoid infinite loops
             return nullptr;
         }

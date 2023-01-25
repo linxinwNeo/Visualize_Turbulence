@@ -108,7 +108,7 @@ bool Tet::has_boundary_tri() const
 Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws, bool add_this_tet)
 {
     // only calculate ws if cal_ws is set to true
-    if(cal_ws) this->bary_tet(v, ws);
+    if(cal_ws) this->bary_cords(ws, v);
 
     Vertex* pt_vert = new Vertex(v);
     if(add_this_tet) pt_vert->add_tet(this);
@@ -186,48 +186,8 @@ Tet *Tet::clone(const double time) const
 }
 
 
-// https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
-// check if the pt is on the same side of other vertices
-bool is_same_side(const Vector3d &v1, const Vector3d &v2, const Vector3d &v3, const Vector3d &v4, const Vector3d &p)
-{
-    Vector3d normal = cross(v2-v1, v3-v1);
-    return dot(normal, v4-v1) * dot(normal, p-v1) >= 0;
-}
-
-
-// https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
-// check is parameter point is in this tet
-bool Tet::is_pt_in(const Vector3d& v) const
-{
-    const Vector3d v1 = this->verts[0]->cords;
-    const Vector3d v2 = this->verts[1]->cords;
-    const Vector3d v3 = this->verts[2]->cords;
-    const Vector3d v4 = this->verts[3]->cords;
-    const Vector3d p = Vector3d(v);
-
-    return  is_same_side(v1, v2, v3, v4, p) &&
-            is_same_side(v2, v3, v4, v1, p) &&
-            is_same_side(v3, v4, v1, v2, p) &&
-            is_same_side(v4, v1, v2, v3, p);
-}
-
-
-// https://www.researchgate.net/publication/226339789_Virtual_Reality-Based_Interactive_Scientific_Visualization_Environments
-// using barycentric cords
-// always calcuate ws
-bool Tet::is_pt_in2(const Vector3d& p, double ws[4]) const
-{
-    this->bary_tet(p, ws);
-    for(int i = 0; i < 4; i ++ ){
-        if(ws[i] < 0) return false;
-    }
-
-    return true;
-}
-
-
-// find the missing v4
-Vertex* Tet::missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3)
+// find the missing vertex of this tet that is not in the parameters
+Vertex* Tet::missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3) const
 {
     set<Vertex*> vs{this->verts[0], this->verts[1], this->verts[2], this->verts[3]};
 
@@ -235,13 +195,79 @@ Vertex* Tet::missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3)
     vs.erase(v2);
     vs.erase(v3);
 
+    if(vs.size() != 1){
+        Utility::throwErrorMessage("Tet::missing_vertex: couldn't find the missing vertex!");
+    }
+
     return *vs.begin();
+}
+
+bool Tet::is_pt_in2(const Vector3d& p, double ds[4]) const
+{
+    this->bary_tet(p, ds);
+    for(int i = 0; i < 4; i ++ ){
+        if(ds[i] < 0) return false;
+    }
+
+    return true;
+}
+
+// checking if the incoming pt is inside this tetrahedron
+// by calculating barycentric coordinates and checking the positivity of each
+// https://people.sc.fsu.edu/~jburkardt/presentations/cg_lab_barycentric_tetrahedrons.pdf
+bool Tet::is_pt_inside(const Vector3d& P, const bool calc_ws, double ws[4]) const
+{
+    // calculate ws if needed
+    if(calc_ws) this->bary_cords(ws, P);
+
+    for(unsigned char i = 0; i < 4; i ++){
+        if(ws[i] < -zero_threshold/3.) return false;
+    }
+
+    return true;
+}
+
+
+// calculate the barycentric coordinates and saved in ws[4]
+// https://people.sc.fsu.edu/~jburkardt/presentations/cg_lab_barycentric_tetrahedrons.pdf
+void Tet::bary_cords(double ws[4], const Vector3d& P) const
+{
+    vector<Triangle*> triangles;
+    triangles.reserve(4);
+
+    for(unsigned char i = 0; i < 4; i++){
+        Vertex* v = this->verts[i];
+        // find the corresponding trianlge of v
+        for(unsigned char j = 0; j < 4; j++){
+            Triangle* tri = this->tris[j];
+            if(!tri->has_vert(v)) triangles.push_back(tri);
+        }
+    }
+
+    if(triangles.size()!=4) Utility::throwErrorMessage("Tet::bary_cords(double ws[4], const Vector3d P): failed to find corresponding triangle for verts");
+
+    const double dist_P_bcd = Utility::SingedDistance(P, triangles[0]->verts[0]->cords, triangles[0]->verts[1]->cords, triangles[0]->verts[2]->cords);
+    const double dist_P_acd = Utility::SingedDistance(P, triangles[1]->verts[0]->cords, triangles[1]->verts[1]->cords, triangles[1]->verts[2]->cords);
+    const double dist_P_abd = Utility::SingedDistance(P, triangles[2]->verts[0]->cords, triangles[2]->verts[1]->cords, triangles[2]->verts[2]->cords);
+    const double dist_P_abc = Utility::SingedDistance(P, triangles[3]->verts[0]->cords, triangles[3]->verts[1]->cords, triangles[3]->verts[2]->cords);
+
+    const double dist_a_bcd = Utility::SingedDistance(this->verts[0]->cords, triangles[0]->verts[0]->cords, triangles[0]->verts[1]->cords, triangles[0]->verts[2]->cords);
+    const double dist_b_acd = Utility::SingedDistance(this->verts[1]->cords, triangles[1]->verts[0]->cords, triangles[1]->verts[1]->cords, triangles[1]->verts[2]->cords);
+    const double dist_c_abd = Utility::SingedDistance(this->verts[2]->cords, triangles[2]->verts[0]->cords, triangles[2]->verts[1]->cords, triangles[2]->verts[2]->cords);
+    const double dist_d_abc = Utility::SingedDistance(this->verts[3]->cords, triangles[3]->verts[0]->cords, triangles[3]->verts[1]->cords, triangles[3]->verts[2]->cords);
+
+    ws[0] = dist_P_bcd / dist_a_bcd;
+    ws[1] = dist_P_acd / dist_b_acd;
+    ws[2] = dist_P_abd / dist_c_abd;
+    ws[3] = dist_P_abc / dist_d_abc;
+
+    return;
 }
 
 
 // https://math.stackexchange.com/questions/183030/given-a-tetrahedron-how-to-find-the-outward-surface-normals-for-each-side
 // compute the normal vector of the specfied triangle
-Vector3d Tet::actual_normal_of( unsigned short tri_idx )
+Vector3d Tet::actual_normal_of( unsigned char tri_idx ) const
 {
     Triangle* tri = this->tris[tri_idx];
     const Vector3d& p = tri->verts[0]->cords;
@@ -254,46 +280,6 @@ Vector3d Tet::actual_normal_of( unsigned short tri_idx )
     }
     // else: the normal is facing outward, don't need to do anthing
     return normal;
-}
-
-
-// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
-double Tet::ScTP(const Vector3d &a, const Vector3d &b, const Vector3d &c) const
-{
-    // computes scalar triple product
-    return dot(a, cross(b, c));
-}
-
-
-// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
-// the weights are saved in vs[4];
-void Tet::bary_tet(const Vector3d & p, double ds[4]) const
-{
-    const Vector3d& a = this->verts[0]->cords;
-    const Vector3d& b = this->verts[1]->cords;
-    const Vector3d& c = this->verts[2]->cords;
-    const Vector3d& d = this->verts[3]->cords;
-
-    const Vector3d vap = p - a;
-    const Vector3d vbp = p - b;
-
-    const Vector3d vab = b - a;
-    const Vector3d vac = c - a;
-    const Vector3d vad = d - a;
-
-    const Vector3d vbc = c - b;
-    const Vector3d vbd = d - b;
-    // ScTP computes the scalar triple product
-    const double va6 = ScTP(vbp, vbd, vbc);
-    const double vb6 = ScTP(vap, vac, vad);
-    const double vc6 = ScTP(vap, vad, vab);
-    const double vd6 = ScTP(vap, vab, vac);
-    const double v6 = 1 / ScTP(vab, vac, vad);
-    ds[0] = va6*v6;
-    ds[1] = vb6*v6;
-    ds[2] = vc6*v6;
-    ds[3] = vd6*v6;
-    return;
 }
 
 
@@ -465,6 +451,29 @@ void Tet::make_edges()
 }
 
 
+// create triangles
+// assume vertices are inserted
+void Tet::make_triangles()
+{
+    Vertex* v1 = this->verts[0];
+    Vertex* v2 = this->verts[1];
+    Vertex* v3 = this->verts[2];
+    Vertex* v4 = this->verts[3];
+
+    Triangle* tri1 = new Triangle(v1, v2, v3);
+    Triangle* tri2 = new Triangle(v2, v3, v4);
+    Triangle* tri3 = new Triangle(v1, v3, v4);
+    Triangle* tri4 = new Triangle(v1, v2, v4);
+
+    this->add_triangle(tri1);
+    this->add_triangle(tri2);
+    this->add_triangle(tri3);
+    this->add_triangle(tri4);
+
+    // may need edges later
+}
+
+
 /* we subdivide the tetrahedron into 4 + 4 = 8 tetrahedrons
  * steps:
  * 1. calculate middle points on 6 edges
@@ -472,9 +481,9 @@ void Tet::make_edges()
  * 3. identify the edges for octahedron (new edges created by step 2.)
  * 4. identify the major diagonal edge (there are three possible diagonal edges, we just need one)
  * 5. separate the octahedron into 4 tetrahedrons by using the diagonal edge.
- * for newly created vertices, edges and tets, we append them to the parameter vectors.
+ * for newly created vertices, edges, tris, and tets, we append them to the parameter vectors.
 */
-void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets)
+void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Triangle*>& new_tris, vector<Tet*>& new_tets)
 {
     // check if this tet has vertices
     if(this->num_verts() != 4) return;
@@ -485,6 +494,14 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     if(this->num_edges() == 0) {
         this->make_edges();
         for(Edge* e:this->edges) new_edges.push_back(e);
+    }
+
+    /* check if this tet has triangles
+     * if not, create new triangle and add these triangles into new_tris
+    */
+    if(this->num_tris() == 0) {
+        this->make_triangles();
+        for(Triangle* tri : this->tris) new_tris.push_back(tri);
     }
 
     // copy vertices
@@ -642,19 +659,28 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
 
     for(Tet* tet : outter_tets){
         new_tets.push_back(tet);
+        // create triangles, not uniquely
+        tet->make_triangles();
+        for(Triangle* tri : tet->tris){
+            new_tris.push_back(tri);
+        }
     }
 
     for(Tet* tet : inner_tets){
         new_tets.push_back(tet);
+        // create triangles, not uniquely
+        tet->make_triangles();
+        for(Triangle* tri : tet->tris){
+            new_tris.push_back(tri);
+        }
     }
 }
 
 
-Eigen::Matrix3d Tet::calc_Jacobian(const Vector3d cords, const double time)
+Eigen::Matrix3d Tet::calc_Jacobian(const Vector3d& cords, const double time)
 {
     double ws[4];
-    if(!this->is_pt_in2(cords, ws)){
-        qDebug() << ws[0] << ws[1] << ws[2] << ws[3];
+    if(!this->is_pt_inside(cords, true, ws)){
         Utility::throwErrorMessage("Tet::calc_Jacobian: Error! incoming pt is outside this tet");
     }
     Eigen::Matrix3d m;
@@ -672,9 +698,9 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vector3d cords, const double time)
     v_dnx = this->get_vert_at(nx_cords, time, ws, true, false);
 
     v_dpy = this->get_vert_at(py_cords, time, ws, true, false);
-    v_dpz = this->get_vert_at(ny_cords, time, ws, true, false);
+    v_dny = this->get_vert_at(ny_cords, time, ws, true, false);
 
-    v_dny = this->get_vert_at(pz_cords, time, ws, true, false);
+    v_dpz = this->get_vert_at(pz_cords, time, ws, true, false);
     v_dnz = this->get_vert_at(nz_cords, time, ws, true, false);
 
     Vector3d dvx = (*v_dpx->vels[time]) - (*v_dnx->vels[time]);
@@ -699,4 +725,43 @@ Eigen::Matrix3d Tet::calc_Jacobian(const Vector3d cords, const double time)
     delete v_dnz;
 
     return m;
+}
+
+// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
+double Tet::ScTP(const Vector3d &a, const Vector3d &b, const Vector3d &c) const
+{
+    // computes scalar triple product
+    return dot(a, cross(b, c));
+}
+
+
+// https://stackoverflow.com/questions/38545520/barycentric-coordinates-of-a-tetrahedron
+// the weights are saved in vs[4];
+void Tet::bary_tet(const Vector3d & p, double ds[4]) const
+{
+    const Vector3d& a = this->verts[0]->cords;
+    const Vector3d& b = this->verts[1]->cords;
+    const Vector3d& c = this->verts[2]->cords;
+    const Vector3d& d = this->verts[3]->cords;
+
+    const Vector3d vap = p - a;
+    const Vector3d vbp = p - b;
+
+    const Vector3d vab = b - a;
+    const Vector3d vac = c - a;
+    const Vector3d vad = d - a;
+
+    const Vector3d vbc = c - b;
+    const Vector3d vbd = d - b;
+    // ScTP computes the scalar triple product
+    const double va6 = ScTP(vbp, vbd, vbc);
+    const double vb6 = ScTP(vap, vac, vad);
+    const double vc6 = ScTP(vap, vad, vab);
+    const double vd6 = ScTP(vap, vab, vac);
+    const double v6 = 1 / ScTP(vab, vac, vad);
+    ds[0] = va6*v6;
+    ds[1] = vb6*v6;
+    ds[2] = vc6*v6;
+    ds[3] = vd6*v6;
+    return;
 }

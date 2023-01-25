@@ -54,23 +54,23 @@ public:
 
     Tet* clone(const double time) const;
 
-    // https://stackoverflow.com/questions/25179693/how-to-check-whether-the-point-is-in-the-tetrahedron-or-not
-    bool is_pt_in(const Vector3d&) const;
-    bool is_pt_in2(const Vector3d&, double ds[4]) const;
-
-    Vector3d actual_normal_of( unsigned short tri_idx );
-    Vertex* missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3);
-
+    Vector3d actual_normal_of( unsigned char tri_idx ) const;
+    Vertex* missing_vertex(Vertex* v1, Vertex*v2, Vertex* v3) const;
+    bool is_pt_inside(const Vector3d& P, const bool calc_ws, double ws[4]) const;
+    void bary_cords(double ws[4], const Vector3d& P) const;
     double ScTP(const Vector3d &a, const Vector3d &b, const Vector3d &c) const;
-    void bary_tet(const Vector3d & p, double vs[4]) const;
+    void bary_tet(const Vector3d & p, double ds[4]) const;
+    bool is_pt_in2(const Vector3d& p, double ds[4]) const;
+
     void calc_marching_indices(unsigned int num_time_steps);
 
     vector<Triangle*> create_isosurface_tris(const double& time);
     Triangle* create_isosurface_tris_case1234( const Vertex* v, const double time );
     vector<Triangle*> create_isosurface_tris_case567( const Vertex* v1, const Vertex* v2, const double time );
     void make_edges();
-    void subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Tet*>& new_tets);
-    Eigen::Matrix3d calc_Jacobian(const Vector3d cords, const double time);
+    void make_triangles();
+    void subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Triangle*>& temp_tris, vector<Tet*>& new_tets);
+    Eigen::Matrix3d calc_Jacobian(const Vector3d& cords, const double time);
 };
 
 bool is_same_side(const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&, const Vector3d&);
