@@ -150,14 +150,14 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], boo
 // https://en.wikipedia.org/wiki/Tetrahedron#Volume
 double Tet::volume() const
 {
-    Vector3d a = this->verts[0]->cords;
-    Vector3d b = this->verts[1]->cords;
-    Vector3d c = this->verts[2]->cords;
-    Vector3d d = this->verts[3]->cords;
-    Vector3d crossP = cross( b-d, c-d );
+    const Vector3d a = this->verts[0]->cords;
+    const Vector3d b = this->verts[1]->cords;
+    const Vector3d c = this->verts[2]->cords;
+    const Vector3d d = this->verts[3]->cords;
+    const Vector3d crossP = cross( b-d, c-d );
     double dotP = dot( a-d, crossP);
     dotP = abs(dotP);
-    double volume = ((double) dotP)/6.;
+    const double volume = ((double) dotP)/6.;
     return volume;
 }
 

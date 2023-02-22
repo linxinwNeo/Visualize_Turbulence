@@ -69,14 +69,14 @@ bool show_ECG_edge_constructions = false;
 bool show_seeds = true;
 bool show_critical_pts = true;
 
-const double h = 1e-2;
+const double h = 1e-3;
 const UI NUM_SEEDS = 100;
-const UI max_num_steps = 100;
-const double dist_step_size = 1e-3;
+const UI max_num_steps = 500;
+const double dist_step_size = 1e-2;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const UI max_num_recursion = 4;
+const UI max_num_recursion = 7;
 const double zero_threshold = 1e-15;
 
 
@@ -110,11 +110,12 @@ void replace_velocity(){
             }
 
             Vector3d cords = v->cords;
-            float scale = 1;
+            float s = 1;
             double x = cords.x();
             double y = cords.y();
             double z = cords.z();
-            v->vels[time]->set(scale*y, -scale*x, 0);
+            v->vels[time]->set(s*x, s*y, 0);
+//            qDebug() <<length(*v->vels[time]);
             normalize(*v->vels[time]);
         }
 
@@ -141,15 +142,22 @@ void testing_subdivision(){
     v1->cords = Vector3d(sqrt(8./9.), 0, -1./3.);
     v2->cords = Vector3d(-sqrt(2./9.), sqrt(2./3.), -1./3.);
     v3->cords = Vector3d(-sqrt(2./9.), -sqrt(2./3.), -1./3.);
-    v4->cords = Vector3d(0, 0, 1.);
+    v4->cords = Vector3d(0, 0.01, 1);
 
     for(Vertex* v : tet->verts){
-        v->vels[0] = new Vector3d(v->y(), -v->x(), v->z());
-//        normalize(*v->vels[0]);
+//        v->vels[0] = new Vector3d(v->x(), v->y(), v->z()/10000000000000000000000000000000000000000000.);
+         v->vels[0] = new Vector3d(v->x(), v->y(), 0);
+//        qDebug() << length(*v->vels[0]);
+        normalize(*v->vels[0]);
     }
 
-//    double ws[4];
-//    Vertex* vert = tet->get_vert_at(Vector3d(0,0,0), 0, ws, true, false );
+    double ws[4];
+
+//    vector<Vertex*> verts; vector<Edge*> edges; vector<Triangle*> tris; vector<Tet*> tets;
+//    tet->subdivide(0, verts, edges, tris, tets);
+
+//    Vertex* vert = tet->get_vert_at((v1->cords+v2->cords)/2., 0, ws, true, false );
+//    qDebug() << ws[0] << ws[1] << ws[2] << ws[3];
 //    Singularity* sing = new Singularity();
 //    sing->Jacobian = tet->calc_Jacobian(Vector3d(0,0,0), 0); // calculate the jacobian for this sing
 //    sing->classify_this(); // classify the type of the singularity
@@ -157,9 +165,10 @@ void testing_subdivision(){
 
     Vector3d* fixed_pt_cords  = nullptr;
     // try to find the critical point
-    mesh->find_fixed_pt_location(tet, 0., &fixed_pt_cords);
+    unsigned int num_times = mesh->find_fixed_pt_location(tet, 0., &fixed_pt_cords);
 
     if(fixed_pt_cords != nullptr){
+        qDebug() << fixed_pt_cords->x() << fixed_pt_cords->y() << fixed_pt_cords->z();
         // calculate the jacobian matrix
         Singularity* sing = new Singularity();
         sing->Jacobian = tet->calc_Jacobian(fixed_pt_cords, 0); // calculate the jacobian for this sing
@@ -179,7 +188,7 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-    meshes[0]->num_time_steps = 3;
+//    meshes[0]->num_time_steps = 2;
 //    replace_velocity();
 
     testing_subdivision();

@@ -389,16 +389,18 @@ void Mesh::build_ECG_for_all_t()
         ECG* ecg = new ECG(t);
         // insert singularities for ecg at time t
         vector<Singularity*> sings = map[t];
-        qDebug() << "singularity size for time " << t <<  ": " <<  sings.size();
+        qDebug() << "singularity size for time" << t <<  ": " <<  sings.size();
         for(Singularity* sing : sings){
             ecg->add_sing(sing); // add singularity one by one
         }
 
         qDebug() << "Build ECG nodes";
         ecg->build_ECG_NODES();
+        qDebug() << "ECG nodes Done";
         auto seeds = ecg->placing_random_seeds(this, NUM_SEEDS);
         qDebug() << "Build ECG edges";
         ecg->build_ECG_EDGES(this, seeds);
+        qDebug() << "ECG edges Done";
         this->ECG_for_all_t[t] = ecg;
 
         t += time_step_size;

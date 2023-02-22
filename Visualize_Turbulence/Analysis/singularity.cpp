@@ -36,6 +36,7 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
                 sing->classify_this(); // classify the type of the singularity
                 qDebug() << sing->get_type();
                 sing->cords = fixed_pt_cords;
+                qDebug() << "fixed_pt_cords: " << fixed_pt_cords->x() << fixed_pt_cords->y() << fixed_pt_cords->z();
                 sing->in_which_tet = tets[tet->idx]; // record the which tet contains this singularity
                 sings_for_all_t[cur_time].push_back( sing ); // save the singularity in a vector
                 delete fixed_pt_cords;
@@ -64,14 +65,18 @@ bool Mesh::is_candidate_tet(Tet* tet, const double time) const
 
     for(const Vertex* vert : tet->verts){
         Vector3d* vel = vert->vels.at(time);
-        if(vel->x() >= 0) pos_x = true;
-        if(vel->x() <= 0) neg_x = true;
+        double x = vel->x();
+        double y = vel->y();
+        double z = vel->z();
 
-        if(vel->y() >= 0) pos_y = true;
-        if(vel->y() <= 0) neg_y = true;
+        if(x > 0) pos_x = true;
+        if(x < 0) neg_x = true;
 
-        if(vel->z() >= 0) pos_z = true;
-        if(vel->z() <= 0) neg_z = true;
+        if(y > 0) pos_y = true;
+        if(y < 0) neg_y = true;
+
+        if(z > 0) pos_z = true;
+        if(z < 0) neg_z = true;
     }
 
     return pos_x && neg_x && pos_y && neg_y && pos_z && neg_z;
@@ -120,13 +125,15 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
  * const double time: we need the velocity defined at some time to check if there is a critical point.
  * Vertex** fixed_pts: If we found a critical point, save that in the *fixed_pts and then return
 */
-UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time, Vector3d** fixed_pt) const
+UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time, Vector3d** fixed_pt ) const
 {
+    int num_pops = 0;
     // copy the tet_to_be_checked
     Tet* tet_cp = tet_to_be_checked->clone(time);
 
     // calculating the max number of tetrahedrons that need to be checked for the incoming tet
     const UI max_times = pow(8, max_num_recursion);
+//     const UI max_times = 4;
     // records how many smaller tets have been checked
     UI count = 0;
 
@@ -143,24 +150,22 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
     while(candidates.size() != 0){
         // check if max_times is reached
         if( count >= max_times ) break;
-        if( candidates.size() > (max_times - count + 1) ) break;
 
         // pop the first tet from the queue
         tet = candidates.front();
         candidates.pop();
+        num_pops++;
 
-        // check if it is a valid candidate tet
-        if( !is_candidate_tet(tet, time) ){
-            delete tet;
-            tet = nullptr;
-            continue;
-        }
+        // print out original tet's volume
+//        qDebug() << "volume" << tet->volume();
 
-        // check if one of vertices of tet is singularity
+        // check if one of vertices of tet is a singularity
         for(unsigned short i = 0; i < 4; i++){
             const Vertex* v = tet->verts[i];
+            qDebug() << "vel is" << length( *(v->vels.at(time)));
             // if we found, copy the vertex, save it and return
-            if( length( *(v->vels.at(time)) ) <= zero_threshold ){
+            if( length( *(v->vels.at(time)) ) < zero_threshold ){
+//            if(abs(v->vels.at(time)->x()) < zero_threshold && abs(v->vels.at(time)->y()) < zero_threshold && abs(v->vels.at(time)->z()) < zero_threshold ){
                 qDebug() << "sing mag is" << length( *(v->vels.at(time)) );
                 *fixed_pt = new Vector3d(v->cords);
                 Utility::clear_mem(temp_verts);
@@ -176,21 +181,33 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
         vector<Tet*> new_candidates;
         // subdivision will create 8 smaller tetrahedrons and those tetrahedrons also create vertices and edges
         tet->subdivide(time, temp_verts, temp_edges, temp_tris, new_candidates);
+        count++;
         if(new_candidates.size() != 8) Utility::throwErrorMessage( "Mesh::find_fixed_pt_location: Error! The size of new_candidates is not 8!");
+
         for(Tet* new_tet : new_candidates){
+            if( !is_candidate_tet(new_tet, time) ){
+//                qDebug()<< "invalid"  << new_tet->verts[0]->vel_str(time) << new_tet->verts[1]->vel_str(time) << new_tet->verts[2]->vel_str(time) << new_tet->verts[3]->vel_str(time);
+                delete new_tet;
+                new_tet = nullptr;
+                continue;
+            }
             candidates.push(new_tet);
         }
+
 
         // get ready for next iteration
         delete tet;
         tet = nullptr;
     }
 
+    qDebug() << "size of candidates" << candidates.size();
+    qDebug() << "pop:" << num_pops;
     Utility::clear_mem(temp_verts);
     Utility::clear_mem(temp_edges);
     Utility::clear_mem(temp_tris);
     Utility::clear_mem(candidates);
     if(tet != nullptr) delete tet;
+
     return count;
 }
 
