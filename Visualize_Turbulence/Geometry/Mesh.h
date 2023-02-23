@@ -76,7 +76,8 @@ public:
     unordered_map< double, vector<Singularity*> > detect_sings();
     bool is_candidate_tet(Tet* tet, const double time) const;
     vector<Tet*> build_candidate_tets( const double time ) const;
-    UI find_fixed_pt_location(  const Tet *tet, const double time, Vector3d** fixed_pt ) const;
+    void find_fixed_pt_location_Limit(  const Tet *tet, const double time, vector<Vector3d>& sings ) const;
+    UI find_fixed_pt_location_TetSubd(  const Tet *tet, const double time, Vector3d** fixed_pt ) const;
 };
 
 inline unsigned long Mesh::num_verts() const

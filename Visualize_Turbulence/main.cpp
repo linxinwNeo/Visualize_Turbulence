@@ -72,6 +72,8 @@ bool show_critical_pts = true;
 const double h = 1e-3;
 const UI NUM_SEEDS = 100;
 const UI max_num_steps = 500;
+const UI NUM_SEEDS_for_Limit = 10;
+const UI max_num_steps_for_Limit = 100;
 const double dist_step_size = 1e-2;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
@@ -153,27 +155,17 @@ void testing_subdivision(){
 
     double ws[4];
 
-//    vector<Vertex*> verts; vector<Edge*> edges; vector<Triangle*> tris; vector<Tet*> tets;
-//    tet->subdivide(0, verts, edges, tris, tets);
+    vector<Vector3d> sings;
+    // try to find the critical points
+    mesh->find_fixed_pt_location_Limit(tet, 0., sings);
 
-//    Vertex* vert = tet->get_vert_at((v1->cords+v2->cords)/2., 0, ws, true, false );
-//    qDebug() << ws[0] << ws[1] << ws[2] << ws[3];
-//    Singularity* sing = new Singularity();
-//    sing->Jacobian = tet->calc_Jacobian(Vector3d(0,0,0), 0); // calculate the jacobian for this sing
-//    sing->classify_this(); // classify the type of the singularity
-//    qDebug() << sing->get_type();
-
-    Vector3d* fixed_pt_cords  = nullptr;
-    // try to find the critical point
-    unsigned int num_times = mesh->find_fixed_pt_location(tet, 0., &fixed_pt_cords);
-
-    if(fixed_pt_cords != nullptr){
-        qDebug() << fixed_pt_cords->x() << fixed_pt_cords->y() << fixed_pt_cords->z();
+    for(Vector3d sing : sings){
+        qDebug() << sing.x() << sing.y() << sing.z();
         // calculate the jacobian matrix
-        Singularity* sing = new Singularity();
-        sing->Jacobian = tet->calc_Jacobian(fixed_pt_cords, 0); // calculate the jacobian for this sing
-        sing->classify_this(); // classify the type of the singularity
-        qDebug() << sing->get_type();
+        Singularity* singularity = new Singularity();
+        singularity->Jacobian = tet->calc_Jacobian(sing, 0); // calculate the jacobian for this sing
+        singularity->classify_this(); // classify the type of the singularity
+        qDebug() << singularity->get_type();
     }
 
     exit(1);

@@ -49,6 +49,7 @@ public:
 
 
     Vertex* get_vert_at(const Vector3d& v, const double time, double ws[4], bool cal_ws = true, bool add_this_tet = true);
+    Vertex* get_vert_at(const double time, double ws[4]) const;
     double volume() const;
     Vector3d centroid() const;
 

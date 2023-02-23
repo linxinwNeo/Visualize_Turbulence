@@ -26,8 +26,10 @@ extern const double cylinder_radius;
 extern const int slices;
 extern const double arrow_color[];
 extern ColorTable CT;
-extern const unsigned int NUM_SEEDS;
-extern const unsigned int max_num_steps;
+extern const UI NUM_SEEDS;
+extern const UI max_num_steps;
+extern const UI NUM_SEEDS_for_Limit;
+extern const UI max_num_steps_for_Limit;
 extern const UI frames_per_sec;
 extern const double time_step_size;
 extern const double surface_level_ratio;
@@ -85,6 +87,7 @@ namespace Utility
     void swap(double& a, double& b);
     void swap(long int& a, long int& b);
     double SingedDistance(const Vector3d P, const Vector3d a, const Vector3d b, const Vector3d c);
+    inline double random_value(const double min, const double max);
 }
 
 
@@ -370,6 +373,17 @@ inline double Utility::SingedDistance(const Vector3d P, const Vector3d a, const 
     delete v2;
     delete v3;
     return dot( (P-Q), n );
+}
+
+inline double Utility::random_value(const double min, const double max){
+    if(max < min) return 0.;
+    if(max == min) return min;
+
+    srand((unsigned)time(NULL));
+
+    const double new_max = max - min;
+
+    return (double)rand() / (double)RAND_MAX * new_max + min;
 }
 
 #endif // UTILITIES_H

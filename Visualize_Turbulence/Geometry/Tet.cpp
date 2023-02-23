@@ -138,10 +138,48 @@ Vertex* Tet::get_vert_at(const Vector3d& v, const double time, double ws[4], boo
         }
     }
 
+    pt_vert->cords = v;
     pt_vert->set_vel(time, new Vector3d(vel) ); // adding new vel in order to avoid double deletion
     pt_vert->set_vor(time, new Vector3d(vor) ); // adding new vor in order to avoid double deletion
     pt_vert->set_mu(time, mu);
 
+    return pt_vert;
+}
+
+Vertex *Tet::get_vert_at(const double time, double ws[4]) const
+{
+    Vector3d vel,  vor;
+    double mu = 0.;
+    double x=0, y=0, z = 0;
+    for(unsigned short i = 0; i < 4; i++){
+        Vertex* vert = this->verts[i];
+        double weight = ws[i];
+
+        if(vert->has_vel_at_t(time)){
+            Vector3d temp_vel = vert->vels[time];
+            vel =  vel + temp_vel * weight;
+        }
+
+        if(vert->has_vor_at_t(time)){
+            Vector3d temp_vor = vert->vors[time];
+            vor = vor + temp_vor * weight;
+        }
+
+        if(vert->has_mu_at_t(time)){
+            double temp_mu = vert->mus[time];
+            mu = mu + temp_mu * weight;
+        }
+
+        x += vert->x() * weight;
+        y += vert->y() * weight;
+        z += vert->z() * weight;
+    }
+
+    Vertex* pt_vert = new Vertex();
+    pt_vert->set_vel(time, new Vector3d(vel) ); // adding new vel in order to avoid double deletion
+    pt_vert->set_vor(time, new Vector3d(vor) ); // adding new vor in order to avoid double deletion
+    pt_vert->set_mu(time, mu);
+    pt_vert->set_cords(x, y, z);
     return pt_vert;
 }
 

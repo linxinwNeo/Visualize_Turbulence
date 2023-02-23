@@ -5,6 +5,8 @@
 #include <Eigen/Eigenvalues>
 #include <iostream>
 #include <queue>
+#include <stdlib.h>
+#include <time.h>
 
 
 unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
@@ -26,7 +28,7 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
             Tet* tet = candidates[i];
             Vector3d* fixed_pt_cords  = nullptr;
             // try to find the critical point
-            find_fixed_pt_location(tet, cur_time, &fixed_pt_cords);
+            find_fixed_pt_location_TetSubd(tet, cur_time, &fixed_pt_cords);
 
             if(fixed_pt_cords != nullptr){
                 // calculate the jacobian matrix
@@ -110,6 +112,79 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
 }
 
 
+/* attemp to find a fixed pt in a given tet, multiple critical points can exist in one tetrahedron.
+ * The idea is to place random points in the tetrahedron and trace them backwards.
+ * Stop if 1) goes outside the tet, 2) run out of steps
+ * if find a vertex, return the critical pt as fixed_pt.
+ */
+void Mesh::find_fixed_pt_location_Limit( const Tet *tet_to_be_checked, const double t, vector<Vector3d>& sings ) const
+{
+#define WEIGHTS pair<pair<double, double>, pair<double, double>>
+
+    // copy the tet_to_be_checked
+    Tet* tet_cp = tet_to_be_checked->clone(t);
+    // randomly placing initial seeds
+    vector<Vertex*> randm_seeds;
+    set<WEIGHTS> weights;
+    randm_seeds.reserve(NUM_SEEDS_for_Limit + max_num_steps_for_Limit * NUM_SEEDS_for_Limit); // reserve enough space
+    // generating seeds
+    UI cur_num_seeds = 0;
+
+    // keep generate new seeds until we have enough seeds
+    while(cur_num_seeds < NUM_SEEDS_for_Limit){
+        const double w1= Utility::random_value(0, 1);
+        const double w2= Utility::random_value(0, 1-w1);
+        const double w3= Utility::random_value(0, 1-w1-w2);
+        const double w4= Utility::random_value(0, 1-w1-w2-w3);
+        WEIGHTS ws = {{w1,w2}, {w3,w4}};
+
+        // make sure this barycentric coordinates are unique
+        if(weights.find(ws) != weights.end()){ // this ws is a duplicate
+            continue;
+        }
+        // add ws if ws is not a duplicate
+        weights.insert(ws);
+        double ws_arr[4] = {w1,w2,w3,w4};
+        // create a new Vertex using this coordinate
+        Vertex* vert = tet_cp->get_vert_at(t, ws_arr);
+        randm_seeds.push_back(vert);
+        cur_num_seeds++;
+    }
+
+    double ws[4];
+    // for each seed
+    for(UI i = 0; i < NUM_SEEDS_for_Limit; i++){
+        qDebug() << "seed 1";
+        Vertex* cur_vert = randm_seeds[i];
+        // trace their path reversely
+        for(UI j = 0; j < max_num_steps_for_Limit; j++){
+            if( !tet_cp->is_pt_inside(cur_vert->cords, true, ws) ){
+                break; // if the point goes outside the tet, we stop tracing
+            }
+
+            if( length(*cur_vert->vels.at(t) ) < zero_threshold ){
+                // it is a critical point
+                sings.push_back(cur_vert->cords);
+                break;
+            }
+
+            Vector3d vel = Vector3d(cur_vert->vels.at(t));
+            Vector3d new_cords = cur_vert->cords + vel * 0.3;
+
+            // interpolate
+            cur_vert = tet_cp->get_vert_at(new_cords, t, ws, true, false);
+            randm_seeds.push_back(cur_vert);
+        }
+    }
+
+    // clear memory usage
+    Utility::clear_mem(randm_seeds);
+    weights.clear();
+    Utility::clear_mem(tet_cp->verts);
+    delete tet_cp;
+    return;
+}
+
 /* find one fixed pt in a given tet, assume only one can exist in a tet.
  * The idea is to subdivide the tetrahedron recursively until we found the a critical point.
  * Steps:
@@ -125,7 +200,7 @@ vector<Tet*> Mesh::build_candidate_tets( const double time ) const
  * const double time: we need the velocity defined at some time to check if there is a critical point.
  * Vertex** fixed_pts: If we found a critical point, save that in the *fixed_pts and then return
 */
-UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time, Vector3d** fixed_pt ) const
+UI Mesh::find_fixed_pt_location_TetSubd( const Tet *tet_to_be_checked, const double time, Vector3d** fixed_pt ) const
 {
     int num_pops = 0;
     // copy the tet_to_be_checked
@@ -133,7 +208,6 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
 
     // calculating the max number of tetrahedrons that need to be checked for the incoming tet
     const UI max_times = pow(8, max_num_recursion);
-//     const UI max_times = 4;
     // records how many smaller tets have been checked
     UI count = 0;
 
@@ -156,22 +230,20 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
         candidates.pop();
         num_pops++;
 
-        // print out original tet's volume
-//        qDebug() << "volume" << tet->volume();
-
         // check if one of vertices of tet is a singularity
         for(unsigned short i = 0; i < 4; i++){
             const Vertex* v = tet->verts[i];
             qDebug() << "vel is" << length( *(v->vels.at(time)));
             // if we found, copy the vertex, save it and return
             if( length( *(v->vels.at(time)) ) < zero_threshold ){
-//            if(abs(v->vels.at(time)->x()) < zero_threshold && abs(v->vels.at(time)->y()) < zero_threshold && abs(v->vels.at(time)->z()) < zero_threshold ){
                 qDebug() << "sing mag is" << length( *(v->vels.at(time)) );
                 *fixed_pt = new Vector3d(v->cords);
                 Utility::clear_mem(temp_verts);
                 Utility::clear_mem(temp_edges);
                 Utility::clear_mem(temp_tris);
                 Utility::clear_mem(candidates);
+                Utility::clear_mem(tet_cp->verts);
+                delete tet_cp;
                 delete tet;
                 return count;
             }
@@ -186,7 +258,6 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
 
         for(Tet* new_tet : new_candidates){
             if( !is_candidate_tet(new_tet, time) ){
-//                qDebug()<< "invalid"  << new_tet->verts[0]->vel_str(time) << new_tet->verts[1]->vel_str(time) << new_tet->verts[2]->vel_str(time) << new_tet->verts[3]->vel_str(time);
                 delete new_tet;
                 new_tet = nullptr;
                 continue;
@@ -206,6 +277,8 @@ UI Mesh::find_fixed_pt_location( const Tet *tet_to_be_checked, const double time
     Utility::clear_mem(temp_edges);
     Utility::clear_mem(temp_tris);
     Utility::clear_mem(candidates);
+    Utility::clear_mem(tet_cp->verts);
+    delete tet_cp;
     if(tet != nullptr) delete tet;
 
     return count;
