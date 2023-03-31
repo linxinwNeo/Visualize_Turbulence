@@ -78,7 +78,7 @@ const double dist_step_size = 1e-2;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
 //const double time_step_size = 0.1;
-const UI max_num_recursion = 7;
+const UI max_num_recursion = 4;
 const double zero_threshold = 1e-15;
 
 
@@ -133,7 +133,33 @@ void replace_velocity(){
 }
 
 
-void testing_subdivision(){
+void test_fixedPtDetection_Robust(){
+    Mesh* mesh = meshes[0];
+    Tet* tet = mesh->tets[0];
+    Vertex* v1 = tet->verts[0];
+    Vertex* v2 = tet->verts[1];
+    Vertex* v3 = tet->verts[2];
+    Vertex* v4 = tet->verts[3];
+
+    // replace coordinates
+    v1->cords = Vector3d(sqrt(8./9.), 0, -1./3.);
+    v2->cords = Vector3d(-sqrt(2./9.), sqrt(2./3.), -1./3.);
+    v3->cords = Vector3d(-sqrt(2./9.), -sqrt(2./3.), -1./3.);
+    v4->cords = Vector3d(0, 0, 1);
+
+    // replace velocity
+    int s = 0.1;
+    for(Vertex* v : tet->verts){
+        v->vels[0] = new Vector3d(s*v->x(), s*v->y(), s*v->z());
+//        qDebug() << v->vels[0]->x() << v->vels[0]->y() << v->vels[0]->z();
+    }
+
+    qDebug() << " result: " << mesh->has_fixedPt_Robust(tet, 0);
+
+    exit(10);
+}
+
+void testing_DetectfixedPt_subd(){
     Mesh* mesh = meshes[0];
     Tet* tet = mesh->tets[0];
     Vertex* v1 = tet->verts[0];
@@ -180,10 +206,11 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-//    meshes[0]->num_time_steps = 2;
+    meshes[0]->num_time_steps = 5;
 //    replace_velocity();
 
-    testing_subdivision();
+//    testing_subdivision();
+//    test_fixedPtDetection_Robust();
 
     // constucting the data for rendering
     if(show_isosurfaces)

@@ -1,5 +1,5 @@
-#ifndef SINGULARITY_H
-#define SINGULARITY_H
+#ifndef FIXEDPTDETECT_H
+#define FIXEDPTDETECT_H
 
 #include "Geometry/Vertex.h"
 #include "Others/Predefined.h"

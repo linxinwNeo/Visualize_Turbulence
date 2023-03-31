@@ -1,6 +1,6 @@
 #include "Geometry/Mesh.h"
 #include "Others/Utilities.h"
-#include "Analysis/singularity.h"
+#include "Analysis/FixedPtDetect.h"
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <iostream>
@@ -34,11 +34,8 @@ unordered_map< double, vector<Singularity*> > Mesh::detect_sings()
                 // calculate the jacobian matrix
                 Singularity* sing = new Singularity();
                 sing->Jacobian = tet->calc_Jacobian(fixed_pt_cords, cur_time); // calculate the jacobian for this sing
-    //            cout<< sing->Jacobian<<endl;
                 sing->classify_this(); // classify the type of the singularity
-                qDebug() << sing->get_type();
                 sing->cords = fixed_pt_cords;
-                qDebug() << "fixed_pt_cords: " << fixed_pt_cords->x() << fixed_pt_cords->y() << fixed_pt_cords->z();
                 sing->in_which_tet = tets[tet->idx]; // record the which tet contains this singularity
                 sings_for_all_t[cur_time].push_back( sing ); // save the singularity in a vector
                 delete fixed_pt_cords;
@@ -154,7 +151,6 @@ void Mesh::find_fixed_pt_location_Limit( const Tet *tet_to_be_checked, const dou
     double ws[4];
     // for each seed
     for(UI i = 0; i < NUM_SEEDS_for_Limit; i++){
-        qDebug() << "seed 1";
         Vertex* cur_vert = randm_seeds[i];
         // trace their path reversely
         for(UI j = 0; j < max_num_steps_for_Limit; j++){
@@ -184,6 +180,72 @@ void Mesh::find_fixed_pt_location_Limit( const Tet *tet_to_be_checked, const dou
     delete tet_cp;
     return;
 }
+
+char Mesh::Positive( const Vector3d* v1, const Vector3d* v2, const Vector3d* v3, const Vector3d* v4, const double time ) const {
+    Eigen::Matrix4d m;
+    m << v1->x(), v1->y(), v1->z(), 1,
+             v2->x(), v2->y(), v2->z(), 1,
+             v3->x(), v3->y(), v3->z(), 1,
+             v4->x(), v4->y(), v4->z(), 1;
+
+    const double det = m.determinant();
+
+    if(det < 0) return -1;
+    else if(det > 0) return 1;
+    else {
+        //        Utility::throwErrorMessage("determinant is 0");
+        return 0;
+    }
+}
+
+// http://www.sci.utah.edu/publications/Bha2014b/Bhatia_TopoInVis2014.pdf
+bool Mesh::has_fixedPt_Robust( const Tet* tet, const double time ) const {
+    Vertex* vert1 = tet->verts[0];
+    Vertex* vert2 = tet->verts[1];
+    Vertex* vert3 = tet->verts[2];
+    Vertex* vert4 = tet->verts[3];
+
+    const Vector3d* v1 = vert1->vels[time];
+    const Vector3d* v2 = vert2->vels[time];
+    const Vector3d* v3 = vert3->vels[time];
+    const Vector3d* v4 = vert4->vels[time];
+    vector<const Vector3d*> vs = {v1, v2, v3, v4};
+
+    const Vector3d* zero = new Vector3d();
+
+    char s = this->Positive(vs[0], vs[1], vs[2], vs[3], time);
+    for(char i=0; i<4; i++){
+        vs[i] = zero;
+        char s_i = this->Positive(vs[0], vs[1], vs[2], vs[3], time);
+        vs[i] = tet->verts[i]->vels[time];
+        if(s != s_i) return false;
+    }
+
+    return true;
+}
+
+
+// for each time step, find tets with fixed pts
+void Mesh::find_tets_with_fixedPts()
+{
+    double cur_time = 0.;
+
+    while( cur_time < this->num_time_steps - 1. ){
+        vector<Tet*> tets_with_fixed_pt;
+        tets_with_fixed_pt.reserve(100);
+        for(Tet* tet : this->tets){
+            if(tet->has_boundary_tri()) continue;
+           if( this->has_fixedPt_Robust(tet, cur_time) ){
+               // TODO: should we do a simpler candidate test first?
+               tets_with_fixed_pt.push_back(tet);
+           }
+        }
+        this->tet_with_fixed_pt_for_all_t[cur_time] = tets_with_fixed_pt;
+        cur_time += time_step_size;
+    }
+    return;
+}
+
 
 /* find one fixed pt in a given tet, assume only one can exist in a tet.
  * The idea is to subdivide the tetrahedron recursively until we found the a critical point.
@@ -233,17 +295,14 @@ UI Mesh::find_fixed_pt_location_TetSubd( const Tet *tet_to_be_checked, const dou
         // check if one of vertices of tet is a singularity
         for(unsigned short i = 0; i < 4; i++){
             const Vertex* v = tet->verts[i];
-            qDebug() << "vel is" << length( *(v->vels.at(time)));
             // if we found, copy the vertex, save it and return
             if( length( *(v->vels.at(time)) ) < zero_threshold ){
-                qDebug() << "sing mag is" << length( *(v->vels.at(time)) );
                 *fixed_pt = new Vector3d(v->cords);
                 Utility::clear_mem(temp_verts);
                 Utility::clear_mem(temp_edges);
                 Utility::clear_mem(temp_tris);
                 Utility::clear_mem(candidates);
                 Utility::clear_mem(tet_cp->verts);
-                delete tet_cp;
                 delete tet;
                 return count;
             }
@@ -278,7 +337,6 @@ UI Mesh::find_fixed_pt_location_TetSubd( const Tet *tet_to_be_checked, const dou
     Utility::clear_mem(temp_tris);
     Utility::clear_mem(candidates);
     Utility::clear_mem(tet_cp->verts);
-    delete tet_cp;
     if(tet != nullptr) delete tet;
 
     return count;

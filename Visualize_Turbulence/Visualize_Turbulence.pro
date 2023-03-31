@@ -10,7 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     Analysis/ECG.cpp \
-    Analysis/singularity.cpp \
+    Analysis/FixedPtDetect.cpp \
     FileLoader/ReadFile.cpp \
     Geometry/Edge.cpp \
     Geometry/Mesh.cpp \
@@ -29,7 +29,7 @@ SOURCES += \
 
 HEADERS += \
     Analysis/ECG.h \
-    Analysis/singularity.h \
+    Analysis/FixedPtDetect.h \
     Eigen/Cholesky \
     Eigen/CholmodSupport \
     Eigen/Core \

@@ -32,6 +32,7 @@ public:
     unsigned int num_time_steps;
 
     unordered_map<double, ECG*> ECG_for_all_t;
+    unordered_map< double, vector<Tet*> > tet_with_fixed_pt_for_all_t;
 
     unordered_map<double, pair<double,double>> min_max_at_verts_for_all_t;
 
@@ -78,6 +79,10 @@ public:
     vector<Tet*> build_candidate_tets( const double time ) const;
     void find_fixed_pt_location_Limit(  const Tet *tet, const double time, vector<Vector3d>& sings ) const;
     UI find_fixed_pt_location_TetSubd(  const Tet *tet, const double time, Vector3d** fixed_pt ) const;
+
+    char Positive( const Vector3d* v1, const Vector3d* v2, const Vector3d* v3, const Vector3d* v4, const double time ) const;
+    bool has_fixedPt_Robust(const Tet* tet, const double time) const;
+    void find_tets_with_fixedPts();
 };
 
 inline unsigned long Mesh::num_verts() const

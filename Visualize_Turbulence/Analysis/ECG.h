@@ -1,7 +1,7 @@
 #ifndef ECG_H
 #define ECG_H
 
-#include "Analysis/singularity.h"
+#include "Analysis/FixedPtDetect.h"
 #include "Lines/StreamLine.h"
 #include <set>
 #include <vector>

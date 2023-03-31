@@ -1,6 +1,6 @@
 #include "Geometry/Mesh.h"
 #include "Others/Utilities.h"
-#include "Analysis/singularity.h"
+#include "Analysis/FixedPtDetect.h"
 #include <set>
 #include <float.h>
 
@@ -382,6 +382,8 @@ void Mesh::build_ECG_for_all_t()
 
 
     unordered_map< double, vector<Singularity*> > map = this->detect_sings();
+    this->find_tets_with_fixedPts();
+
 
     double t = 0.;
     while( t < this->num_time_steps - 1. )

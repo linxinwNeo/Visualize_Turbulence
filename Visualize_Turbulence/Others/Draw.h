@@ -14,7 +14,7 @@
 #include "Geometry/Vertex.h"
 #include "Lines/PathLine.h"
 #include "Lines/StreamLine.h"
-#include "Analysis/singularity.h"
+#include "Analysis/FixedPtDetect.h"
 
 // function prototypes
 inline void draw_cylinder(
@@ -371,6 +371,27 @@ inline void draw_ECG_connections( ECG* ecg ){
             draw_streamline(edge->sl, 0, 0);
         }
     }
+}
+
+inline void mark_tets_with_fixedPts(const vector<Tet*> & tets){
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(0,0,0);
+    for(const Tet* tet: tets){
+        for(const Triangle* tri:tet->tris){
+            Vector3d v1 = tri->verts[0]->cords;
+            Vector3d v2 = tri->verts[1]->cords;
+            Vector3d v3 = tri->verts[2]->cords;
+            glVertex3f(v1.x(), v1.y(), v1.z());
+            glVertex3f(v2.x(), v2.y(), v2.z());
+            glVertex3f(v3.x(), v3.y(), v3.z());
+        }
+    }
+    glEnd();
+
+    glPopMatrix();
 }
 
 #endif // DRAW_H
