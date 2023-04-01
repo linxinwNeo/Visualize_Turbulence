@@ -373,7 +373,7 @@ inline void draw_ECG_connections( ECG* ecg ){
     }
 }
 
-inline void mark_tets_with_fixedPts(const vector<Tet*> & tets){
+inline void color_tets_with_fixedPts(const vector<Tet*> & tets){
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 

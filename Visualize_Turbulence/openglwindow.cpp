@@ -186,7 +186,7 @@ void openGLWindow::main_routine(Mesh * mesh) const
     }
 
     if(build_ECG){
-        mark_tets_with_fixedPts(mesh->tet_with_fixed_pt_for_all_t.at(this->time));
+        color_tets_with_fixedPts(mesh->tet_with_fixed_pt_for_all_t.at(this->time));
     }
 
     if(show_boundary_wireframe)

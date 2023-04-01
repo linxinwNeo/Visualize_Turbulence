@@ -87,7 +87,9 @@ void Vertex::set_mu(const double time, const double mu)
 }
 
 
-// deep-copy this vertex
+// copy th following properties:
+// 1. the coordinates
+// 2. the velocity at time
 Vertex *Vertex::clone(const double time, const bool copy_vel = true) const
 {
     Vertex* new_v = new Vertex(this->x(), this->y(), this->z());

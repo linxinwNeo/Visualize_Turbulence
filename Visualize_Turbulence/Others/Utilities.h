@@ -277,8 +277,9 @@ inline vector<UL> Utility::generate_unique_random_Tet_idx(Mesh* mesh)
 
 inline void Utility::clear_mem(vector<Vertex*> verts){
     for(UI i = 0; i < verts.size(); i++){
-        if(verts[i] != NULL){
+        if(verts[i] != nullptr){
             delete verts[i];
+            verts[i] = nullptr;
         }
     }
     verts.clear();
@@ -287,8 +288,9 @@ inline void Utility::clear_mem(vector<Vertex*> verts){
 
 inline void Utility::clear_mem(vector<Edge*> edges){
     for(UI i = 0; i < edges.size(); i++){
-        if(edges[i] != NULL){
+        if(edges[i] != nullptr){
             delete edges[i];
+            edges[i] = nullptr;
         }
     }
     edges.clear();
@@ -296,8 +298,9 @@ inline void Utility::clear_mem(vector<Edge*> edges){
 
 inline void Utility::clear_mem(vector<Triangle*> tris){
     for(UI i = 0; i < tris.size(); i++){
-        if(tris[i] != NULL){
+        if(tris[i] != nullptr){
             delete tris[i];
+            tris[i] = nullptr;
         }
     }
     tris.clear();
@@ -305,8 +308,9 @@ inline void Utility::clear_mem(vector<Triangle*> tris){
 
 inline void Utility::clear_mem(vector<Tet*> tets){
     for(UI i = 0; i < tets.size(); i++){
-        if(tets[i] != NULL){
+        if(tets[i] != nullptr){
             delete tets[i];
+            tets[i] = nullptr;
         }
     }
     tets.clear();
@@ -360,18 +364,15 @@ inline void Utility::swap(long int & a, long int& b)
 // if val < 0, the pt is on the other side of the plane
 inline double Utility::SingedDistance(const Vector3d P, const Vector3d a, const Vector3d b, const Vector3d c)
 {
-    Vertex* v1 = new Vertex(a);
-    Vertex* v2 = new Vertex(b);
-    Vertex* v3 = new Vertex(c);
-    Triangle tri = Triangle(v1, v2, v3);
+    Vertex v1 = Vertex(a);
+    Vertex v2 = Vertex(b);
+    Vertex v3 = Vertex(c);
+    Triangle tri = Triangle(&v1, &v2, &v3);
 
     // compute the normal of the triangle
     Vector3d n = tri.cal_normal();
     const Vector3d& Q = a;
 
-    delete v1;
-    delete v2;
-    delete v3;
     return dot( (P-Q), n );
 }
 

@@ -472,9 +472,10 @@ vector<Triangle *> Tet::create_isosurface_tris_case567(const Vertex *v1, const V
 
 
 // create 6 unique edges for this tetrahedron
+// add full adjacency information
 void Tet::make_edges()
 {
-    UI i, j;
+    unsigned char i, j;
     for(i = 0; i < 4; i++){
         Vertex* v1 = verts[i];
         for(j = i+1; j < 4; j++){
@@ -489,8 +490,8 @@ void Tet::make_edges()
 }
 
 
-// create triangles
-// assume vertices are inserted
+// create 4 triangles for this tetrahedron
+// assume vertices exit
 void Tet::make_triangles()
 {
     Vertex* v1 = this->verts[0];
@@ -498,15 +499,22 @@ void Tet::make_triangles()
     Vertex* v3 = this->verts[2];
     Vertex* v4 = this->verts[3];
 
+    // create 4 triangles
     Triangle* tri1 = new Triangle(v1, v2, v3);
     Triangle* tri2 = new Triangle(v2, v3, v4);
     Triangle* tri3 = new Triangle(v1, v3, v4);
     Triangle* tri4 = new Triangle(v1, v2, v4);
 
+    // add ajacency imformation
     this->add_triangle(tri1);
     this->add_triangle(tri2);
     this->add_triangle(tri3);
     this->add_triangle(tri4);
+
+    tri1->add_tets(this);
+    tri2->add_tets(this);
+    tri3->add_tets(this);
+    tri4->add_tets(this);
 
     // may need edges later
 }
@@ -523,9 +531,6 @@ void Tet::make_triangles()
 */
 void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>& new_edges, vector<Triangle*>& new_tris, vector<Tet*>& new_tets)
 {
-    // check if this tet has vertices
-    if(this->num_verts() != 4) return;
-
     /* check if this tet has edges
      * if not, create new edges and add these edges into new_edges
     */
@@ -550,8 +555,8 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     // find edge middle points
     // keep track of newly created vertices
     // these are actually the vertices of octahedron
-    vector<Vertex*> uniq_edge_points;
-    uniq_edge_points.reserve(6);
+    vector<Vertex*> uniq_middle_points;
+    uniq_middle_points.reserve(6);
 
     vector<Edge*> uniq_new_edges;
     uniq_new_edges.reserve(12+12+1); // must be 25 new edges in total
@@ -565,7 +570,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
 
         Vector3d middle_cords = e->middle_pt();
         Vertex* new_vert = this->get_vert_at(middle_cords, time, ws, true, false);
-        uniq_edge_points.push_back(new_vert);
+        uniq_middle_points.push_back(new_vert);
 
         // create two new edges
         Edge* new_e1 = new Edge(v1, new_vert);
@@ -621,10 +626,10 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     */
     vector<Tet*> inner_tets; inner_tets.reserve(4);
     Edge* diag_e = NULL;
-    Vertex* first_v = uniq_edge_points[0];
+    Vertex* first_v = uniq_middle_points[0];
     Vertex* second_v = NULL;
     // look for the octahedron edge of v2 that doesn't have connection with v1
-    for(Vertex* v : uniq_edge_points){
+    for(Vertex* v : uniq_middle_points){
         if(v == first_v) continue;
         if(v->is_connected_to(first_v)) continue;
 
@@ -644,7 +649,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     */
     // step 1
     vector<Vertex*> not_including_diag;
-    for(Vertex* v : uniq_edge_points){
+    for(Vertex* v : uniq_middle_points){
         if(!diag_e->has_vert(v)){
             not_including_diag.push_back(v);
         }
@@ -687,7 +692,7 @@ void Tet::subdivide(const double time, vector<Vertex*>& new_verts, vector<Edge*>
     for(auto& v : vert_copies){
         new_verts.push_back(v.second);
     }
-    for(Vertex* v:uniq_edge_points){
+    for(Vertex* v:uniq_middle_points){
         new_verts.push_back(v);
     }
 
