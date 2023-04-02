@@ -67,7 +67,8 @@ bool build_ECG = true;
 bool show_ECG_connections = false;
 bool show_ECG_edge_constructions = false;
 bool show_seeds = true;
-bool show_critical_pts = true;
+bool show_fixedPts = true;
+bool show_tets_with_fixedPts = true;
 
 const double h = 1e-3;
 const UI NUM_SEEDS = 50;
@@ -205,7 +206,7 @@ int main(int argc, char *argv[])
     read_files();
 
     // replace velocity vectors with analytical equations
-    meshes[0]->num_time_steps = 5;
+//    meshes[0]->num_time_steps = 5;
 //    replace_velocity();
 
 //    testing_subdivision();

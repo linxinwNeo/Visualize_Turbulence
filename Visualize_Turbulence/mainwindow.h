@@ -42,5 +42,6 @@ private slots:
     void on_showSeeds_triggered();
     void on_showAxis_triggered();
     void on_showBoundaryTriangles_triggered();
+    void on_showTetsWithFPs_triggered();
 };
 #endif // MAINWINDOW_H

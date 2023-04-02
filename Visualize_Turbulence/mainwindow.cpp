@@ -132,7 +132,7 @@ void MainWindow::on_showSLs_triggered()
 
 void MainWindow::on_showFPs_triggered()
 {
-    show_critical_pts = !show_critical_pts;
+    show_fixedPts = !show_fixedPts;
     this->redraw();
 }
 
@@ -154,6 +154,13 @@ void MainWindow::on_showAxis_triggered()
 void MainWindow::on_showBoundaryTriangles_triggered()
 {
     show_opage_boundary_tris = !show_opage_boundary_tris;
+    this->redraw();
+}
+
+
+void MainWindow::on_showTetsWithFPs_triggered()
+{
+    show_tets_with_fixedPts = !show_tets_with_fixedPts;
     this->redraw();
 }
 

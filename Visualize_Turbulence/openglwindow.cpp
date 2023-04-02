@@ -167,12 +167,12 @@ void openGLWindow::main_routine(Mesh * mesh) const
         draw_isosurfaces(isosurface, min, max);
     }
 
-    if(build_ECG){
+    if(show_tets_with_fixedPts){
         color_tets_with_fixedPts(mesh->tet_with_fixed_pt_for_all_t.at(this->time));
     }
 
 
-    if(build_ECG && show_critical_pts){
+    if(build_ECG && show_fixedPts){
         draw_singularities(mesh->ECG_for_all_t.at(this->time)->get_sings());
     }
 

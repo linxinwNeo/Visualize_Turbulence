@@ -50,7 +50,8 @@ extern bool tracing_streamlines_from_seed;
 extern bool tracing_streamlines_from_critical_pts;
 extern bool show_ECG_connections;
 extern bool show_ECG_edge_constructions;
-extern bool show_critical_pts;
+extern bool show_fixedPts;
+extern bool show_tets_with_fixedPts;
 extern bool show_seeds;
 
 extern const double boundary_tri_alpha;

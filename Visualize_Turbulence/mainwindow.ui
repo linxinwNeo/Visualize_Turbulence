@@ -75,10 +75,11 @@
     <property name="title">
      <string>Menu</string>
     </property>
+    <addaction name="showAxis"/>
     <addaction name="showSLs"/>
     <addaction name="showFPs"/>
+    <addaction name="showTetsWithFPs"/>
     <addaction name="showSeeds"/>
-    <addaction name="showAxis"/>
     <addaction name="showBoundaryTriangles"/>
    </widget>
    <addaction name="menuMenu"/>
@@ -112,6 +113,11 @@
   <action name="showBoundaryTriangles">
    <property name="text">
     <string>Boundary Triangles On/Off</string>
+   </property>
+  </action>
+  <action name="showTetsWithFPs">
+   <property name="text">
+    <string>TetsWithFixedPoints On/Off</string>
    </property>
   </action>
  </widget>
