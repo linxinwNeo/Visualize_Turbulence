@@ -121,3 +121,39 @@ void MainWindow::increment_time( ) {
 
     this->redraw();
 }
+
+
+void MainWindow::on_showSLs_triggered()
+{
+    show_streamlines = !show_streamlines;
+    this->redraw();
+}
+
+
+void MainWindow::on_showFPs_triggered()
+{
+    show_critical_pts = !show_critical_pts;
+    this->redraw();
+}
+
+
+void MainWindow::on_showSeeds_triggered()
+{
+    show_seeds = !show_seeds;
+    this->redraw();
+}
+
+
+void MainWindow::on_showAxis_triggered()
+{
+    show_axis = !show_axis;
+    this->redraw();
+}
+
+
+void MainWindow::on_showBoundaryTriangles_triggered()
+{
+    show_opage_boundary_tris = !show_opage_boundary_tris;
+    this->redraw();
+}
+

@@ -68,20 +68,50 @@
      <x>0</x>
      <y>0</y>
      <width>1434</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMenu">
     <property name="title">
      <string>Menu</string>
     </property>
-    <addaction name="actionOption_1"/>
+    <addaction name="showSLs"/>
+    <addaction name="showFPs"/>
+    <addaction name="showSeeds"/>
+    <addaction name="showAxis"/>
+    <addaction name="showBoundaryTriangles"/>
    </widget>
    <addaction name="menuMenu"/>
   </widget>
-  <action name="actionOption_1">
+  <action name="showSLs">
    <property name="text">
-    <string>Option-1</string>
+    <string>StreamLines On/Off</string>
+   </property>
+   <property name="iconText">
+    <string>StreamLines</string>
+   </property>
+  </action>
+  <action name="showFPs">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>FixedPoints On/Off</string>
+   </property>
+  </action>
+  <action name="showSeeds">
+   <property name="text">
+    <string>Seeds On/Off</string>
+   </property>
+  </action>
+  <action name="showAxis">
+   <property name="text">
+    <string>Axis On/Off</string>
+   </property>
+  </action>
+  <action name="showBoundaryTriangles">
+   <property name="text">
+    <string>Boundary Triangles On/Off</string>
    </property>
   </action>
  </widget>

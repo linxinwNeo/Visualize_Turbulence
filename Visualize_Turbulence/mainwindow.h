@@ -37,5 +37,10 @@ private:
 
 private slots:
     void increment_time();
+    void on_showSLs_triggered();
+    void on_showFPs_triggered();
+    void on_showSeeds_triggered();
+    void on_showAxis_triggered();
+    void on_showBoundaryTriangles_triggered();
 };
 #endif // MAINWINDOW_H

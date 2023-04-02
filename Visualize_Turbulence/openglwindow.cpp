@@ -167,6 +167,10 @@ void openGLWindow::main_routine(Mesh * mesh) const
         draw_isosurfaces(isosurface, min, max);
     }
 
+    if(build_ECG){
+        color_tets_with_fixedPts(mesh->tet_with_fixed_pt_for_all_t.at(this->time));
+    }
+
 
     if(build_ECG && show_critical_pts){
         draw_singularities(mesh->ECG_for_all_t.at(this->time)->get_sings());
@@ -174,9 +178,7 @@ void openGLWindow::main_routine(Mesh * mesh) const
 
     if(build_ECG && show_ECG_edge_constructions){
         vector<StreamLine*> sls = mesh->ECG_for_all_t.at(this->time)->sls;
-//        qDebug() << mesh->ECG_for_all_t.at(this->time)->num_sls() <<  mesh->ECG_for_all_t.at(this->time)->num_nodes();
         for(StreamLine* sl : sls){
-//            qDebug() << sl->num_verts();
             draw_streamline(sl, 1000, 1000);
         }
     }
@@ -185,12 +187,9 @@ void openGLWindow::main_routine(Mesh * mesh) const
         draw_ECG_connections(mesh->ECG_for_all_t.at(this->time));
     }
 
-    if(build_ECG){
-        color_tets_with_fixedPts(mesh->tet_with_fixed_pt_for_all_t.at(this->time));
-    }
-
     if(show_boundary_wireframe)
         draw_wireframe(mesh->boundary_tris);
+
 
     if(show_opage_boundary_tris){
         draw_opague_boundary_tris(boundary_tri_alpha, mesh->boundary_tris);
@@ -207,7 +206,6 @@ void openGLWindow::set_scene() const
     glTranslatef(this->rot_center.entry[0] ,
                  this->rot_center.entry[1],
                  this->rot_center.entry[2]);
-    //qDebug() << this->rot_center.entry[0] << " "<< this->rot_center.entry[1] << " " << this->rot_center.entry[2] ;
 
     Utility::multmatrix( this->rotmat );
 
@@ -252,7 +250,6 @@ void openGLWindow::mousePressEvent(QMouseEvent *event)
 
 void openGLWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-
     // if it is left button...
     if(event->button() == Qt::LeftButton){
         this->leftButtonUp(event);

@@ -374,13 +374,24 @@ inline void draw_ECG_connections( ECG* ecg ){
 }
 
 inline void color_tets_with_fixedPts(const vector<Tet*> & tets){
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
+
+    float color[ ] = { 0.,0.,0. };
+    glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, color );
+    glMaterialfv( GL_FRONT_AND_BACK, GL_DIFFUSE, color );
+
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
 
     glBegin(GL_TRIANGLES);
     glColor3f(0,0,0);
     for(const Tet* tet: tets){
-        for(const Triangle* tri:tet->tris){
+        for( Triangle* tri:tet->tris ){
+            const Vector3d& normal = tri->cal_normal();
+            glNormal3f(normal.x(), normal.y(), normal.z());
             Vector3d v1 = tri->verts[0]->cords;
             Vector3d v2 = tri->verts[1]->cords;
             Vector3d v3 = tri->verts[2]->cords;
@@ -390,6 +401,7 @@ inline void color_tets_with_fixedPts(const vector<Tet*> & tets){
         }
     }
     glEnd();
+
 
     glPopMatrix();
 }

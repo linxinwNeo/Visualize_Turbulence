@@ -70,10 +70,10 @@ bool show_seeds = true;
 bool show_critical_pts = true;
 
 const double h = 1e-3;
-const UI NUM_SEEDS = 100;
+const UI NUM_SEEDS = 50;
 const UI max_num_steps = 500;
-const UI NUM_SEEDS_for_Limit = 10;
-const UI max_num_steps_for_Limit = 100;
+//const UI NUM_SEEDS_for_Limit = 10;
+//const UI max_num_steps_for_Limit = 100;
 const double dist_step_size = 1e-2;
 const UI frames_per_sec = 1; // frames per sec
 const double time_step_size = ((double)1.)/(double)frames_per_sec; // sec for each frame
@@ -182,8 +182,7 @@ void testing_DetectfixedPt_subd(){
     double ws[4];
 
     vector<Vector3d> sings;
-    // try to find the critical points
-    mesh->find_fixed_pt_location_Limit(tet, 0., sings);
+
 
     for(Vector3d sing : sings){
         qDebug() << sing.x() << sing.y() << sing.z();
