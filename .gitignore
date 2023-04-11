@@ -37,3 +37,4 @@
 
 # QT specific
 *build-*
+*.pro.user
